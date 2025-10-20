@@ -12,27 +12,46 @@ const Home: React.FC = () => {
 
         <section className="summary">
           <div className="summary-bar">
-            <span>Stocker Center — All rooms full</span>
-            <span>ARC — 2 rooms free</span>
-            <span>Alden Library — 5 rooms free</span>
+            <div className="summary-item">
+              <span className="building">Stocker Center</span>
+              <span className="rm_status">All rooms full</span>
+            </div>
+
+            <div className="summary-item">
+              <span className="building">ARC</span>
+              <span className="rm_status">2 rooms free</span>
+            </div>
+
+            <div className="summary-item">
+              <span className="building">Alden Library</span>
+              <span className="rm_status">5 rooms free</span>
+            </div>
+
           </div>
         </section>
 
-        <section className="favorites-rooms">
-          <div className="favorites">
-            <h2>Favorites</h2>
-            <ul>
-              <li>Stocker Center 155</li>
-              <li>Stocker Center 152</li>
-            </ul>
-          </div>
+        <section className="favorites-map-container">
+
+          <section className="favorites-rooms">
+            <div className="favorites">
+              <div className="favorites-bar">
+                <span>Favorites</span>
+              </div>
+              <ul>
+                <li>Stocker Center 155</li>
+                <li>Stocker Center 152</li>
+              </ul>
+            </div>
+          </section>
         
+          <section className="map-section">
+            <div className="map">
+              <img src={MapPlaceholder} alt="Campus Map" />
+            </div>
+          </section>
 
-          <div className="map">
-            <h2>Campus Map</h2>
-            <img src={MapPlaceholder} alt="Campus Map" />
-          </div>
         </section>
+
       </main>
     </div>
   );
