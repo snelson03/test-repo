@@ -3,10 +3,16 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import colors from '../constants/colors';
 
-export default function RoomCard({ roomName, status }: { roomName: string; status: 'available' | 'busy' | 'offline' }) {
+type RoomCardProps = {
+  roomName: string;
+  status: 'available' | 'occupied' | 'offline' | 'almost_filled';
+};
+
+export default function RoomCard({ roomName, status }: RoomCardProps) {
   return (
     <View style={[styles.card, { backgroundColor: colors[status] }]}>
       <Text style={styles.text}>{roomName}</Text>
+      <Text style={styles.status}>{status.toUpperCase()}</Text>
     </View>
   );
 }
@@ -21,5 +27,11 @@ const styles = StyleSheet.create({
   text: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 16,
+  },
+  status: {
+    color: '#fff',
+    marginTop: 4,
+    fontSize: 14,
   },
 });
