@@ -1,3 +1,5 @@
+// tsconfig file
+// sets up paths for filenames and compilation
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {

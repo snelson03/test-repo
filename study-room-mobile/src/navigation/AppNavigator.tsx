@@ -1,3 +1,4 @@
+// app navigation file
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -7,6 +8,7 @@ import CampusMapScreen from '@/screens/CampusMapScreen';
 import FavoritesScreen from '@/screens/FavoritesScreen';
 import PreferencesScreen from '@/screens/PreferencesScreen';
 
+// setting up app pages
 export type RootStackParamList = {
   Home: undefined;
   FindRoom: undefined;
@@ -17,6 +19,7 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+// setting up navigation routes for pages
 export default function AppNavigator() {
   return (
     <Stack.Navigator initialRouteName="Home">

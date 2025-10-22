@@ -1,3 +1,6 @@
+// Home Screen layout file
+
+//import navigation, colors, react packages
 import React, { useState, useRef } from 'react';
 import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity, Animated, Easing, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -18,6 +21,7 @@ export default function HomeScreen() {
   // Animation for menu dropdown
   const menuAnim = useRef(new Animated.Value(0)).current;
 
+  // Menu animation
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
     Animated.timing(menuAnim, {
@@ -28,6 +32,7 @@ export default function HomeScreen() {
     }).start();
   };
 
+  // static room variables for testing layout
   const rooms = [
     { name: 'Stocker Center', status: 'busy', subtitle: 'All rooms full' },
     { name: 'ARC', status: 'almost_filled', subtitle: '2 rooms free' },
@@ -53,18 +58,19 @@ export default function HomeScreen() {
   const contentWidth = SCREEN_WIDTH > MAX_SCREEN_WIDTH ? MAX_SCREEN_WIDTH : SCREEN_WIDTH;
 
   return (
+    // sets up style and alignment of homepage
     <View style={{ flex: 1, alignItems: 'center' }}>
       <ScrollView
         style={[styles.container, { width: contentWidth }]}
         contentContainerStyle={{ paddingBottom: 32 }}
         scrollEnabled={!menuOpen}
       >
-        {/* Header */}
+        {/* Header style setup */}
         <View style={styles.header}>
           <Image source={require('@/assets/images/bf_logo.png')} style={styles.logo} />
         </View>
 
-        {/* Find a Room Banner */}
+        {/* Find a Room Banner style setup */}
         <TouchableOpacity onPress={() => !menuOpen && navigation.navigate('FindRoom' as never)}>
           <View style={styles.bannerContainer}>
             <View style={styles.imageShadow}>
@@ -74,7 +80,7 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Campus Map */}
+        {/* Campus Map style setup*/}
         <TouchableOpacity onPress={() => !menuOpen && navigation.navigate('CampusMap' as never)}>
           <View style={styles.mapContainer}>
             <View style={styles.imageShadow}>
@@ -84,7 +90,7 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Room Cards + Favorites */}
+        {/* Room Cards + Favorites style setup */}
         <View style={styles.cardsContainer}>
           {rooms.map((room) => (
             <View key={room.name} style={styles.roomCardContainer}>
@@ -115,7 +121,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Overlay Dropdown Menu */}
+      {/* Overlay Dropdown Menu setup */}
       {menuOpen && (
         <Animated.View style={[styles.menuOverlay, { width: contentWidth, transform: [{ translateY: menuTranslate }] }]}>
           <TouchableOpacity style={styles.overlayBackground} onPress={toggleMenu} activeOpacity={1} />
@@ -139,28 +145,49 @@ export default function HomeScreen() {
   );
 }
 
+// Implemets object styles and sets colors + spacing, etc
 const styles = StyleSheet.create({
+  // background color
   container: { flex: 1, backgroundColor: colors.white },
-  header: { flexDirection: 'row', backgroundColor: colors.primary, padding: 20, alignItems: 'center', justifyContent: 'flex-start', width: '100%' },
+  // header color and logo alignment
+  header: { flexDirection: 'row', backgroundColor: colors.primary, padding: 20,
+      alignItems: 'center', justifyContent: 'flex-start', width: '100%' },
   logo: {width: 300, height: 80, marginRight: 12 },
 
+  // Find a Room banner image, spacing, text color, and shadows implemented
   bannerContainer: { marginVertical: 16, paddingHorizontal: 20, position: 'relative' },
   bannerImage: { width: '100%', height: 200, borderRadius: 0 },
-  bannerText: { position: 'absolute', paddingHorizontal: 20, bottom: 12, left: 12, fontSize: 40, fontFamily: 'BebasNeue-Regular', color: colors.white },
+  bannerText: { position: 'absolute', paddingHorizontal: 20, bottom: 12, left: 12, fontSize: 40, fontFamily: 'BebasNeue-Regular',
+  fontWeight: '500', color: colors.gray100, textShadowColor: 'rgba(0, 0, 0, 200)',
+      textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 15, },
+  imageShadow: {
+      shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.6,
+      shadowRadius: 12, elevation: 8, borderRadius: 10,},
 
+  // Campus Map banner image, spacing, text color, and shadows implemented
   mapContainer: { marginVertical: 16, paddingHorizontal: 20, position: 'relative' },
   mapImage: { width: '100%', height: 200, borderRadius: 0 },
-  mapText: { position: 'absolute', paddingHorizontal: 20, bottom: 12, left: 12, fontSize: 40, fontFamily: 'BebasNeue-Regular', color: colors.primary },
+  mapText: { position: 'absolute', paddingHorizontal: 20, bottom: 12, left: 12, fontSize: 40, fontFamily: 'BebasNeue-Regular',
+      fontWeight: '500', color: colors.white, textShadowColor: 'rgba(0, 0, 0, 200)',
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 15, },
+  imageShadow: {
+    shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.6,
+        shadowRadius: 12, elevation: 8, borderRadius: 10,},
 
+  // room card, spacing, text color, implemented
   cardsContainer: { marginVertical: 16, paddingHorizontal: 20 },
-  roomCardContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, backgroundColor: colors.primary,
-        borderRadius: 0, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+  roomCardContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, 
+        backgroundColor: colors.primary, borderRadius: 0, marginBottom: 12, shadowColor: '#000', 
+        shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
   roomCardTextLeft: { fontSize: 27, fontFamily: 'BebasNeue-Regular', color: colors.white },
   roomCardTextRight: { fontSize: 14, color: colors.white },
 
+  // Dropdown menu container and button
   menuButtonContainer: { position: 'absolute', top: 50, right: 20 },
   menuButton: { backgroundColor: colors.primary, padding: 12, borderRadius: 30, elevation: 5 },
-
+  
+  // Dropdown menu options and background shading upon opening menu
   menuOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-start', zIndex: 1000, alignSelf: 'center' },
   overlayBackground: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
   menuContent: { backgroundColor: colors.white, marginTop: 80, borderRadius: 8, paddingVertical: 10, elevation: 10 },

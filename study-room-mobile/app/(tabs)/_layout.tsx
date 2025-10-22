@@ -1,3 +1,4 @@
+//Layout starter file
 import { Tabs } from 'expo-router';
 import React from 'react';
 
@@ -8,8 +9,10 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 
 
 export default function TabLayout() {
+  // sets color scheme
   const colorScheme = useColorScheme();
 
+  //sets up app layout, react starter file
   return (
     <Tabs
       screenOptions={{

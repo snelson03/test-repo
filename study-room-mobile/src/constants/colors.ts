@@ -1,9 +1,10 @@
-// src/constants/colors.ts
+// Color list file
 
 const colors = 
 {
   // Primary colors
-  primary: "#00582F",     // Cutler Green
+  primary: "#05472A",     // Cutler Green
+  green2: "#006435",
   darkAccent: "#024230",  // Under The Elms (Dark Green)
   white: "#FFFFFF",       // Cupola White
 
