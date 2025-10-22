@@ -1,6 +1,8 @@
 .sidebar {
+    font-family: 'Bebas Neue', bebas-neue;
     width: 200px;
-    background-color: #00694E;
+    /* background-color: #00694E; */
+    background-color: #024230;
     color: white;
     height: 100vh;
     padding: 1rem;
@@ -10,15 +12,19 @@
 }
 
 .sidebar .logo img {
-    width: 200px;
+    width: 238px;
+    margin-left: -1rem;
+    margin-top: -3rem;
+    margin-bottom: -1rem;
 }
 
 .sidebar a {
     color: white;
     text-decoration: none;
     font-weight: bold;
+    font-size: 1.75rem;
     display: block;
-    margin-top: 10px;
+    margin-top: 20px;
 }
 
 .sidebar a:hover {
