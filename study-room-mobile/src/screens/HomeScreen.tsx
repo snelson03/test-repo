@@ -65,10 +65,17 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 32 }}
         scrollEnabled={!menuOpen}
       >
+  
         {/* Header style setup */}
         <View style={styles.header}>
           <Image source={require('@/assets/images/bf_logo.png')} style={styles.logo} />
         </View>
+
+        {/* Welcome message style setup */}
+        <View style={styles.welcome}>
+          <Text style={styles.welcome}>Welcome Back, Ms773121!</Text>
+        </View>
+
 
         {/* Find a Room Banner style setup */}
         <TouchableOpacity onPress={() => !menuOpen && navigation.navigate('FindRoom' as never)}>
@@ -153,9 +160,12 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', backgroundColor: colors.primary, padding: 20,
       alignItems: 'center', justifyContent: 'flex-start', width: '100%' },
   logo: {width: 300, height: 80, marginRight: 12 },
+  // Welcome message
+  welcome: {position: 'absolute', paddingHorizontal: 0, bottom: 12, top: 15, left: 12, fontSize: 30,// fontFamily: 'BebasNeue-Regular',
+  fontWeight: '500',color: colors.primary, position: 'relative'},
 
   // Find a Room banner image, spacing, text color, and shadows implemented
-  bannerContainer: { marginVertical: 16, paddingHorizontal: 20, position: 'relative' },
+  bannerContainer: { marginVertical: 12, paddingHorizontal: 20, top: 50, bottom: 15, position: 'relative' },
   bannerImage: { width: '100%', height: 200, borderRadius: 0 },
   bannerText: { position: 'absolute', paddingHorizontal: 20, bottom: 12, left: 12, fontSize: 40, fontFamily: 'BebasNeue-Regular',
   fontWeight: '500', color: colors.gray100, textShadowColor: 'rgba(0, 0, 0, 200)',
@@ -165,7 +175,7 @@ const styles = StyleSheet.create({
       shadowRadius: 12, elevation: 8, borderRadius: 10,},
 
   // Campus Map banner image, spacing, text color, and shadows implemented
-  mapContainer: { marginVertical: 16, paddingHorizontal: 20, position: 'relative' },
+  mapContainer: { marginVertical: 16, paddingHorizontal: 20, top: 50, position: 'relative' },
   mapImage: { width: '100%', height: 200, borderRadius: 0 },
   mapText: { position: 'absolute', paddingHorizontal: 20, bottom: 12, left: 12, fontSize: 40, fontFamily: 'BebasNeue-Regular',
       fontWeight: '500', color: colors.white, textShadowColor: 'rgba(0, 0, 0, 200)',
@@ -176,7 +186,7 @@ const styles = StyleSheet.create({
         shadowRadius: 12, elevation: 8, borderRadius: 10,},
 
   // room card, spacing, text color, implemented
-  cardsContainer: { marginVertical: 16, paddingHorizontal: 20 },
+  cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 50, },
   roomCardContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, 
         backgroundColor: colors.primary, borderRadius: 0, marginBottom: 12, shadowColor: '#000', 
         shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
