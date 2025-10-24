@@ -161,11 +161,11 @@ const styles = StyleSheet.create({
       alignItems: 'center', justifyContent: 'flex-start', width: '100%' },
   logo: {width: 300, height: 80, marginRight: 12 },
   // Welcome message
-  welcome: {position: 'absolute', paddingHorizontal: 0, bottom: 12, top: 15, left: 12, fontSize: 30,// fontFamily: 'BebasNeue-Regular',
+  welcome: {position: 'absolute', paddingHorizontal: 0, bottom: 0, top: 15, left: 12, fontSize: 30,// fontFamily: 'BebasNeue-Regular',
   fontWeight: '500', fontFamily: 'BebasNeue-Regular', color: colors.primary, position: 'relative'},
 
   // Find a Room banner image, spacing, text color, and shadows implemented
-  bannerContainer: { marginVertical: 12, paddingHorizontal: 20, top: 50, bottom: 15, position: 'relative' },
+  bannerContainer: { marginVertical: 12, paddingHorizontal: 20, top: 40, bottom: 15, position: 'relative' },
   bannerImage: { width: '100%', height: 200, borderRadius: 0 },
   bannerText: { position: 'absolute', paddingHorizontal: 20, bottom: 12, left: 12, fontSize: 40, fontFamily: 'BebasNeue-Regular',
   fontWeight: '500', color: colors.gray100, textShadowColor: 'rgba(0, 0, 0, 200)',
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
       shadowRadius: 12, elevation: 8, borderRadius: 10,},
 
   // Campus Map banner image, spacing, text color, and shadows implemented
-  mapContainer: { marginVertical: 16, paddingHorizontal: 20, top: 50, position: 'relative' },
+  mapContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40, position: 'relative' },
   mapImage: { width: '100%', height: 200, borderRadius: 0 },
   mapText: { position: 'absolute', paddingHorizontal: 20, bottom: 12, left: 12, fontSize: 40, fontFamily: 'BebasNeue-Regular',
       fontWeight: '500', color: colors.white, textShadowColor: 'rgba(0, 0, 0, 200)',
@@ -186,11 +186,11 @@ const styles = StyleSheet.create({
         shadowRadius: 12, elevation: 8, borderRadius: 10,},
 
   // room card, spacing, text color, implemented
-  cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 50, },
+  cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40, },
   roomCardContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, 
         backgroundColor: colors.primary, borderRadius: 0, marginBottom: 12, shadowColor: '#000', 
         shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
-  roomCardTextLeft: { fontSize: 27, fontFamily: 'BebasNeue-Regular', color: colors.white },
+  roomCardTextLeft: { fontSize: 27, color: colors.white },
   roomCardTextRight: { fontSize: 14, color: colors.white },
 
   // Dropdown menu container and button
