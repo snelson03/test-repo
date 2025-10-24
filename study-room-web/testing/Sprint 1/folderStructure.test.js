@@ -9,7 +9,8 @@ const expectedFolders = [
   "components",
   "assets",
   "pages",
-  "navigation", // adjust to 'navigations' if that’s your folder name
+  "layouts",
+  "theme",
 ];
 
 const colorFileCandidates = [

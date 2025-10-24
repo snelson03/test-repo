@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+
+html, body {
+    overflow: hidden;
+}
+
+.find-room-container {
+    display: flex;
+}
+
+.find-room-content {
+    flex: 1;
+    padding-left: 10rem;
+    padding-right: 17.2rem;
+    background: #fff;
+    color: #002b16;
+}
+
+.find-room-header {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 600;
+    font-size: 3rem;
+    color: #024230;
+    margin-bottom: 2.3rem;
+    margin-top: 3.1rem;
+}
+
+.building-floor-selector {
+    position: relative;
+    margin-left: -1rem;
+}
+
+.building-floor-btn {
+    font-family: 'Inter', sans-serif;
+    background: transparent;
+    border: none;
+    color: #024230;
+    font-size: 1.5rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.building-floor-btn:hover {
+    background: white;
+    transform: translateX(3px);
+}
+
+.building-floor-btn:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 105%;
+    left: 0;
+    background: white;
+    border: 1px solid #ccc;
+    width: 230px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    overflow: hidden;
+    margin-left: 16px;
+    margin-top: -3px;
+}
+
+.dropdown-item:hover {
+    background-color: #e6f4ea;
+}
+
+.room-grid {
+    background: #00694E;
+    padding: 2rem;
+    width: 1300px;
+    min-height: 600px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    justify-items: center;
+    align-items: center;
+}
+
+.room {
+    width: 200px;
+    height: 200px;
+    border: 3px solid black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: black;
+    transition: transform 0.2s ease;
+    background: lightgray;
+    padding-top: 0.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.room.available {
+    background: #27ae60;
+}
+
+.room.occupied {
+    background: #c0392b;
+}
+
+.room.offline {
+    background: #7f8c8d;
+}
+
+.room-number {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: black;
+}
