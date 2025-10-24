@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   logo: {width: 300, height: 80, marginRight: 12 },
   // Welcome message
   welcome: {position: 'absolute', paddingHorizontal: 0, bottom: 12, top: 15, left: 12, fontSize: 30,// fontFamily: 'BebasNeue-Regular',
-  fontWeight: '500',color: colors.primary, position: 'relative'},
+  fontWeight: '500', fontFamily: 'BebasNeue-Regular', color: colors.primary, position: 'relative'},
 
   // Find a Room banner image, spacing, text color, and shadows implemented
   bannerContainer: { marginVertical: 12, paddingHorizontal: 20, top: 50, bottom: 15, position: 'relative' },
