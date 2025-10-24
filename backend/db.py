@@ -4,9 +4,6 @@ from sqlalchemy.orm import sessionmaker, Session
 from config import DATABASE_URL
 from typing import Generator
 
-# Database URL
-DATABASE_URL = DATABASE_URL
-
 # Create engine
 engine = create_engine(DATABASE_URL)
 
