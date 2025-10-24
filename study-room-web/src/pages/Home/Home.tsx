@@ -15,7 +15,7 @@ const Home: React.FC = () => {
             <div className="summary-item">
               <span className="building">Stocker Center</span>
               <div className="rm_status">
-                <span class="status-dot red"></span>
+                <span className="status-dot red"></span>
                 All rooms full
               </div>
             </div>
