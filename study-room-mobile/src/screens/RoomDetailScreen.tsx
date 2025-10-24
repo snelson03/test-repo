@@ -1,4 +1,4 @@
-// src/screens/RoomDetailScreen.tsx
+// Room detail Screen Starter File
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 

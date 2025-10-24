@@ -1,19 +1,53 @@
-// src/navigation/AppNavigator.tsx
+// app navigation file
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import HomeScreen from '../screens/HomeScreen';
-import RoomDetailScreen from '../screens/RoomDetailScreen';
 
-const Stack = createNativeStackNavigator();
+import HomeScreen from '@/screens/HomeScreen';
+import FindRoomScreen from '@/screens/FindRoomScreen';
+import CampusMapScreen from '@/screens/CampusMapScreen';
+import FavoritesScreen from '@/screens/FavoritesScreen';
+import PreferencesScreen from '@/screens/PreferencesScreen';
 
+// setting up app pages
+export type RootStackParamList = {
+  Home: undefined;
+  FindRoom: undefined;
+  CampusMap: undefined;
+  Favorites: undefined;
+  Preferences: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+
+// setting up navigation routes for pages
 export default function AppNavigator() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="RoomDetail" component={RoomDetailScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <Stack.Navigator initialRouteName="Home">
+      <Stack.Screen 
+        name="Home" 
+        component={HomeScreen} 
+        options={{ headerShown: false }} 
+      />
+      <Stack.Screen 
+        name="FindRoom" 
+        component={FindRoomScreen} 
+        options={{ title: 'Find a Room' }} 
+      />
+      <Stack.Screen 
+        name="CampusMap" 
+        component={CampusMapScreen} 
+        options={{ title: 'Campus Map' }} 
+      />
+      <Stack.Screen 
+        name="Favorites" 
+        component={FavoritesScreen} 
+        options={{ title: 'Favorites' }} 
+      />
+      <Stack.Screen 
+        name="Preferences" 
+        component={PreferencesScreen} 
+        options={{ title: 'Preferences' }} 
+      />
+    </Stack.Navigator>
   );
 }
