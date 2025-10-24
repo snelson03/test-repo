@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   roomCardContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, 
         backgroundColor: colors.primary, borderRadius: 0, marginBottom: 12, shadowColor: '#000', 
         shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
-  roomCardTextLeft: { fontSize: 27, color: colors.white },
+  roomCardTextLeft: { fontSize: 27, fontFamily: 'BebasNeue-Regular', color: colors.white },
   roomCardTextRight: { fontSize: 14, color: colors.white },
 
   // Dropdown menu container and button
