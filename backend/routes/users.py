@@ -43,7 +43,9 @@ async def create_user(user_data: UserCreate):
         username=user_data.username,
         email=user_data.email,
         full_name=user_data.full_name,
+        password=user_data.password,
         is_active=True,
+        is_admin=False,
         created_at=datetime.now(),
     )
 
@@ -92,3 +94,10 @@ async def delete_user(user_id: int):
             return {"message": "User deleted successfully"}
 
     raise HTTPException(status_code=404, detail="User not found")
+
+
+# Admin-only endpoints
+@router.get("/admin/users", response_model=List[User])
+async def get_all_users_admin():
+    """Get all users (admin only) - includes inactive users"""
+    return users_db
