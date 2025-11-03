@@ -17,9 +17,9 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/find-room" element={<FindRoom />} />
         <Route path="/campus-map" element={<CampusMap />} />
+        <Route path="/favorites" element={<Favorites />} />
 
         <Route element={<TopNavLayout />}>
-          <Route path="/favorites" element={<Favorites />} />
           <Route path="/preferences" element={<Preferences />} />
         </Route>
       </Routes>
