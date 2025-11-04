@@ -34,9 +34,9 @@ export default function HomeScreen() {
 
   // static room variables for testing layout
   const rooms = [
-    { name: 'Stocker Center', status: 'busy', subtitle: 'All rooms full' },
-    { name: 'ARC', status: 'almost_filled', subtitle: '2 rooms free' },
-    { name: 'Alden Library', status: 'available', subtitle: '5 rooms free' },
+    { name: 'Stocker Center', status: 'busy', subtitle: 'No rooms available' },
+    { name: 'ARC', status: 'almost_filled', subtitle: 'All rooms offline' },
+    { name: 'Alden Library', status: 'available', subtitle: '5 rooms available' },
   ];
 
   // Menu items
@@ -97,28 +97,50 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Room Cards + Favorites style setup */}
+        {/* Room Cards + Favorites style setup - added color coded dots next to room headers*/}
         <View style={styles.cardsContainer}>
           {rooms.map((room) => (
             <View key={room.name} style={styles.roomCardContainer}>
               <Text style={styles.roomCardTextLeft}>{room.name}</Text>
-              <Text style={styles.roomCardTextRight}>{room.subtitle}</Text>
+
+              <View style={styles.rightSection}>
+                <View
+                  style={[
+                    styles.statusDot,
+                    {
+                      backgroundColor:
+                        room.status === 'available'
+                          ? colors.available
+                          : room.status === 'busy'
+                          ? colors.occupied
+                          : colors.offline,
+                    },
+                  ]}
+                />
+                <Text style={styles.roomCardTextRight}>{room.subtitle}</Text>
+              </View>
             </View>
           ))}
 
           <TouchableOpacity onPress={() => !menuOpen && navigation.navigate('Favorites' as never)}>
             <View style={styles.roomCardContainer}>
-              <Text style={styles.roomCardTextLeft}>MY FAVORITES</Text>
-              <Text style={styles.roomCardTextRight}>3 Rooms</Text>
-            </View>
+              <View style={styles.favoritesLeft}>
+                <Text style={styles.roomCardTextLeft}>MY FAVORITES</Text>
+              </View>
+              <Feather name="heart" size={25} color={colors.white} style={styles.heartIcon} />
+              </View>
           </TouchableOpacity>
+
 
           <TouchableOpacity onPress={() => !menuOpen && navigation.navigate('Preferences' as never)}>
             <View style={styles.roomCardContainer}>
+            <View style={styles.preferencesLeft}>
               <Text style={styles.roomCardTextLeft}>PREFERENCES</Text>
             </View>
+            <Feather name="menu" size={25} color={colors.white} style={styles.prefIcon} />
+            </View>
           </TouchableOpacity>
-        </View>
+          </View>
       </ScrollView>
 
       {/* Floating Menu Button */}
@@ -161,7 +183,7 @@ const styles = StyleSheet.create({
       alignItems: 'center', justifyContent: 'flex-start', width: '100%' },
   logo: {width: 300, height: 80, marginRight: 12 },
   // Welcome message
-  welcome: {position: 'absolute', paddingHorizontal: 0, bottom: 0, top: 15, left: 12, fontSize: 30,// fontFamily: 'BebasNeue-Regular',
+  welcome: { paddingHorizontal: 0, bottom: 0, top: 15, left: 12, fontSize: 30,// fontFamily: 'BebasNeue-Regular',
   fontWeight: '500', fontFamily: 'BebasNeue-Regular', color: colors.primary, position: 'relative'},
 
   // Find a Room banner image, spacing, text color, and shadows implemented
@@ -187,20 +209,55 @@ const styles = StyleSheet.create({
 
   // room card, spacing, text color, implemented
   cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40, },
-  roomCardContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 15, 
-        backgroundColor: colors.primary, borderRadius: 0, marginBottom: 12, shadowColor: '#000', 
+  roomCardContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, 
+        backgroundColor: colors.primary, borderRadius: 0, marginBottom: 7, shadowColor: '#000', 
         shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
   roomCardTextLeft: { fontSize: 27, fontFamily: 'BebasNeue-Regular', color: colors.white },
   roomCardTextRight: { fontSize: 14, color: colors.white },
+
+  statusDot: { width: 10, height: 10, borderRadius: 5, marginHorizontal: 8 },
+  rightSection: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  
+  favoritesLeft: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1,},
+  heartIcon: {marginTop: 2, marginRight: 12,},
+
+  preferencesLeft: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1,},
+  prefIcon: {marginTop: 2, marginRight: 12,},
 
   // Dropdown menu container and button
   menuButtonContainer: { position: 'absolute', top: 50, right: 20 },
   menuButton: { backgroundColor: colors.primary, padding: 12, borderRadius: 30, elevation: 5 },
   
   // Dropdown menu options and background shading upon opening menu
-  menuOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'flex-start', zIndex: 1000, alignSelf: 'center' },
-  overlayBackground: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.3)' },
-  menuContent: { backgroundColor: colors.white, marginTop: 80, borderRadius: 8, paddingVertical: 10, elevation: 10 },
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  overlayBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)', // translucent gray overlay
+  },
+  menuContent: {
+    backgroundColor: colors.white,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    width: '100%', // centers visually on most devices
+  },
   menuItemContainer: { paddingVertical: 12, paddingHorizontal: 16 },
   menuItemText: { fontSize: 22, fontFamily: 'BebasNeue-Regular', color: colors.primary },
 });

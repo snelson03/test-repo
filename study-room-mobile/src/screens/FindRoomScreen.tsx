@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     maxWidth: 400,
   },
   title: { // page title font setup
-    fontSize: 35,
+    fontSize: 38,
     fontFamily: 'BebasNeue-Regular',
     fontWeight: '500',
     color: colors.primary,
