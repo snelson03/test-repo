@@ -18,10 +18,8 @@ function App() {
         <Route path="/find-room" element={<FindRoom />} />
         <Route path="/campus-map" element={<CampusMap />} />
         <Route path="/favorites" element={<Favorites />} />
+        <Route path="/preferences" element={<Preferences />} />
 
-        <Route element={<TopNavLayout />}>
-          <Route path="/preferences" element={<Preferences />} />
-        </Route>
       </Routes>
     </Router>
   );

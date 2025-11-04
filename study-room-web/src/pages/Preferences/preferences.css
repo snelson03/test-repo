@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+.preferences-container {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+}
+
+.preferences-content {
+    flex: 1;
+    padding: 2rem 8.3rem;
+    box-sizing: border-box;
+    background: transparent;
+    color: #002b16;
+}
+
+.preferences-header {
+    font-family: 'Bebas Neue', sans-serif;
+    font-weight: 600;
+    font-size: 3rem;
+    color: #024230;
+    margin-bottom: 3.3rem;
+    margin-top: 1.1rem;
+    margin-left: -0.2rem;
+}
+
+/* .preferences-selector {
+    position: relative;
+    margin-left: -1rem;
+} */
+
+/* .preferences-btn {
+    font-family: 'Inter', sans-serif;
+    background: transparent;
+    border: none;
+    color: #024230;
+    font-size: 1.5rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.preferences-ctgry-btn:hover {
+    background: white;
+    transform: translateX(3px);
+}
+
+.preferences-ctgry-btn:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.dropdown-menu2 {
+    position: absolute;
+    top: 105%;
+    left: 0;
+    background: white;
+    border: 1px solid #ccc;
+    width: 230px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    overflow: hidden;
+    margin-left: 16px;
+    margin-top: -3px;
+}
+
+.dropdown-item2:hover {
+    background-color: #e6f4ea;
+} */
+
+.preferences-title {
+    font-size: 2rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+}
+
+.option-box {
+    background-color: #00694E;
+    color: white;
+    padding: 2.5rem 2.5rem;
+    width: 90rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    height: 45rem;
+    margin-left: -0.1rem;
+}
+
+.option-heading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 500;
+    margin-top: -1rem;
+    margin-left: -1rem;
+    margin-bottom: 2rem;
+}
+
+.option-section {
+    margin-bottom: 2rem;
+    margin-left: -0.9rem;
+}
+
+.option-subheading {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.7rem;
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+    font-size: 1rem;
+}
+
+.option-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.option-edit {
+    color: #fff;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    margin-left: 0.3rem;
+    cursor: pointer;
+}
