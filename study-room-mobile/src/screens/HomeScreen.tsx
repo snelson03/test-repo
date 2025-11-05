@@ -6,6 +6,8 @@ import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity, Animated, 
 import { useNavigation } from '@react-navigation/native';
 import colors from '@/constants/colors';
 import { Feather } from '@expo/vector-icons';
+import { useUser } from '@/context/UserContext';
+
 
 // Device dimensions
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -16,6 +18,7 @@ const MAX_SCREEN_WIDTH = 480;
 
 export default function HomeScreen() {
   const navigation = useNavigation();
+  const { name } = useUser(); // updates user's name for welcome message
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Animation for menu dropdown
@@ -73,7 +76,7 @@ export default function HomeScreen() {
 
         {/* Welcome message style setup */}
         <View style={styles.welcome}>
-          <Text style={styles.welcome}>Welcome Back, Ms773121!</Text>
+        <Text style={styles.welcome}>Welcome Back, {name}!</Text>
         </View>
 
 

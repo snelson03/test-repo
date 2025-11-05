@@ -5,12 +5,13 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { useFonts } from 'expo-font';
 import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
+import { UserProvider } from './src/context/UserContext';
 
 export default function App() {
   // Import fonts
   const [fontsLoaded] = useFonts({
     'BebasNeue-Regular': require('./assets/fonts/BebasNeue-Regular.ttf'),
-    'Poppins': require('./assets/fonts/Poppins-Light.ttf'),
+    'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
   });
 
   if (!fontsLoaded) {
@@ -23,9 +24,11 @@ export default function App() {
   }
 
   return (
+    <UserProvider>
     <NavigationContainer>
       <AppNavigator />
     </NavigationContainer>
+    </UserProvider>
   );
 }
 
