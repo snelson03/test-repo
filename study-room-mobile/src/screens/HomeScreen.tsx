@@ -125,18 +125,47 @@ export default function HomeScreen() {
             </View>
           ))}
 
-          <TouchableOpacity onPress={() => !menuOpen && navigation.navigate('Favorites' as never)}>
-            <View style={styles.roomCardContainer}>
-              <View style={styles.favoritesLeft}>
-                <Text style={styles.roomCardTextLeft}>MY FAVORITES</Text>
+        <TouchableOpacity
+          onPress={() => !menuOpen && navigation.navigate('Favorites' as never)}
+          activeOpacity={0.9}
+        >
+          <View style={[styles.favoritesCard]}>
+            {/* Header with title and star icon */}
+            <View style={styles.favoritesHeader}>
+              <Text style={styles.favoritesTitle}>MY FAVORITES</Text>
+              <Feather name="heart" size={22} color={colors.white} />
+            </View>
+
+            {/* Inner favorite room cards with example data */}
+            <View style={styles.favItem}>
+              <Text style={styles.favItemText}>STOCKER CENTER</Text>
+              <View style={styles.favRight}>
+                <View style={[styles.favstatusDot, { backgroundColor: colors.available }]} />
+                <Text style={styles.favNumber}>153</Text>
               </View>
-              <Feather name="heart" size={25} color={colors.white} style={styles.heartIcon} />
+            </View>
+
+            <View style={styles.favItem}>
+              <Text style={styles.favItemText}>ALDEN LIBRARY</Text>
+              <View style={styles.favRight}>
+                <View style={[styles.favstatusDot, { backgroundColor: colors.occupied }]} />
+                <Text style={styles.favNumber}>207</Text>
               </View>
-          </TouchableOpacity>
+            </View>
+
+            <View style={styles.favItem}>
+              <Text style={styles.favItemText}>ARC</Text>
+              <View style={styles.favRight}>
+                <View style={[styles.favstatusDot, { backgroundColor: colors.offline }]} />
+                <Text style={styles.favNumber}>212</Text>
+              </View>
+            </View>
+          </View>
+        </TouchableOpacity>
 
 
           <TouchableOpacity onPress={() => !menuOpen && navigation.navigate('Preferences' as never)}>
-            <View style={styles.roomCardContainer}>
+          <View style={styles.roomCardContainer}>
             <View style={styles.preferencesLeft}>
               <Text style={styles.roomCardTextLeft}>PREFERENCES</Text>
             </View>
@@ -206,9 +235,6 @@ const styles = StyleSheet.create({
       fontWeight: '500', color: colors.white, textShadowColor: 'rgba(0, 0, 0, 200)',
       textShadowOffset: { width: 2, height: 2 },
       textShadowRadius: 15, },
-  imageShadow: {
-    shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.6,
-        shadowRadius: 12, elevation: 8, borderRadius: 10,},
 
   // room card, spacing, text color, implemented
   cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40, },
@@ -223,7 +249,24 @@ const styles = StyleSheet.create({
   
   favoritesLeft: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1,},
   heartIcon: {marginTop: 2, marginRight: 12,},
-
+// favorites card implementation
+  favoritesCard: { backgroundColor: colors.marigold, padding: 20, borderRadius: 0, marginTop: 20, marginBottom: 25, 
+    // Shadow for iOS
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 6 },
+  shadowOpacity: 0.6,
+  shadowRadius: 12,
+  // Shadow for Android
+  elevation: 8, },
+  favoritesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, },
+  favoritesTitle: { fontSize: 27, fontFamily: 'BebasNeue-Regular', color: colors.white },
+  favItem: { backgroundColor: colors.primary, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 12, paddingHorizontal: 16, marginVertical: 2, },
+  favItemText: { color: colors.white, fontFamily: 'BebasNeue-Regular', fontSize: 20,},
+  favRight: { flexDirection: 'row', alignItems: 'center',gap: 7, },
+  favstatusDot: { width: 10, height: 10, borderRadius: 5, },
+  favNumber: { color: colors.white, fontSize: 16, },
+// preferences card
   preferencesLeft: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1,},
   prefIcon: {marginTop: 2, marginRight: 12,},
 
