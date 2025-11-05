@@ -1,6 +1,6 @@
 // Preferences Screen File
-// This file controls the Preferences page where users can manage notifications, account info, and groups.
-// It includes dropdown navigation, saving user name globally, and persistent storage using AsyncStorage.
+// Implements the Preferences page where users can manage notifications, account info, and groups.
+// includes dropdown navigation, saving user name globally, and persistent storage using AsyncStorage.
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, TextInput } from 'react-native';
@@ -204,20 +204,30 @@ export default function PreferencesScreen() {
             {['Notifications', 'Account', 'Groups'].map((cat) => (
               <TouchableOpacity
                 key={cat}
-                style={styles.dropdownItem}
+                style={[
+                  styles.dropdownItem,
+                  activeCategory === cat && styles.dropdownSelected, // highlight selected item
+                ]}
                 onPress={() => {
                   setActiveCategory(cat as any);
                   setDropdownOpen(false);
                 }}
               >
-                <Text style={styles.dropdownText}>{cat}</Text>
+                <Text
+                  style={[
+                    styles.dropdownText,
+                    activeCategory === cat && styles.dropdownTextSelected, // change selected text
+                  ]}
+                >
+                  {cat}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
         )}
       </View>
 
-      {/* Category content rendering */}
+      {/* Notification section*/}
       {activeCategory === 'Notifications' && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
@@ -230,7 +240,7 @@ export default function PreferencesScreen() {
             <View key={key} style={styles.optionRow}>
               <TouchableOpacity
                 style={[styles.checkbox, notificationTypes[key as NotificationTypeKey] && styles.checkboxChecked]}
-                onPress={() => toggle('types', key as NotificationTypeKey)}
+                onPress={() => toggle('types', key as NotificationTypeKey)} // allows user to check box to recieve notifications
               >
                 {notificationTypes[key as NotificationTypeKey] && <Ionicons name="checkmark" size={18} color={colors.primary} />}
               </TouchableOpacity>
@@ -248,7 +258,7 @@ export default function PreferencesScreen() {
             <View key={key} style={styles.optionRow}>
               <TouchableOpacity
                 style={[styles.checkbox, methods[key as MethodKey] && styles.checkboxChecked]}
-                onPress={() => toggle('methods', key as MethodKey)}
+                onPress={() => toggle('methods', key as MethodKey)} // allows user to check box for how they want to recieve notifications
               >
                 {methods[key as MethodKey] && <Ionicons name="checkmark" size={18} color={colors.primary} />}
               </TouchableOpacity>
@@ -261,7 +271,7 @@ export default function PreferencesScreen() {
             <View key={key} style={styles.optionRow}>
               <TouchableOpacity
                 style={[styles.checkbox, schedule[key as ScheduleKey] && styles.checkboxChecked]}
-                onPress={() => toggle('schedule', key as ScheduleKey)}
+                onPress={() => toggle('schedule', key as ScheduleKey)} // allows user to set a notification schedule
               >
                 {schedule[key as ScheduleKey] && <Ionicons name="checkmark" size={18} color={colors.primary} />}
               </TouchableOpacity>
@@ -283,7 +293,7 @@ export default function PreferencesScreen() {
                 value={account[key as keyof typeof account]}
                 onChangeText={(val) => {
                   handleAccountChange(key as keyof typeof account, val);
-                  if (key === 'name') setName(val);
+                  if (key === 'name') setName(val); // allows user to change name that will updat globally
                 }}
               />
             </View>
@@ -304,7 +314,7 @@ export default function PreferencesScreen() {
               placeholderTextColor={colors.gray400}
               style={styles.inputBox}
               value={newGroup}
-              onChangeText={setNewGroup}
+              onChangeText={setNewGroup} // allows user to add groups which will eventually give access to restricted group rooms
             />
             <TouchableOpacity style={styles.addButton} onPress={addGroup}>
               <Ionicons name="add-circle" size={28} color={colors.white} />
@@ -313,12 +323,13 @@ export default function PreferencesScreen() {
         </View>
       )}
 
-      {/* Modal for custom preferences */}
+      {/* Modal for custom preferences - makes edit button clickable and allow user to enter custom options 
+      (custom optioins do not currently do anything) */}
       <Modal transparent visible={modalVisible} animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Edit {modalType}</Text>
-            <TextInput
+            <Text style={styles.modalTitle}>Edit {modalType}</Text> 
+            <TextInput 
               style={styles.modalInput}
               placeholder="Enter custom preference..."
               placeholderTextColor={colors.gray400}
@@ -345,22 +356,32 @@ export default function PreferencesScreen() {
 
 // Styles section -implements layout of screen with all components applied
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white, paddingHorizontal: 16 },
+  // header and subheader
+  container: { flex: 1, backgroundColor: colors.gray100, paddingHorizontal: 16 },
   header: { flexDirection: 'row', alignItems: 'center', marginTop: 50 },
   backButton: { padding: 5 },
   title: { fontSize: 48, fontFamily: 'BebasNeue-Regular', color: colors.primary, marginLeft: 70 },
   subHeader: { marginTop: 12, marginBottom: 10 },
   dropdownToggle: { flexDirection: 'row', alignItems: 'center' },
   subHeaderText: { fontSize: 20, color: colors.primary, marginLeft: 6 },
-  dropdownMenu: { backgroundColor: colors.white, borderRadius: 6, marginTop: 8, padding: 6, elevation: 6 },
+  // drop down menu
+  dropdownMenu: { backgroundColor: colors.white, borderRadius: 4, marginTop: 8, padding: 6, elevation: 6, shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.2,
+  shadowRadius: 4, },
   dropdownItem: { padding: 8 },
   dropdownText: { fontSize: 16, color: colors.primary },
+  dropdownSelected: { backgroundColor: colors.primary, },
+  dropdownTextSelected: { color: colors.white, },
+  // section setup
   section: { backgroundColor: colors.primary, borderRadius: 4, paddingVertical: 20, paddingHorizontal: 20, marginTop: 10, marginBottom: 40 },
   sectionTitle: { fontSize: 24, fontFamily: 'BebasNeue-Regular', color: colors.white, marginBottom: 16 },
   categoryTitle: { fontSize: 18, fontFamily: 'BebasNeue-Regular', color: colors.white, marginTop: 10, marginBottom: 8 },
   optionRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  // checkboxes
   checkbox: { width: 24, height: 24, borderRadius: 4, backgroundColor: colors.gray300, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   checkboxChecked: { backgroundColor: colors.white },
+  // input text from user
   optionText: { color: colors.white, fontSize: 16, flex: 1 },
   editText: { color: colors.offWhite, fontSize: 14, textDecorationLine: 'underline' },
   inputRow: { marginBottom: 16 },

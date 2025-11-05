@@ -1,4 +1,4 @@
-// app/_layout.tsx
+// app/_layout.tsx - contains root layout
 import { Stack } from 'expo-router';
 import React from 'react';
 import { UserProvider } from '@/context/UserContext'; 

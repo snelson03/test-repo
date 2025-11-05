@@ -1,3 +1,4 @@
+// User context file - saves user name and any user data when it changes
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -22,7 +23,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         console.log(' Loaded name from storage:', savedName);
         if (savedName) setNameState(savedName);
       } catch (e) {
-        console.warn('❌Failed to load saved name:', e);
+        console.warn('Failed to load saved name:', e);
       }
     };
     loadName();
@@ -34,9 +35,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setNameState(newName);
     try {
       await AsyncStorage.setItem('user_name', newName);
-      console.log('✅ Name saved successfully!');
+      console.log('Name saved successfully!');
     } catch (e) {
-      console.warn('❌ Failed to save name:', e);
+      console.warn('Failed to save name:', e);
     }
   };
 
@@ -47,5 +48,5 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Custom hook to easily access the context in any component
+// hook to access the context in any component
 export const useUser = () => useContext(UserContext);
