@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.users import router as user_router
+from routes.auth import router as auth_router
+from db import create_tables
 
 app = FastAPI(
     title="Study Room Management API",
@@ -17,8 +19,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database tables on startup"""
+    create_tables()
+
+
 # Include routers
-app.include_router(user_router, prefix="/api/v1/users")
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
+app.include_router(user_router, prefix="/api/v1/users", tags=["users"])
 
 
 @app.get("/")
