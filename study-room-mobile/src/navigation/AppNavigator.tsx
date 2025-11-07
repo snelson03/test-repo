@@ -1,4 +1,4 @@
-// app navigation file
+// app navigation file 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
@@ -17,7 +17,7 @@ export type RootStackParamList = {
   Preferences: undefined;
 };
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator();
 
 // setting up navigation routes for pages
 export default function AppNavigator() {
