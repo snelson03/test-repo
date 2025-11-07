@@ -128,7 +128,7 @@ export default function FindARoomScreen() {
           data={rooms}
           numColumns={2}
           keyExtractor={(item) => item.id}
-          columnWrapperStyle={styles.row}
+          scrollEnabled={false}
           renderItem={({ item }) => (       // changes room color based on status
             <View style={[styles.roomBox, { backgroundColor: getColor(item.status) }]}> 
               <Text style={styles.roomText}>{item.id}</Text>
@@ -136,7 +136,12 @@ export default function FindARoomScreen() {
           )}
           contentContainerStyle={{
             alignItems: 'center',
-            paddingBottom: 32,
+            justifyContent: 'center',
+            paddingBottom: 1,
+            width: '100%',
+          }}
+          columnWrapperStyle={{
+            justifyContent: 'center', // centers each row
           }}
         />
       </View>
@@ -172,9 +177,11 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 102,
+    gap: 80,
     width: '90%',
     maxWidth: 400,
+    textAlign: 'center',
+    marginTop: 50,
   },
   title: { // title
     fontSize: 38,
@@ -228,7 +235,9 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 400,
     paddingVertical: 40,
-    paddingHorizontal: 40,
+    paddingBottom: -40,
+    paddingHorizontal: 0,
+    justifyContent: 'center',
   },
   row: {
     justifyContent: 'space-between',

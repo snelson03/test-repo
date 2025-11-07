@@ -7,13 +7,13 @@ import colors from '@/constants/colors';
 
 // static favorites list for now
 const favorites = [
-  { name: 'Stocker Center, 1F', status: 'available', number: 155 },
-  { name: 'Stocker Center, 2F', status: 'offline', number: 212 },
-  { name: 'Stocker Center, 3F', status: 'occupied', number: 315 },
-  { name: 'ARC, 1F', status: 'available', number: 103 },
-  { name: 'ARC, 2F', status: 'occupied', number: 207 },
-  { name: 'Alden Library, 1F', status: 'available', number: 121 },
-  { name: 'Alden Library, 2F', status: 'available', number: 157 },
+  { name: 'Stocker Center  155', status: 'available', tstatus: 'Available' },
+  { name: 'Stocker Center  212', status: 'offline',tstatus: 'Offline'},
+  { name: 'Stocker Center  315', status: 'occupied', tstatus: 'Occupied'},
+  { name: 'ARC  103', status: 'available', tstatus: 'Available'},
+  { name: 'ARC  207', status: 'occupied', tstatus: 'Occupied' },
+  { name: 'Alden  Library 121', status: 'available', tstatus: 'Available' },
+  { name: 'Alden  Library 157', status: 'available',tstatus: 'Available' },
 ];
 
 export default function FavoritesScreen() {
@@ -53,7 +53,7 @@ export default function FavoritesScreen() {
                   },
                 ]}
               />
-              <Text style={styles.numberText}>{item.number}</Text>
+              <Text style={styles.statusText}>{item.tstatus}</Text>
             </View>
           </View>
         ))}
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     borderRadius: 0,
     padding: 25,
     marginBottom: 7,
-    marginHorizontal: 40,
+    marginHorizontal: 10,
     justifyContent: 'space-between',
     alignItems: 'center',
   },
@@ -115,9 +115,10 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
   },
-  numberText: {
+  statusText: {
     color: colors.white,
     fontSize: 16,
     fontWeight: '400',
+    fontFamily: 'Poppins',
   },
 });

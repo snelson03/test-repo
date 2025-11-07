@@ -358,9 +358,9 @@ export default function PreferencesScreen() {
 const styles = StyleSheet.create({
   // header and subheader
   container: { flex: 1, backgroundColor: colors.gray100, paddingHorizontal: 16 },
-  header: { flexDirection: 'row', alignItems: 'center', marginTop: 50 },
+  header: { flexDirection: 'row', alignItems: 'center', marginTop: 50, },
   backButton: { padding: 5 },
-  title: { fontSize: 48, fontFamily: 'BebasNeue-Regular', color: colors.primary, marginLeft: 70 },
+  title: { fontSize: 48, fontFamily: 'BebasNeue-Regular', color: colors.primary, textAlign: 'center', marginLeft: 50},
   subHeader: { marginTop: 12, marginBottom: 10 },
   dropdownToggle: { flexDirection: 'row', alignItems: 'center' },
   subHeaderText: { fontSize: 20, color: colors.primary, marginLeft: 6 },
@@ -375,14 +375,14 @@ const styles = StyleSheet.create({
   dropdownTextSelected: { color: colors.white, },
   // section setup
   section: { backgroundColor: colors.primary, borderRadius: 4, paddingVertical: 20, paddingHorizontal: 20, marginTop: 10, marginBottom: 40 },
-  sectionTitle: { fontSize: 24, fontFamily: 'BebasNeue-Regular', color: colors.white, marginBottom: 16 },
-  categoryTitle: { fontSize: 18, fontFamily: 'BebasNeue-Regular', color: colors.white, marginTop: 10, marginBottom: 8 },
-  optionRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  sectionTitle: { fontSize: 28, fontFamily: 'BebasNeue-Regular', color: colors.white, marginBottom: 16 },
+  categoryTitle: { fontSize: 24, fontFamily: 'BebasNeue-Regular', color: colors.white, marginTop: 10, marginBottom: 8 },
+  optionRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
   // checkboxes
   checkbox: { width: 24, height: 24, borderRadius: 4, backgroundColor: colors.gray300, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
   checkboxChecked: { backgroundColor: colors.white },
   // input text from user
-  optionText: { color: colors.white, fontSize: 16, flex: 1 },
+  optionText: { color: colors.white, fontSize: 16, flex: 1, },
   editText: { color: colors.offWhite, fontSize: 14, textDecorationLine: 'underline' },
   inputRow: { marginBottom: 16 },
   inputLabel: { color: colors.white, fontSize: 16, marginBottom: 4, fontFamily: 'BebasNeue-Regular' },

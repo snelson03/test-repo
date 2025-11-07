@@ -10,8 +10,8 @@ import { UserProvider } from './src/context/UserContext';
 export default function App() {
   // Import fonts
   const [fontsLoaded] = useFonts({
-    'BebasNeue-Regular': require('./assets/fonts/BebasNeue-Regular.ttf'),
-    'Poppins-Regular': require('./assets/fonts/Poppins-Regular.ttf'),
+    'BebasNeue-Regular': require('@/assets/fonts/BebasNeue-Regular.ttf'),
+    'Poppins-Regular': require('@/assets/fonts/Poppins-Regular.ttf'),
   });
 
   if (!fontsLoaded) {

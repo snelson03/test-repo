@@ -7,6 +7,9 @@ import { useNavigation } from '@react-navigation/native';
 import colors from '@/constants/colors';
 import { Feather } from '@expo/vector-icons';
 import { useUser } from '@/context/UserContext';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+
 
 
 // Device dimensions
@@ -74,6 +77,7 @@ export default function HomeScreen() {
           <Image source={require('@/assets/images/bf_logo.png')} style={styles.logo} />
         </View>
 
+
         {/* Welcome message style setup */}
         <View style={styles.welcome}>
         <Text style={styles.welcome}>Welcome Back, {name}!</Text>
@@ -102,14 +106,25 @@ export default function HomeScreen() {
 
         {/* Room Cards + Favorites style setup - added color coded dots next to room headers*/}
         <View style={styles.cardsContainer}>
-          {rooms.map((room) => (
-            <View key={room.name} style={styles.roomCardContainer}>
-              <Text style={styles.roomCardTextLeft}>{room.name}</Text>
+        {/* Available Now Section */}
+        <View style={styles.cardShadow}>
+        <LinearGradient
+            colors={['#F4F4F4', '#A1B5A8']} // added gradient '#F4F4F4'
+            style={styles.availableNowCard}
+          >
 
-              <View style={styles.rightSection}>
+          <View style={styles.availableHeader}>
+            <Text style={styles.availableTitle}>AVAILABLE NOW</Text>
+            <Ionicons name="location-sharp" size={22} color={colors.primary} />
+          </View>
+
+          {rooms.map((room) => (
+            <View key={room.name} style={styles.availableItem}>
+              <Text style={styles.availableItemText}>{room.name}</Text>
+              <View style={styles.availableRight}>
                 <View
                   style={[
-                    styles.statusDot,
+                    styles.availableStatusDot,
                     {
                       backgroundColor:
                         room.status === 'available'
@@ -120,47 +135,55 @@ export default function HomeScreen() {
                     },
                   ]}
                 />
-                <Text style={styles.roomCardTextRight}>{room.subtitle}</Text>
+                <Text style={styles.availableSubtitle}>{room.subtitle}</Text>
               </View>
             </View>
           ))}
+        </LinearGradient>
+        </View>
+  
 
         <TouchableOpacity
           onPress={() => !menuOpen && navigation.navigate('Favorites' as never)}
           activeOpacity={0.9}
         >
-          <View style={[styles.favoritesCard]}>
+          <View style={styles.cardShadow}> 
+          <LinearGradient
+                colors={['#F4F4F4', '#A1B5A8']}  // favorites caard gradient
+                style={styles.favoritesCard}
+              >
             {/* Header with title and star icon */}
             <View style={styles.favoritesHeader}>
               <Text style={styles.favoritesTitle}>MY FAVORITES</Text>
-              <Feather name="heart" size={22} color={colors.white} />
+              <Feather name="heart" size={22} color={colors.primary} />
             </View>
 
             {/* Inner favorite room cards with example data */}
             <View style={styles.favItem}>
-              <Text style={styles.favItemText}>STOCKER CENTER</Text>
+              <Text style={styles.favItemText}>STOCKER CENTER  155</Text>
               <View style={styles.favRight}>
                 <View style={[styles.favstatusDot, { backgroundColor: colors.available }]} />
-                <Text style={styles.favNumber}>153</Text>
+                <Text style={styles.favNumber}>Available</Text>
               </View>
             </View>
 
             <View style={styles.favItem}>
-              <Text style={styles.favItemText}>ALDEN LIBRARY</Text>
+              <Text style={styles.favItemText}>ALDEN LIBRARY  121</Text>
               <View style={styles.favRight}>
                 <View style={[styles.favstatusDot, { backgroundColor: colors.occupied }]} />
-                <Text style={styles.favNumber}>207</Text>
+                <Text style={styles.favNumber}>Occupied</Text>
               </View>
             </View>
 
             <View style={styles.favItem}>
-              <Text style={styles.favItemText}>ARC</Text>
+              <Text style={styles.favItemText}>ARC 103</Text>
               <View style={styles.favRight}>
                 <View style={[styles.favstatusDot, { backgroundColor: colors.offline }]} />
-                <Text style={styles.favNumber}>212</Text>
+                <Text style={styles.favNumber}>Offline</Text>
               </View>
             </View>
-          </View>
+            </LinearGradient>
+            </View>
         </TouchableOpacity>
 
 
@@ -211,12 +234,12 @@ const styles = StyleSheet.create({
   // background color
   container: { flex: 1, backgroundColor: colors.white },
   // header color and logo alignment
-  header: { flexDirection: 'row', backgroundColor: colors.primary, padding: 20,
+  header: { flexDirection: 'row', backgroundColor: colors.primary, padding: 30, paddingTop: 60,
       alignItems: 'center', justifyContent: 'flex-start', width: '100%' },
   logo: {width: 300, height: 80, marginRight: 12 },
   // Welcome message
   welcome: { paddingHorizontal: 0, bottom: 0, top: 15, left: 12, fontSize: 30,// fontFamily: 'BebasNeue-Regular',
-  fontWeight: '500', fontFamily: 'BebasNeue-Regular', color: colors.primary, position: 'relative'},
+  fontWeight: '500', fontFamily: 'BebasNeue-Regular', color: colors.primary, position: 'relative',},
 
   // Find a Room banner image, spacing, text color, and shadows implemented
   bannerContainer: { marginVertical: 12, paddingHorizontal: 20, top: 40, bottom: 15, position: 'relative' },
@@ -226,7 +249,7 @@ const styles = StyleSheet.create({
       textShadowOffset: { width: 2, height: 2 }, textShadowRadius: 15, },
   imageShadow: {
       shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.6,
-      shadowRadius: 12, elevation: 8, borderRadius: 10,},
+      shadowRadius: 6, elevation: 8, borderRadius: 10,},
 
   // Campus Map banner image, spacing, text color, and shadows implemented
   mapContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40, position: 'relative' },
@@ -234,23 +257,40 @@ const styles = StyleSheet.create({
   mapText: { position: 'absolute', paddingHorizontal: 20, bottom: 12, left: 12, fontSize: 40, fontFamily: 'BebasNeue-Regular',
       fontWeight: '500', color: colors.white, textShadowColor: 'rgba(0, 0, 0, 200)',
       textShadowOffset: { width: 2, height: 2 },
-      textShadowRadius: 15, },
+      textShadowRadius: 10, },
 
   // room card, spacing, text color, implemented
   cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40, },
   roomCardContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, 
         backgroundColor: colors.primary, borderRadius: 0, marginBottom: 7, shadowColor: '#000', 
-        shadowOpacity: 0.1, shadowRadius: 4, elevation: 2 },
+        shadowOpacity: 0.8, shadowRadius: 6, elevation: 2, shadowOffset: { width: 0, height: 5 },},
   roomCardTextLeft: { fontSize: 27, fontFamily: 'BebasNeue-Regular', color: colors.white },
   roomCardTextRight: { fontSize: 14, color: colors.white },
 
-  statusDot: { width: 10, height: 10, borderRadius: 5, marginHorizontal: 8 },
+  // availaable now section implemented
+  availableNowCard: { borderRadius: 0, padding: 20,
+    marginBottom: 0, shadowColor: '#000', shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.6, shadowRadius: 12, elevation: 5 },
+  
+  availableHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  availableTitle: { color: colors.primary, fontFamily: 'BebasNeue-Regular', fontSize: 27, letterSpacing: 0.5, },
+  
+  availableItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    backgroundColor: colors.primary, borderRadius: 0, padding: 18, marginBottom: 6 },
+  
+  availableItemText: { color: colors.white, fontFamily: 'BebasNeue-Regular', fontSize: 20 },
+  availableRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  availableStatusDot: { width: 11, height: 11, borderRadius: 5.5 },
+  availableSubtitle: { color: colors.white, fontSize: 14 },
+  
+
+  statusDot: { width: 8, height: 9, borderRadius: 4, marginHorizontal: 8 },
   rightSection: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   
   favoritesLeft: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1,},
   heartIcon: {marginTop: 2, marginRight: 12,},
 // favorites card implementation
-  favoritesCard: { backgroundColor: colors.marigold, padding: 20, borderRadius: 0, marginTop: 20, marginBottom: 25, 
+  favoritesCard: { backgroundColor: colors.marigold, padding: 20, borderRadius: 0, marginTop: 0, marginBottom: 0, 
     // Shadow for iOS
   shadowColor: '#000',
   shadowOffset: { width: 0, height: 6 },
@@ -259,16 +299,27 @@ const styles = StyleSheet.create({
   // Shadow for Android
   elevation: 8, },
   favoritesHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, },
-  favoritesTitle: { fontSize: 27, fontFamily: 'BebasNeue-Regular', color: colors.white },
+  favoritesTitle: { fontSize: 27, fontFamily: 'BebasNeue-Regular', color: colors.primary,},
   favItem: { backgroundColor: colors.primary, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 12, paddingHorizontal: 16, marginVertical: 2, },
+    paddingVertical: 18, paddingHorizontal: 18, marginVertical: 3, },
   favItemText: { color: colors.white, fontFamily: 'BebasNeue-Regular', fontSize: 20,},
-  favRight: { flexDirection: 'row', alignItems: 'center',gap: 7, },
-  favstatusDot: { width: 10, height: 10, borderRadius: 5, },
-  favNumber: { color: colors.white, fontSize: 16, },
+  favRight: { flexDirection: 'row', alignItems: 'center',gap: 12, },
+  favstatusDot: { width: 11, height: 11, borderRadius: 5.5, },
+  favNumber: { color: colors.white, fontSize: 14, },
 // preferences card
-  preferencesLeft: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1,},
+  preferencesLeft: { marginTop:0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1,},
   prefIcon: {marginTop: 2, marginRight: 12,},
+
+  cardShadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.8,
+    shadowRadius: 5,
+    elevation: 8, // Android shadow
+    borderRadius: 0,
+    marginBottom: 32,
+  },
+  
 
   // Dropdown menu container and button
   menuButtonContainer: { position: 'absolute', top: 50, right: 20 },
