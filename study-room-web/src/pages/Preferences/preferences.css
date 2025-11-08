@@ -5,8 +5,6 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    width: 100%;
-    height: 100%;
 }
 
 .preferences-container {
@@ -33,54 +31,6 @@ html, body {
     margin-top: 1.1rem;
     margin-left: -0.2rem;
 }
-
-/* .preferences-selector {
-    position: relative;
-    margin-left: -1rem;
-} */
-
-/* .preferences-btn {
-    font-family: 'Inter', sans-serif;
-    background: transparent;
-    border: none;
-    color: #024230;
-    font-size: 1.5rem;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1rem;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-}
-
-.preferences-ctgry-btn:hover {
-    background: white;
-    transform: translateX(3px);
-}
-
-.preferences-ctgry-btn:focus {
-    outline: none;
-    box-shadow: none;
-}
-
-.dropdown-menu2 {
-    position: absolute;
-    top: 105%;
-    left: 0;
-    background: white;
-    border: 1px solid #ccc;
-    width: 230px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    overflow: hidden;
-    margin-left: 16px;
-    margin-top: -3px;
-}
-
-.dropdown-item2:hover {
-    background-color: #e6f4ea;
-} */
 
 .preferences-title {
     font-size: 2rem;

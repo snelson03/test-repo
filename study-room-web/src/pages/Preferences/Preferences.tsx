@@ -17,41 +17,52 @@ const Preferences: React.FC = () => {
 
                     <div className="option-section">
                         <h3 className="option-subheading">Notification Types</h3>
-                        <label className="option-item">
-                            <input type="checkbox" /> All Available Rooms
-                        </label>
-                        <label className="option-item">
-                            <input type="checkbox" /> Favorites Only{" "}
+
+                        <div className="option-item">
+                            <input type="checkbox" /> 
+                            <span>All Available Rooms</span>
+                        </div>
+                        <div className="option-item">
+                            <input type="checkbox" />
+                            <span>Favorites Only{" "}</span>
                             <span className="option-edit">Edit</span>
-                        </label>
-                        <label className="option-item">
-                            <input type="checkbox" /> Building Specific{" "}
+                        </div>
+                        <div className="option-item">
+                            <input type="checkbox" />
+                            <span>Building Specific{" "}</span>
                             <span className="option-edit">Edit</span>
-                        </label>
+                        </div>
                     </div>
 
                     <div className="option-section">
                         <h3 className="option-subheading">Notification Methods</h3>
-                        <label className="option-item">
-                            <input type="checkbox" /> Email
-                        </label>
-                        <label className="option-item">
-                            <input type="checkbox" /> Sms
-                        </label>
+
+                        <div className="option-item">
+                            <input type="checkbox" />
+                            <span>Email</span>
+                        </div>
+                        <div className="option-item">
+                            <input type="checkbox" />
+                            <span>Sms</span>
+                        </div>
                     </div>
 
                     <div className="option-section">
                         <h3 className="option-subheading">Notification Scheduling</h3>
-                        <label className="option-item">
-                            <input type="checkbox" /> 9:00AM - 9:00PM
-                        </label>
-                        <label className="option-item">
-                            <input type="checkbox" /> Always On
-                        </label>
-                        <label className="option-item">
-                            <input type="checkbox" /> Custom{" "}
+
+                        <div className="option-item">
+                            <input type="checkbox" />
+                            <span>9:00AM - 9:00PM</span>
+                        </div>
+                        <div className="option-item">
+                            <input type="checkbox" />
+                            <span>Always On</span>
+                        </div>
+                        <div className="option-item">
+                            <input type="checkbox" />
+                            <span>Custom{" "}</span>
                             <span className="option-edit">Edit</span>
-                        </label>
+                        </div>
                     </div>
                 </div>
         </main>
