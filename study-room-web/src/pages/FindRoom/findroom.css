@@ -96,16 +96,16 @@ html, body {
 }
 
 .dropdown-item {
-    background: white;
+    background: #024230;
     border: 1px solid #024230;
-    color: #024230;
+    color: white;
     padding: 0.35rem 0.6rem;
     cursor: pointer;
     font-size: 0.95rem;
 }
 
 .dropdown-item:hover {
-    background-color: #e6f4ea;
+    background-color: #00694E;
 }
 
 .dropdown-item:active {

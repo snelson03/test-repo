@@ -57,7 +57,7 @@ const FindRoom: React.FC = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const floorsForSelected = Object.keys(buildingData[selectedBuilding]);
+    // const floorsForSelected = Object.keys(buildingData[selectedBuilding]);
     const roomsForSelected = buildingData[selectedBuilding][selectedFloor] ?? [];
 
 
