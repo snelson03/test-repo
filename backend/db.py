@@ -36,6 +36,8 @@ def create_tables():
     """
     # Import all model classes to register them with Base
     from models.users import User  # noqa: F401
+    from models.buildings import Building  # noqa: F401
+    from models.rooms import Room  # noqa: F401
 
     # Create all tables
     Base.metadata.create_all(bind=engine)
