@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes.users import router as user_router
 from routes.auth import router as auth_router
+from routes.buildings import router as building_router
+from routes.rooms import router as room_router
 from db import create_tables
 
 app = FastAPI(
@@ -29,6 +31,8 @@ async def startup_event():
 # Include routers
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(user_router, prefix="/api/v1/users", tags=["users"])
+app.include_router(building_router, prefix="/api/v1/buildings", tags=["buildings"])
+app.include_router(room_router, prefix="/api/v1/rooms", tags=["rooms"])
 
 
 @app.get("/")
