@@ -4,7 +4,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import colors from '@/constants/colors';
+import colors from 'src/constants/colors';
 
 // Get screen dimensions for responsive layout
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: 80,
     paddingHorizontal: 20,
     gap: 20,
   },
