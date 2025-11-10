@@ -1,36 +1,31 @@
-/* app/_layout.tsx -- NO LONGER USED
+// app/_layout.tsx
 import React, { useEffect } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
-import * as SplashScreen from 'expo-splash-screen';
+import { NavigationContainer } from '@react-navigation/native';
+import AppNavigator from '@/navigation/AppNavigator';
 import { UserProvider } from '@/context/UserContext';
-import AppNavigator from '@/navigation/AppNavigator'; 
 
-// Prevent the splash screen from auto-hiding before fonts are loaded
+// Prevent splash screen from auto-hiding before fonts are loaded
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  // Load custom fonts
   const [fontsLoaded] = useFonts({
     'BebasNeue-Regular': require('@/assets/fonts/BebasNeue-Regular.ttf'),
     'Poppins-Regular': require('@/assets/fonts/Poppins-Regular.ttf'),
   });
 
-  // Once fonts are ready, hide splash
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
 
-  // Don’t render UI until fonts finish loading
-  if (!fontsLoaded) {
-    return null;
-  }
+  if (!fontsLoaded) return null;
 
   return (
     <UserProvider>
-      {/* Stack automatically maps all route files in /app/ }
       <Stack
         screenOptions={{
           headerShown: false,
@@ -40,5 +35,3 @@ export default function RootLayout() {
     </UserProvider>
   );
 }
-
-*/

@@ -65,8 +65,8 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   container: { // background container
     flex: 1,
-    backgroundColor: colors.white,
-    paddingTop: 50,
+    backgroundColor: colors.gray100,
+    paddingTop: 80,
     paddingHorizontal: 16,
   },
   header: { // header container
@@ -118,7 +118,5 @@ const styles = StyleSheet.create({
   statusText: {
     color: colors.white,
     fontSize: 16,
-    fontWeight: '400',
-    fontFamily: 'Poppins',
   },
 });

@@ -1,9 +1,10 @@
-// tsconfig file
-// sets up paths for filenames and compilation
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "module": "esnext",
+    "target": "esnext",
+    "jsx": "react-native",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -14,7 +15,7 @@
       "@/*": ["src/*"],
       "@app/*": ["app/*"]
     },
-    "types": []     
+    "types": []
   },
   "include": [
     "app/**/*",
@@ -23,3 +24,4 @@
     "expo-env.d.ts"
   ]
 }
+
