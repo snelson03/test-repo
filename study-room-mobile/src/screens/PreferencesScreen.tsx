@@ -10,7 +10,15 @@ import { useNavigation } from '@react-navigation/native';
 import colors from '@/constants/colors';
 import { useUser } from '@/context/UserContext';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '@/navigation/AppNavigator'; // adjust path if needed
+import { RootStackParamList } from '@/navigation/AppNavigator'; 
+import { useFavorites } from '@/context/FavoritesContext';
+
+// describes what each favorite looks like
+interface FavoriteItem {
+  name: string;
+  status?: string;
+  tstatus?: string;
+}
 
 export default function PreferencesScreen() {
   // Navigation setup
@@ -67,9 +75,11 @@ const navigation = useNavigation<PreferencesNavProp>();
   const [modalType, setModalType] = useState('');
   const [tempText, setTempText] = useState('');
 
-  // favorites list (fake data)
-  const [favorites, setFavorites] = useState(['Stocker Center 155', 'ARC 103', 'Alden Library 121']);
-  const [selectedFavorites, setSelectedFavorites] = useState(['Stocker Center 155']);
+  // get real favorites data from shared context
+  const { favorites } = useFavorites() as { favorites: FavoriteItem[] };
+  const [selectedFavorites, setSelectedFavorites] = useState<FavoriteItem[]>([]);
+  
+
 
   // toggle function setup
   type NotificationTypeKey = keyof typeof notificationTypes;
@@ -187,7 +197,6 @@ const navigation = useNavigation<PreferencesNavProp>();
     savePreferences();
   }, [notificationTypes, methods, schedule, account, groups, customInputs, selectedFavorites]);
 
-  // Screen Layout - controls what appears on the screen visually
   // Screen Layout - controls what appears on the screen visually
 return (
   <View style={styles.container}>
@@ -366,32 +375,32 @@ return (
             <>
               <Text style={styles.modalTitle}>My Favorites</Text>
               <View style={styles.greenBox}>
-                {favorites.map((fav) => (
-                  <TouchableOpacity
-                    key={fav}
-                    style={styles.optionRow}
-                    onPress={() => {
-                      const exists = selectedFavorites.includes(fav);
-                      setSelectedFavorites(
-                        exists
-                          ? selectedFavorites.filter((f) => f !== fav)
-                          : [...selectedFavorites, fav]
-                      );
-                    }}
-                  >
-                    <View
-                      style={[
-                        styles.checkbox,
-                        selectedFavorites.includes(fav) && { backgroundColor: colors.white },
-                      ]}
-                    >
-                      {selectedFavorites.includes(fav) && (
-                        <Ionicons name="checkmark" size={18} color={colors.primary} />
-                      )}
-                    </View>
-                    <Text style={[styles.optionText, { color: colors.white }]}>{fav}</Text>
-                  </TouchableOpacity>
-                ))}
+              {favorites.map((fav) => (
+              <TouchableOpacity
+                key={fav.name} // 
+                style={styles.optionRow}
+                onPress={() => {
+                  const exists = selectedFavorites.some((f) => f.name === fav.name);
+                  setSelectedFavorites(
+                    exists
+                      ? selectedFavorites.filter((f) => f.name !== fav.name)
+                      : [...selectedFavorites, fav]
+                  );
+                }}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    selectedFavorites.some((f) => f.name === fav.name) && { backgroundColor: colors.white },
+                  ]}
+                >
+                  {selectedFavorites.some((f) => f.name === fav.name) && (
+                    <Ionicons name="checkmark" size={18} color={colors.primary} />
+                  )}
+                </View>
+                <Text style={[styles.optionText, { color: colors.white }]}>{fav.name}</Text>
+              </TouchableOpacity>
+            ))}
               </View>
               <TouchableOpacity
                 style={[styles.modalButton, { backgroundColor: colors.primary, marginTop: 20 }]}

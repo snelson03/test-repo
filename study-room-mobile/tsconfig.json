@@ -2,8 +2,8 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "module": "esnext",
     "target": "esnext",
+    "module": "esnext",
     "jsx": "react-native",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
@@ -14,8 +14,7 @@
     "paths": {
       "@/*": ["src/*"],
       "@app/*": ["app/*"]
-    },
-    "types": []
+    }
   },
   "include": [
     "app/**/*",
@@ -24,4 +23,3 @@
     "expo-env.d.ts"
   ]
 }
-

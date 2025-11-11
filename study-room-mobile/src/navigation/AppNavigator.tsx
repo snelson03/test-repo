@@ -7,6 +7,7 @@ import FindRoomScreen from '@/screens/FindRoomScreen';
 import CampusMapScreen from '@/screens/CampusMapScreen';
 import FavoritesScreen from '@/screens/FavoritesScreen';
 import PreferencesScreen from '@/screens/PreferencesScreen';
+import RoomDetailsScreen from '@/screens/RoomDetailsScreen';
 
 // setting up app pages
 export type RootStackParamList = {
@@ -15,6 +16,11 @@ export type RootStackParamList = {
   CampusMap: undefined;
   Favorites: undefined;
   Preferences: undefined;
+  RoomDetails: { 
+    building: 'Stocker Center' | 'ARC' | 'Alden Library';
+    roomId: string;
+    status: 'available' | 'occupied' | 'offline';
+  };
 };
 
 const Stack = createNativeStackNavigator();
@@ -31,23 +37,29 @@ export default function AppNavigator() {
       <Stack.Screen 
         name="FindRoom" 
         component={FindRoomScreen} 
-        options={{ title: 'Find a Room' }} 
+        options={{ headerShown: false  }} 
       />
       <Stack.Screen 
         name="CampusMap" 
         component={CampusMapScreen} 
-        options={{ title: 'Campus Map' }} 
+        options={{ headerShown: false  }} 
       />
       <Stack.Screen 
         name="Favorites" 
         component={FavoritesScreen} 
-        options={{ title: 'Favorites' }} 
+        options={{ headerShown: false  }} 
       />
       <Stack.Screen 
         name="Preferences" 
         component={PreferencesScreen} 
-        options={{ title: 'Preferences' }} 
+        options={{ headerShown: false  }} 
       />
+      <Stack.Screen
+        name="RoomDetails"
+        component={RoomDetailsScreen}
+        options={{ headerShown: false }}
+      />
+
     </Stack.Navigator>
   );
 }
