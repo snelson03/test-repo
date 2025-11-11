@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   roomBox: {
     flex: 1,
     aspectRatio: 1,
-    minWidth: 110,
+    minWidth: 140,
     borderRadius: 4,
     margin: 12,
     justifyContent: 'center',

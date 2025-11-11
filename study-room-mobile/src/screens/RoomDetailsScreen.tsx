@@ -26,30 +26,38 @@ export default function RoomDetailsScreen() {
   const route = useRoute() as unknown as RoomDetailsScreenRouteProp;
   const { building, roomId, status } = route.params;
 
+  // helper: determine floor number based on room ID’s first digit
+  const getFloorFromRoom = (id: string): string => {
+    const floorNum = parseInt(id.charAt(0));
+    if (isNaN(floorNum)) return 'Unknown Floor';
+    if (floorNum === 1) return '1st Floor';
+    if (floorNum === 2) return '2nd Floor';
+    if (floorNum === 3) return '3rd Floor';
+    return `${floorNum}th Floor`;
+  };
+
   // Building info record 
   const BuildingInfo: Record<
     'Stocker Center' | 'ARC' | 'Alden Library',
-    { address: string; floor: string; restrictions: string }
+    { address: string; restrictions: string }
   > = {
     'Stocker Center': {
       address: '28 West Green Dr, Athens, OH 45701',
-      floor: '1st Floor',
       restrictions: 'Computer Science Students',
     },
     ARC: {
       address: '20 South Green Dr, Athens, OH 45701',
-      floor: '2nd Floor',
       restrictions: 'Open to All Students',
     },
     'Alden Library': {
       address: '30 Park Place, Athens, OH 45701',
-      floor: '3rd Floor',
       restrictions: 'Open to All Students',
     },
   };
 
   // pull data for selected building
   const info = BuildingInfo[building as keyof typeof BuildingInfo];
+  const floor = getFloorFromRoom(roomId);
 
   // color for room status
   const getColor = (stat: string) => {
@@ -88,7 +96,7 @@ export default function RoomDetailsScreen() {
       {/* Location box */}
       <View style={styles.infoBox}>
         <Text style={styles.sectionTitle}>LOCATION</Text>
-        <Text style={styles.boldText}>{building}, {info.floor}</Text>
+        <Text style={styles.boldText}>{building}, {floor}</Text>
         <Text style={styles.subText}>{info.address}</Text>
       </View>
 
@@ -120,46 +128,45 @@ export default function RoomDetailsScreen() {
       </View>
 
       {/* View on Map Section */}
-<TouchableOpacity
-  style={[
-    styles.sectionBox,
-    {
-      backgroundColor: colors.primary,
-      marginTop: 60,
-      paddingVertical: 15,
-      width: '85%',
-      alignSelf: 'center',
-      borderRadius: 6,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 3,
-      elevation: 3,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between', 
-      paddingHorizontal: 20,
-    },
-  ]}
-  onPress={() => navigation.navigate('CampusMap')}
->
-  {/* Invisible spacer on left to balance icon */}
-  <View style={{ width: 24 }} />
+      <TouchableOpacity
+        style={[
+          styles.sectionBox,
+          {
+            backgroundColor: colors.primary,
+            marginTop: 60,
+            paddingVertical: 15,
+            width: '85%',
+            alignSelf: 'center',
+            borderRadius: 6,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 3,
+            elevation: 3,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between', 
+            paddingHorizontal: 20,
+          },
+        ]}
+        onPress={() => navigation.navigate('CampusMap')}
+      >
+        {/* Invisible spacer on left to balance icon */}
+        <View style={{ width: 24 }} />
 
-  {/* Centered text */}
-  <Text style={[styles.sectionTitle, { color: colors.white, textAlign: 'center',  transform: [{ translateY: 6 }]  }]}>
-    VIEW ON MAP
-  </Text>
+        {/* Centered text */}
+        <Text style={[styles.sectionTitle, { color: colors.white, textAlign: 'center', transform: [{ translateY: 6 }] }]}>
+          VIEW ON MAP
+        </Text>
 
-  {/* Icon on right */}
-  <Ionicons name="location-sharp" size={24} color={colors.white} />
-</TouchableOpacity>
-
+        {/* Icon on right */}
+        <Ionicons name="location-sharp" size={24} color={colors.white} />
+      </TouchableOpacity>
     </View>
   );
 }
 
-// Style section - implements stylesfor each section
+// Style section - implements styles for each section
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.gray100, paddingHorizontal: 20, paddingTop: 60 },
   header: {
@@ -208,16 +215,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     marginBottom: 18,
   },
-  infoBoxRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#D9D9D9',
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    borderRadius: 2,
-    marginBottom: 18,
-  },
   sectionTitle: {
     fontFamily: 'BebasNeue-Regular',
     fontSize: 28,
@@ -234,7 +231,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 25,
   },
-
   sectionBox: {
     paddingVertical: 20,
     paddingHorizontal: 16,
@@ -248,18 +244,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 4,
   },
-  mapBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    color: colors.gray200,
-  },
-
   availabilityTitle: {
     fontSize: 28,
     fontFamily: 'BebasNeue-Regular',
     textAlign: 'center',
   },
-  
 });
