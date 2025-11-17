@@ -95,3 +95,27 @@ async def require_admin(
             detail="Not enough permissions. Admin access required.",
         )
     return current_user
+
+
+async def require_faculty(
+    current_user: UserModel = Depends(get_current_active_user),
+) -> UserModel:
+    """Require that the current user is a faculty member"""
+    if not current_user.is_faculty:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions. Faculty access required.",
+        )
+    return current_user
+
+
+async def require_faculty_or_admin(
+    current_user: UserModel = Depends(get_current_active_user),
+) -> UserModel:
+    """Require that the current user is either a faculty member or an admin"""
+    if not (current_user.is_faculty or current_user.is_admin):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions. Faculty or Admin access required.",
+        )
+    return current_user

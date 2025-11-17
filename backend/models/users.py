@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
@@ -16,7 +17,11 @@ class User(Base):
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
+    is_faculty = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationship to room blocks
+    room_blocks = relationship("RoomBlock", back_populates="faculty")
 
 
 # Pydantic Models for API
@@ -38,6 +43,7 @@ class UserResponse(UserBase):
     id: int
     is_active: bool
     is_admin: bool
+    is_faculty: bool
     created_at: Optional[datetime] = None
 
     class Config:
@@ -50,6 +56,7 @@ class UserUpdate(BaseModel):
     password: Optional[str] = None
     is_active: Optional[bool] = None
     is_admin: Optional[bool] = None
+    is_faculty: Optional[bool] = None
 
 
 class Token(BaseModel):
