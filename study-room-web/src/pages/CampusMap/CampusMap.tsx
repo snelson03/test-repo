@@ -1,7 +1,8 @@
 import React from 'react';
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 import Sidebar from "../../components/Sidebar/sidebar";
 import './campusmap.css';
-import MapPlaceholder from "../../assets/map-placeholder.png";
+import Map from "../../assets/map.jpeg";
 import Arc from "../../assets/arc.png";
 import Stocker from "../../assets/stocker.png";
 import Alden from "../../assets/alden.png";
@@ -16,7 +17,21 @@ const CampusMap: React.FC = () => {
         <section className="map-section">
             <div className="map-with-key">
                 <div className="map">
-                  <img src={MapPlaceholder} alt="Campus Map" />
+                    <TransformWrapper
+                        initialScale={1.0}
+                        minScale={1}
+                        maxScale={6}
+                        wheel={{ step: 0.2 }}
+                        pinch={{ step: 0.5 }}
+
+                        limitToBounds={true}
+                        centerOnInit={true}
+                        alignmentAnimation={{ sizeX: 1, sizeY: 1 }}
+                    >
+                        <TransformComponent>
+                            <img src={Map} alt="Campus Map" />
+                        </TransformComponent>
+                    </TransformWrapper>
                 </div>
 
                 <div className="building-key-container">
