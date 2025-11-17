@@ -10,12 +10,20 @@ import { useNavigation } from '@react-navigation/native';
 import colors from '@/constants/colors';
 import { useUser } from '@/context/UserContext';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '@/navigation/AppNavigator'; // adjust path if needed
+import { RootStackParamList } from '@/navigation/AppNavigator'; 
+import { useFavorites } from '@/context/FavoritesContext';
+
+// describes what each favorite looks like
+interface FavoriteItem {
+  name: string;
+  status?: string;
+  tstatus?: string;
+}
 
 export default function PreferencesScreen() {
   // Navigation setup
   type PreferencesNavProp = NativeStackNavigationProp<RootStackParamList, 'Preferences'>; 
-const navigation = useNavigation<PreferencesNavProp>();
+  const navigation = useNavigation<PreferencesNavProp>();
 
   // keeps track of which category (Notifications, Account, or Groups) is being viewed
   const [activeCategory, setActiveCategory] = useState<'Notifications' | 'Account' | 'Groups'>('Notifications');
@@ -24,7 +32,6 @@ const navigation = useNavigation<PreferencesNavProp>();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Notification states
-  // holds the user’s selected notification settings
   const [notificationTypes, setNotificationTypes] = useState({
     allRooms: true,
     favoritesOnly: false,
@@ -50,7 +57,6 @@ const navigation = useNavigation<PreferencesNavProp>();
   });
 
   // Account info section
-  // The user context stores the global name for use on the Home screen
   const { name, setName } = useUser();
   const [account, setAccount] = useState({
     name,
@@ -67,9 +73,12 @@ const navigation = useNavigation<PreferencesNavProp>();
   const [modalType, setModalType] = useState('');
   const [tempText, setTempText] = useState('');
 
-  // favorites list (fake data)
-  const [favorites, setFavorites] = useState(['Stocker Center 155', 'ARC 103', 'Alden Library 121']);
-  const [selectedFavorites, setSelectedFavorites] = useState(['Stocker Center 155']);
+  //  controls logout confirmation modal
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+
+  // get real favorites data from shared context
+  const { favorites } = useFavorites() as { favorites: FavoriteItem[] };
+  const [selectedFavorites, setSelectedFavorites] = useState<FavoriteItem[]>([]);
 
   // toggle function setup
   type NotificationTypeKey = keyof typeof notificationTypes;
@@ -109,13 +118,11 @@ const navigation = useNavigation<PreferencesNavProp>();
     setModalVisible(true);
   };
 
-  // Closes modal
   const closeModal = () => {
     setModalVisible(false);
     setTempText('');
   };
 
-  // Saves modal input
   const saveModal = () => {
     setCustomInputs({ ...customInputs, [modalType]: tempText });
     setModalVisible(false);
@@ -126,7 +133,7 @@ const navigation = useNavigation<PreferencesNavProp>();
     setAccount({ ...account, [key]: value });
   };
 
-  // Adds a group if it does not already exist
+  // Adds a group
   const addGroup = () => {
     if (newGroup.trim() && !groups.includes(newGroup)) {
       setGroups([...groups, newGroup.trim()]);
@@ -177,283 +184,403 @@ const navigation = useNavigation<PreferencesNavProp>();
     }
   };
 
-  // Load once when screen opens
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem('loggedInUser');
+
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Login' }],
+      });
+    } catch (err) {
+      console.log('Logout error:', err);
+    }
+  };
+
   useEffect(() => {
     loadPreferences();
   }, []);
 
-  // Save automatically whenever preferences change
   useEffect(() => {
     savePreferences();
   }, [notificationTypes, methods, schedule, account, groups, customInputs, selectedFavorites]);
 
-  // Screen Layout - controls what appears on the screen visually
-  // Screen Layout - controls what appears on the screen visually
-return (
-  <View style={styles.container}>
-    {/* Header with title and back button */}
-    <View style={styles.header}>
-    <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => {
-          if (navigation.canGoBack()) {
-            navigation.goBack();
-          } else {
-            navigation.navigate('Home');
-          }
-        }}
-      >
-        <Ionicons name="arrow-back" size={26} color={colors.primary} />
-      </TouchableOpacity>
+  // UI LAYOUT
+  return (
+    <View style={styles.container}>
 
-      <Text style={styles.title}>PREFERENCES</Text>
-    </View>
+      {/* Header with title and back button */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate('Home');
+            }
+          }}
+        >
+          <Ionicons name="arrow-back" size={26} color={colors.primary} />
+        </TouchableOpacity>
 
-    {/* Dropdown to switch between sections */}
-    <View style={styles.subHeader}>
-      <TouchableOpacity style={styles.dropdownToggle} onPress={() => setDropdownOpen(!dropdownOpen)}>
-        <Feather name="menu" size={22} color={colors.primary} />
-        <Text style={styles.subHeaderText}>{activeCategory}</Text>
-        <Ionicons
-          name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
-          size={18}
-          color={colors.primary}
-          style={{ marginLeft: 6 }}
-        />
-      </TouchableOpacity>
+        <Text style={styles.title}>PREFERENCES</Text>
+      </View>
 
-      {dropdownOpen && (
-        <View style={styles.dropdownMenu}>
-          {['Notifications', 'Account', 'Groups'].map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.dropdownItem,
-                activeCategory === cat && styles.dropdownSelected, // highlight selected item
-              ]}
-              onPress={() => {
-                setActiveCategory(cat as any);
-                setDropdownOpen(false);
-              }}
-            >
-              <Text
+      {/* Dropdown to switch between sections */}
+      <View style={styles.subHeader}>
+        <TouchableOpacity
+          style={styles.dropdownToggle}
+          onPress={() => setDropdownOpen(!dropdownOpen)}
+        >
+          <Feather name="menu" size={22} color={colors.primary} />
+          <Text style={styles.subHeaderText}>{activeCategory}</Text>
+          <Ionicons
+            name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
+            size={18}
+            color={colors.primary}
+            style={{ marginLeft: 6 }}
+          />
+        </TouchableOpacity>
+
+        {dropdownOpen && (
+          <View style={styles.dropdownMenu}>
+            {['Notifications', 'Account', 'Groups'].map((cat) => (
+              <TouchableOpacity
+                key={cat}
                 style={[
-                  styles.dropdownText,
-                  activeCategory === cat && styles.dropdownTextSelected, // change selected text
+                  styles.dropdownItem,
+                  activeCategory === cat && styles.dropdownSelected,
                 ]}
+                onPress={() => {
+                  setActiveCategory(cat as any);
+                  setDropdownOpen(false);
+                }}
               >
-                {cat}
-              </Text>
-            </TouchableOpacity>
+                <Text
+                  style={[
+                    styles.dropdownText,
+                    activeCategory === cat && styles.dropdownTextSelected,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+
+      {/* Notification Section */}
+      {activeCategory === 'Notifications' && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+
+          <Text style={styles.categoryTitle}>NOTIFICATION TYPES</Text>
+
+          {[
+            { key: 'allRooms', label: 'All Available Rooms' },
+            { key: 'favoritesOnly', label: 'Favorites Only', editable: true },
+            { key: 'buildingSpecific', label: 'Building Specific', editable: true },
+          ].map(({ key, label, editable }) => (
+            <View key={key} style={styles.optionRow}>
+              <TouchableOpacity
+                style={[
+                  styles.checkbox,
+                  notificationTypes[key as keyof typeof notificationTypes] &&
+                    styles.checkboxChecked,
+                ]}
+                onPress={() =>
+                  toggle('types', key as keyof typeof notificationTypes)
+                }
+              >
+                {notificationTypes[key as keyof typeof notificationTypes] && (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+
+              <Text style={styles.optionText}>{label}</Text>
+
+              {editable && (
+                <TouchableOpacity onPress={() => openModal(key)}>
+                  <Text style={styles.editText}>Edit</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+
+          <Text style={styles.categoryTitle}>NOTIFICATION METHODS</Text>
+
+          {Object.keys(methods).map((key) => (
+            <View key={key} style={styles.optionRow}>
+              <TouchableOpacity
+                style={[
+                  styles.checkbox,
+                  methods[key as keyof typeof methods] && styles.checkboxChecked,
+                ]}
+                onPress={() =>
+                  toggle('methods', key as keyof typeof methods)
+                }
+              >
+                {methods[key as keyof typeof methods] && (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+
+              <Text style={styles.optionText}>{key.toUpperCase()}</Text>
+            </View>
+          ))}
+
+          <Text style={styles.categoryTitle}>NOTIFICATION SCHEDULE</Text>
+
+          {Object.keys(schedule).map((key) => (
+            <View key={key} style={styles.optionRow}>
+              <TouchableOpacity
+                style={[
+                  styles.checkbox,
+                  schedule[key as keyof typeof schedule] &&
+                    styles.checkboxChecked,
+                ]}
+                onPress={() =>
+                  toggle('schedule', key as keyof typeof schedule)
+                }
+              >
+                {schedule[key as keyof typeof schedule] && (
+                  <Ionicons name="checkmark" size={18} color={colors.primary} />
+                )}
+              </TouchableOpacity>
+
+              <Text style={styles.optionText}>{key.toUpperCase()}</Text>
+            </View>
           ))}
         </View>
       )}
-    </View>
 
-    {/* Notification section*/}
-    {activeCategory === 'Notifications' && (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
-        <Text style={styles.categoryTitle}>NOTIFICATION TYPES</Text>
-        {[
-          { key: 'allRooms', label: 'All Available Rooms' },
-          { key: 'favoritesOnly', label: 'Favorites Only', editable: true },
-          { key: 'buildingSpecific', label: 'Building Specific', editable: true },
-        ].map(({ key, label, editable }) => (
-          <View key={key} style={styles.optionRow}>
-            <TouchableOpacity
-              style={[styles.checkbox, notificationTypes[key as keyof typeof notificationTypes] && styles.checkboxChecked]}
-              onPress={() => toggle('types', key as keyof typeof notificationTypes)} // allows user to check box to recieve notifications
-            >
-              {notificationTypes[key as keyof typeof notificationTypes] && (
-                <Ionicons name="checkmark" size={18} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-            <Text style={styles.optionText}>{label}</Text>
-            {editable && (
-              <TouchableOpacity onPress={() => openModal(key)}>
-                <Text style={styles.editText}>Edit</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
+      {/* Account Section */}
+      {activeCategory === 'Account' && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>MY ACCOUNT</Text>
 
-        <Text style={styles.categoryTitle}>NOTIFICATION METHODS</Text>
-        {Object.keys(methods).map((key) => (
-          <View key={key} style={styles.optionRow}>
-            <TouchableOpacity
-              style={[styles.checkbox, methods[key as keyof typeof methods] && styles.checkboxChecked]}
-              onPress={() => toggle('methods', key as keyof typeof methods)} // allows user to check box for how they want to recieve notifications
-            >
-              {methods[key as keyof typeof methods] && (
-                <Ionicons name="checkmark" size={18} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-            <Text style={styles.optionText}>{key.toUpperCase()}</Text>
-          </View>
-        ))}
+          {Object.keys(account).map((key) => (
+            <View key={key} style={styles.inputRow}>
+              <Text style={styles.inputLabel}>{key.toUpperCase()}</Text>
+              <TextInput
+                style={styles.inputBox}
+                value={account[key as keyof typeof account]}
+                onChangeText={(val) => {
+                  handleAccountChange(key as keyof typeof account, val);
+                  if (key === 'name') setName(val);
+                }}
+              />
+            </View>
+          ))}
 
-        <Text style={styles.categoryTitle}>NOTIFICATION SCHEDULE</Text>
-        {Object.keys(schedule).map((key) => (
-          <View key={key} style={styles.optionRow}>
-            <TouchableOpacity
-              style={[styles.checkbox, schedule[key as keyof typeof schedule] && styles.checkboxChecked]}
-              onPress={() => toggle('schedule', key as keyof typeof schedule)} // allows user to set a notification schedule
-            >
-              {schedule[key as keyof typeof schedule] && (
-                <Ionicons name="checkmark" size={18} color={colors.primary} />
-              )}
-            </TouchableOpacity>
-            <Text style={styles.optionText}>{key.toUpperCase()}</Text>
-          </View>
-        ))}
-      </View>
-    )}
-
-    {/* Account Section */}
-    {activeCategory === 'Account' && (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>MY ACCOUNT</Text>
-        {Object.keys(account).map((key) => (
-          <View key={key} style={styles.inputRow}>
-            <Text style={styles.inputLabel}>{key.toUpperCase()}</Text>
-            <TextInput
-              style={styles.inputBox}
-              value={account[key as keyof typeof account]}
-              onChangeText={(val) => {
-                handleAccountChange(key as keyof typeof account, val);
-                if (key === 'name') setName(val); // allows user to change name that will updat globally
-              }}
-            />
-          </View>
-        ))}
-      </View>
-    )}
-
-    {/* Groups Section */}
-    {activeCategory === 'Groups' && (
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>MY GROUPS</Text>
-        {groups.map((g) => (
-          <View key={g} style={styles.groupRow}>
-            <Text style={styles.groupItem}>• {g}</Text>
-            <TouchableOpacity onPress={() => removeGroup(g)}>
-              <Ionicons name="trash" size={22} color={colors.offWhite} />
-            </TouchableOpacity>
-          </View>
-        ))}
-        <View style={styles.addGroupRow}>
-          <TextInput
-            placeholder="Join a new group..."
-            placeholderTextColor={colors.gray400}
-            style={styles.inputBox}
-            value={newGroup}
-            onChangeText={setNewGroup} // allows user to add groups which will eventually give access to restricted group rooms
-          />
-          <TouchableOpacity style={styles.addButton} onPress={addGroup}>
-            <Ionicons name="add-circle" size={28} color={colors.white} />
+          {/* Logout button now opens modal  */}
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={() => setLogoutModalVisible(true)}
+          >
+            <Text style={styles.logoutText}>LOG OUT</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    )}
+      )}
 
-    {/* Modal for custom preferences - makes edit button clickable and allow user to select from favorites */}
-    <Modal transparent visible={modalVisible} animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          {/* Favorites Only Modal */}
-          {modalType === 'favoritesOnly' && (
-            <>
-              <Text style={styles.modalTitle}>My Favorites</Text>
-              <View style={styles.greenBox}>
-                {favorites.map((fav) => (
-                  <TouchableOpacity
-                    key={fav}
-                    style={styles.optionRow}
-                    onPress={() => {
-                      const exists = selectedFavorites.includes(fav);
-                      setSelectedFavorites(
-                        exists
-                          ? selectedFavorites.filter((f) => f !== fav)
-                          : [...selectedFavorites, fav]
-                      );
-                    }}
-                  >
-                    <View
-                      style={[
-                        styles.checkbox,
-                        selectedFavorites.includes(fav) && { backgroundColor: colors.white },
-                      ]}
-                    >
-                      {selectedFavorites.includes(fav) && (
-                        <Ionicons name="checkmark" size={18} color={colors.primary} />
-                      )}
-                    </View>
-                    <Text style={[styles.optionText, { color: colors.white }]}>{fav}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: colors.primary, marginTop: 20 }]}
-                onPress={closeModal}
-              >
-                <Text style={[styles.modalButtonText, { color: colors.white }]}>Close</Text>
+      {/* Groups Section */}
+      {activeCategory === 'Groups' && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>MY GROUPS</Text>
+
+          {groups.map((g) => (
+            <View key={g} style={styles.groupRow}>
+              <Text style={styles.groupItem}>• {g}</Text>
+
+              <TouchableOpacity onPress={() => removeGroup(g)}>
+                <Ionicons name="trash" size={22} color={colors.offWhite} />
               </TouchableOpacity>
-            </>
-          )}
+            </View>
+          ))}
 
-          {/* Building Specific Modal - allows user to select from building options for notifications */}
-          {modalType === 'buildingSpecific' && (
-            <>
-              <Text style={styles.modalTitle}>Select Buildings</Text>
-              <View style={styles.greenBox}>
-                {['ARC', 'Alden Library', 'Stocker'].map((bld) => (
-                  <TouchableOpacity
-                    key={bld}
-                    style={styles.optionRow}
-                    onPress={() => {
-                      const selected = customInputs.buildingSpecific
-                        .split(',')
-                        .map((x) => x.trim())
-                        .filter(Boolean);
-                      const exists = selected.includes(bld);
-                      const newList = exists
-                        ? selected.filter((x) => x !== bld)
-                        : [...selected, bld];
-                      setCustomInputs({
-                        ...customInputs,
-                        buildingSpecific: newList.join(', '),
-                      });
-                    }}
-                  >
-                    <View
+          <View style={styles.addGroupRow}>
+            <TextInput
+              placeholder="Join a new group..."
+              placeholderTextColor={colors.gray400}
+              style={styles.inputBox}
+              value={newGroup}
+              onChangeText={setNewGroup}
+            />
+
+            <TouchableOpacity style={styles.addButton} onPress={addGroup}>
+              <Ionicons name="add-circle" size={28} color={colors.white} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Modal for custom preferences */}
+      <Modal transparent visible={modalVisible} animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+
+            {/* Favorites Modal */}
+            {modalType === 'favoritesOnly' && (
+              <>
+                <Text style={styles.modalTitle}>My Favorites</Text>
+
+                <View style={styles.greenBox}>
+                  {favorites.map((fav) => (
+                    <TouchableOpacity
+                      key={fav.name}
+                      style={styles.optionRow}
+                      onPress={() => {
+                        const exists = selectedFavorites.some(
+                          (f) => f.name === fav.name
+                        );
+                        setSelectedFavorites(
+                          exists
+                            ? selectedFavorites.filter((f) => f.name !== fav.name)
+                            : [...selectedFavorites, fav]
+                        );
+                      }}
+                    >
+                      <View
                         style={[
                           styles.checkbox,
-                          customInputs.buildingSpecific.includes(bld) && { backgroundColor: colors.white },
+                          selectedFavorites.some((f) => f.name === fav.name) && {
+                            backgroundColor: colors.white,
+                          },
+                        ]}
+                      >
+                        {selectedFavorites.some((f) => f.name === fav.name) && (
+                          <Ionicons
+                            name="checkmark"
+                            size={18}
+                            color={colors.primary}
+                          />
+                        )}
+                      </View>
+
+                      <Text style={[styles.optionText, { color: colors.white }]}>
+                        {fav.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    { backgroundColor: colors.primary, marginTop: 20 },
+                  ]}
+                  onPress={closeModal}
+                >
+                  <Text style={[styles.modalButtonText, { color: colors.white }]}>
+                    Close
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* Building Specific Modal */}
+            {modalType === 'buildingSpecific' && (
+              <>
+                <Text style={styles.modalTitle}>Select Buildings</Text>
+
+                <View style={styles.greenBox}>
+                  {['ARC', 'Alden Library', 'Stocker'].map((bld) => (
+                    <TouchableOpacity
+                      key={bld}
+                      style={styles.optionRow}
+                      onPress={() => {
+                        const selected = customInputs.buildingSpecific
+                          .split(',')
+                          .map((x) => x.trim())
+                          .filter(Boolean);
+
+                        const exists = selected.includes(bld);
+
+                        const newList = exists
+                          ? selected.filter((x) => x !== bld)
+                          : [...selected, bld];
+
+                        setCustomInputs({
+                          ...customInputs,
+                          buildingSpecific: newList.join(', '),
+                        });
+                      }}
+                    >
+                      <View
+                        style={[
+                          styles.checkbox,
+                          customInputs.buildingSpecific.includes(bld) && {
+                            backgroundColor: colors.white,
+                          },
                         ]}
                       >
                         {customInputs.buildingSpecific.includes(bld) && (
-                          <Ionicons name="checkmark" size={18} color={colors.primary} />
+                          <Ionicons
+                            name="checkmark"
+                            size={18}
+                            color={colors.primary}
+                          />
                         )}
                       </View>
-                    <Text style={[styles.optionText, { color: colors.white }]}>{bld}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <TouchableOpacity
-                style={[styles.modalButton, { backgroundColor: colors.primary, marginTop: 20 }]}
-                onPress={closeModal}
-              >
-                <Text style={[styles.modalButtonText, { color: colors.white }]}>Close</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-      </View>
-    </Modal>
-  </View>
-);
 
+                      <Text style={[styles.optionText, { color: colors.white }]}>
+                        {bld}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    { backgroundColor: colors.primary, marginTop: 20 },
+                  ]}
+                  onPress={closeModal}
+                >
+                  <Text style={[styles.modalButtonText, { color: colors.white }]}>
+                    Close
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/*  Logout Confirmation Modal */}
+      {logoutModalVisible && (
+        <View style={styles.logoutOverlay}>
+          <View style={styles.logoutBox}>
+            <Text style={styles.logoutModalTitle}>Log Out</Text>
+            <Text style={styles.logoutModalMessage}>
+              Are you sure you want to log out?
+            </Text>
+
+            <View style={styles.logoutButtonsRow}>
+              <TouchableOpacity
+                style={[styles.logoutModalButton, styles.cancelButton]}
+                onPress={() => setLogoutModalVisible(false)}
+              >
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.logoutModalButton, styles.confirmLogoutButton]}
+                onPress={() => {
+                  setLogoutModalVisible(false);
+                  handleLogout();
+                }}
+              >
+                <Text style={styles.confirmLogoutText}>Log out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
+    </View>
+  );
 }
 
 // Styles section -implements layout of screen with all components applied
@@ -466,38 +593,58 @@ const styles = StyleSheet.create({
   subHeader: { marginTop: 12, marginBottom: 10 },
   dropdownToggle: { flexDirection: 'row', alignItems: 'center' },
   subHeaderText: { fontSize: 20, color: colors.primary, marginLeft: 6 },
+
   // drop down menu
-  dropdownMenu: { backgroundColor: colors.white, borderRadius: 4, marginTop: 8, padding: 6, elevation: 6, shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.2,
-  shadowRadius: 4 },
+  dropdownMenu: { 
+    backgroundColor: colors.white, 
+    borderRadius: 4, 
+    marginTop: 8, 
+    padding: 6, 
+    elevation: 6, 
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4 
+  },
   dropdownItem: { padding: 8 },
   dropdownText: { fontSize: 16, color: colors.primary },
   dropdownSelected: { backgroundColor: colors.primary },
   dropdownTextSelected: { color: colors.white },
+
   // section setup
-  section: { backgroundColor: colors.primary, borderRadius: 4, paddingVertical: 20, paddingHorizontal: 20, marginTop: 10, marginBottom: 40 },
+  section: { 
+    backgroundColor: colors.primary, 
+    borderRadius: 4, 
+    paddingVertical: 20, 
+    paddingHorizontal: 20, 
+    marginTop: 10, 
+    marginBottom: 40 
+  },
   sectionTitle: { fontSize: 28, fontFamily: 'BebasNeue-Regular', color: colors.white, marginBottom: 16 },
   categoryTitle: { fontSize: 24, fontFamily: 'BebasNeue-Regular', color: colors.white, marginTop: 10, marginBottom: 8 },
   optionRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
+
   // checkboxes
   checkbox: { width: 24, height: 24, borderRadius: 4, backgroundColor: colors.gray300, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
-  checkboxChecked: { backgroundColor: colors.white, color: colors.primary, },
+  checkboxChecked: { backgroundColor: colors.white, color: colors.primary },
+
   // input text from user
   optionText: { color: colors.white, fontSize: 16, flex: 1 },
   editText: { color: colors.offWhite, fontSize: 14, textDecorationLine: 'underline' },
   inputRow: { marginBottom: 16 },
   inputLabel: { color: colors.white, fontSize: 16, marginBottom: 4, fontFamily: 'BebasNeue-Regular' },
   inputBox: { backgroundColor: colors.white, borderRadius: 6, padding: 8, color: colors.primary },
+
   groupItem: { color: colors.white, fontSize: 18 },
   groupRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   addGroupRow: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
   addButton: { backgroundColor: colors.primary, borderRadius: 50, padding: 6, marginLeft: 8 },
+
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.6)', // darker overlay to cover full screen
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   modalContainer: {
     backgroundColor: colors.white,
@@ -517,7 +664,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   modalButtonText: { fontSize: 18, fontFamily: 'BebasNeue-Regular', color: colors.white },
-
   greenBox: {
     backgroundColor: colors.primary,
     borderRadius: 8,
@@ -526,5 +672,87 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
   },
-  
+
+  logoutButton: { // logout button style
+    backgroundColor: "#D9534F", //#D9534F
+    paddingVertical: 10,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginTop: 30,
+    width: '40%',
+    alignSelf: 'center',
+  },
+  logoutText: {
+    color: colors.white,
+    fontFamily: 'BebasNeue-Regular',
+    fontSize: 25,
+  },
+
+  /* Logout modal styles */
+  logoutOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 30,
+  },
+  logoutBox: {
+    backgroundColor: colors.white,
+    width: '100%',
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+    alignItems: 'center',
+  },
+  logoutModalTitle: {
+    fontFamily: 'BebasNeue-Regular',
+    fontSize: 30,
+    color: colors.primary,
+    marginBottom: 10,
+  },
+  logoutModalMessage: {
+    fontSize: 16,
+    color: colors.primary,
+    textAlign: 'center',
+    marginBottom: 25,
+    fontFamily: 'Poppins-Regular',
+  },
+  logoutButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '80%',
+    marginTop: 10,
+  },
+  logoutModalButton: {
+    flex: 1,
+    paddingVertical: 10,
+    marginHorizontal: 8,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    backgroundColor: colors.gray100,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  cancelText: {
+    color: colors.primary,
+    fontFamily: 'BebasNeue-Regular',
+    fontSize: 22,
+  },
+  confirmLogoutButton: {
+    backgroundColor: colors.primary,
+  },
+  confirmLogoutText: {
+    color: colors.white,
+    fontFamily: 'BebasNeue-Regular',
+    fontSize: 22,
+  },
 });

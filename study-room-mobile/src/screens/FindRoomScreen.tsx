@@ -3,20 +3,45 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons'; // used for icons in header
+import { LinearGradient } from 'expo-linear-gradient'; // for gradient background
 import colors from '@/constants/colors';
+import { useFavorites } from '@/context/FavoritesContext'; // shared favorites context
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '@/navigation/AppNavigator';
+
+
+// strict type for rooms
+interface RoomItem {
+  id: string;
+  status: 'occupied' | 'available' | 'offline';
+}
+
+// ashared type for favorites (matches what’s saved in AsyncStorage)
+interface FavoriteItem {
+  name: string;
+  status?: string;
+  tstatus?: string;
+}
 
 export default function FindARoomScreen() {
-  const router = useRouter();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  // Dropdown open/close control
+  const { favorites, addFavorite, removeFavorite } = useFavorites() as {
+    favorites: FavoriteItem[];
+    addFavorite: (item: FavoriteItem) => void;
+    removeFavorite: (name: string) => void;
+  };
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  // Selected building state
   const [selectedBuilding, setSelectedBuilding] = useState<'Stocker Center' | 'ARC' | 'Alden Library'>('Stocker Center');
 
+  // controls whether user is editing favorites (shows all hearts)
+  const [editMode, setEditMode] = useState(false);
+
   // Example layouts for each building - admin will be able to edit these layouts
-  const buildingLayouts = {
+  const buildingLayouts: Record<string, RoomItem[]> = {
     'Stocker Center': [
       { id: '151', status: 'occupied' },
       { id: '152', status: 'available' },
@@ -62,35 +87,93 @@ export default function FindARoomScreen() {
     }
   };
 
+  // helper to check if a room is in favorites
+  const isFavorite = (roomName: string) =>
+    favorites.some((f: FavoriteItem) => f.name === `${selectedBuilding} ${roomName}`);
+
+  // handle add/remove favorite toggle
+  const toggleFavorite = (room: RoomItem) => {
+    const roomName = `${selectedBuilding} ${room.id}`;
+    const exists = isFavorite(room.id);
+    if (exists) {
+      removeFavorite(roomName);
+    } else {
+      addFavorite({
+        name: roomName,
+        status: room.status,
+        tstatus: room.status.charAt(0).toUpperCase() + room.status.slice(1),
+      });
+    }
+  };
+
   const rooms = buildingLayouts[selectedBuilding];
 
   return (
-    <ScrollView // makes page scrollable
-        style={styles.container}
-        contentContainerStyle={{
-          alignItems: 'center',
-          paddingBottom: 40,
-        }}
-      >
+    <ScrollView
+      // makes page scrollable
+      style={styles.container}
+      contentContainerStyle={{
+        alignItems: 'center',
+        paddingBottom: 40,
+      }}
+    >
       {/* Header */}
       <View style={styles.headerWrapper}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={28} color={colors.primary} />
-          </TouchableOpacity>
-          <Text style={styles.title}>FIND A ROOM</Text>
+        <TouchableOpacity
+        onPress={() => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          } else {
+            navigation.navigate('Home'); // fallback to Home
+          }
+        }}
+      >
+        <Ionicons name="arrow-back" size={28} color={colors.primary} />
+      </TouchableOpacity>
+
+
+          {/* centered title */}
+          <View style={{ flex: 1, alignItems: 'center' }}>
+            <Text style={styles.title}>FIND A ROOM</Text>
+          </View>
+
+          {/* empty placeholder for spacing */}
+          <View style={{ width: 28 }} />
         </View>
 
-        {/* Subheader with dropdown menu */}
+        {/* Subheader row now contains dropdown and edit button side by side */}
         <View style={styles.subHeader}>
-          <TouchableOpacity onPress={() => setDropdownOpen(!dropdownOpen)}>
-            <Ionicons
-              name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
-              size={22}
-              color={colors.primary}
+          {/* Dropdown toggle */}
+          <View style={styles.dropdownRow}>
+            <TouchableOpacity onPress={() => setDropdownOpen(!dropdownOpen)}>
+              <Ionicons
+                name={dropdownOpen ? 'chevron-up' : 'chevron-down'}
+                size={22}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+            <Text style={styles.subHeaderText}>{selectedBuilding}</Text>
+          </View>
+
+          {/* Edit Favorites button */}
+          <TouchableOpacity
+            style={[
+              styles.editButtonRow,
+              editMode && { backgroundColor: colors.available + '33' }, // subtle tint when editing
+            ]}
+            onPress={() => setEditMode(!editMode)}
+          >
+            <Feather
+              name={editMode ? 'check' : 'edit'}
+              size={20}
+              color={editMode ? colors.primary : colors.primary} 
+              style={{ marginRight: 4 }}
             />
+            <Text style={styles.editLabelRow}>
+              {editMode ? 'Done' : 'Edit Favorites'}
+            </Text>
           </TouchableOpacity>
-          <Text style={styles.subHeaderText}>{selectedBuilding}</Text>
         </View>
 
         {/* Dropdown menu */}
@@ -104,7 +187,7 @@ export default function FindARoomScreen() {
                   selectedBuilding === building && styles.dropdownSelected,
                 ]}
                 onPress={() => {
-                  setSelectedBuilding(building as any); // changes layout to selected bulding
+                  setSelectedBuilding(building as any); // changes layout to selected building
                   setDropdownOpen(false);
                 }}
               >
@@ -129,11 +212,65 @@ export default function FindARoomScreen() {
           numColumns={2}
           keyExtractor={(item) => item.id}
           scrollEnabled={false}
-          renderItem={({ item }) => (       // changes room color based on status
-            <View style={[styles.roomBox, { backgroundColor: getColor(item.status) }]}> 
-              <Text style={styles.roomText}>{item.id}</Text>
-            </View>
-          )}
+          renderItem={({ item }) => {
+            const favorite = isFavorite(item.id); // check if room is in favorites
+
+            return (
+              // tap to toggle favorite (only when in edit mode)
+              <TouchableOpacity
+              onPress={() => {
+                if (editMode) {
+                  // when in edit mode, clicking toggles favorites
+                  toggleFavorite(item);
+                } else {
+                  // when not in edit mode, go to room details screen
+                  navigation.navigate('RoomDetails', {
+                    building: selectedBuilding,
+                    roomId: item.id,
+                    status: item.status as 'available' | 'occupied' | 'offline',
+                  });
+                }
+              }}
+              style={[styles.roomBox, { backgroundColor: getColor(item.status) }]}
+              activeOpacity={0.8}
+            >
+
+                {/* gradient background for room boxes */}
+                <LinearGradient
+                    colors={[
+                      getColor(item.status),           // base color
+                      getColor(item.status) + 'CC',    
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[styles.roomBox, { aspectRatio: 1, width: 120 }]} // keeps square shape even on iOS
+                  >
+                  <Text style={styles.roomText}>{item.id}</Text>
+
+                  {/* heart icon overlay logic */}
+                  {editMode ? (
+                    // show outline heart when editing favorites
+                    <Ionicons
+                      name={favorite ? 'heart' : 'heart-outline'}
+                      size={22}
+                      color={favorite ? colors.white : colors.white}
+                      style={{ position: 'absolute', top: 6, right: 6 }}
+                    />
+                  ) : (
+                    // show filled heart only if it’s already in favorites
+                    favorite && (
+                      <Ionicons
+                        name="heart"
+                        size={22}
+                        color={colors.gray100}
+                        style={{ position: 'absolute', top: 6, right: 6 }}
+                      />
+                    )
+                  )}
+                </LinearGradient>
+              </TouchableOpacity>
+            );
+          }}
           contentContainerStyle={{
             alignItems: 'center',
             justifyContent: 'center',
@@ -145,65 +282,96 @@ export default function FindARoomScreen() {
           }}
         />
       </View>
-            {/* color coded legend appears on bottom of screen */}
-            <View style={styles.legendContainer}>
-        <View style={styles.legendRow}>
-          <View style={[styles.legendBox, { backgroundColor: colors.available }]} />
-          <Text style={styles.legendText}>AVAILABLE</Text>
-        </View>
-        <View style={styles.legendRow}>
-          <View style={[styles.legendBox, { backgroundColor: colors.occupied }]} />
-          <Text style={styles.legendText}>OCCUPIED</Text>
-        </View>
-        <View style={styles.legendRow}>
-          <View style={[styles.legendBox, { backgroundColor: colors.offline }]} />
-          <Text style={styles.legendText}>ROOM DATA UNAVAILABLE</Text>
-        </View>
-      </View>
 
-      </ScrollView>
+      {/* color coded legend appears on bottom of screen */}
+        <View style={styles.legendContainer}>
+          <View style={styles.legendRow}>
+            <LinearGradient
+              colors={[colors.available, colors.available + 'CC']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.legendBox}
+            />
+            <Text style={styles.legendText}>AVAILABLE</Text>
+          </View>
+
+          <View style={styles.legendRow}>
+            <LinearGradient
+              colors={[colors.occupied, colors.occupied + 'CC']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.legendBox}
+            />
+            <Text style={styles.legendText}>OCCUPIED</Text>
+          </View>
+
+          <View style={styles.legendRow}>
+            <LinearGradient
+              colors={[colors.offline, colors.offline + 'CC']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.legendBox}
+            />
+            <Text style={styles.legendText}>ROOM DATA UNAVAILABLE</Text>
+          </View>
+        </View>
+
+    </ScrollView>
   );
 }
- // style sheet section - implements layout and sets up components
+
+// style sheet section - implements layout and sets up components
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.gray100,
-  },
-  headerWrapper: { // header
-    width: '100%',
-    alignItems: 'center',
-  },
+  container: { flex: 1, backgroundColor: colors.gray100 },
+  headerWrapper: { width: '100%', alignItems: 'center' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 80,
+    justifyContent: 'space-between',
     width: '90%',
     maxWidth: 400,
-    textAlign: 'center',
-    marginTop: 50,
+    marginTop: 80,
   },
-  title: { // title
+  title: {
     fontSize: 38,
     fontFamily: 'BebasNeue-Regular',
     fontWeight: '500',
     color: colors.primary,
     textTransform: 'uppercase',
+    textAlign: 'center',
   },
-  subHeader: { // subheader
+  subHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 16,
     marginBottom: 10,
-    gap: 10,
     width: '90%',
     maxWidth: 400,
   },
-  subHeaderText: {
-    fontSize: 18,
-    color: colors.primary,
+  dropdownRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  dropdownMenu: { // drop down menu
+  subHeaderText: { fontSize: 18, color: colors.primary },
+  editButtonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.gray100,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 4,
+    elevation: 3,
+    borderWidth: 1, 
+    borderColor: colors.primary, // green outline
+  },
+  editLabelRow: {
+    fontSize: 14,
+    color: colors.primary,
+    fontFamily: 'Poppins',
+  },
+  dropdownMenu: {
     backgroundColor: colors.white,
     borderRadius: 4,
     marginBottom: 20,
@@ -216,36 +384,22 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
-  dropdownItem: {
-    padding: 10,
-  },
-  dropdownText: {
-    fontSize: 16,
-    color: colors.primary,
-  },
-  dropdownSelected: {
-    backgroundColor: colors.primary,
-  },
-  dropdownTextSelected: {
-    color: colors.white,
-  },
-  gridContainer: { // room grid container
+  dropdownItem: { padding: 10 },
+  dropdownText: { fontSize: 16, fontFamily: 'Poppins', color: colors.primary },
+  dropdownSelected: { backgroundColor: colors.primary },
+  dropdownTextSelected: { color: colors.white },
+  gridContainer: {
     backgroundColor: colors.primary,
     borderRadius: 0,
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 450,
     paddingVertical: 40,
-    paddingBottom: -40,
-    paddingHorizontal: 0,
     justifyContent: 'center',
   },
-  row: {
-    justifyContent: 'space-between',
-  },
-  roomBox: { // individual room boxes
+  roomBox: {
     flex: 1,
     aspectRatio: 1,
-    minWidth: 110,
+    minWidth: 140,
     borderRadius: 4,
     margin: 12,
     justifyContent: 'center',
@@ -254,33 +408,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 1, height: 1 },
     shadowOpacity: 0.5,
     shadowRadius: 5,
+    position: 'relative',
   },
-  roomText: { 
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#000',
-  },
-  legendContainer: { // legend
-    marginTop: 24,
-    alignItems: 'flex-start',
-    width: '90%',
-    maxWidth: 400,
-  },
-  legendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  legendBox: {
-    width: 28,
-    height: 28,
-    marginRight: 12,
-    borderRadius: 2,
-  },
-  legendText: {
-    fontSize: 24,
-    fontFamily: 'BebasNeue-Regular',
-    color: colors.primary,
-  },
-
+  roomText: { fontSize: 25, fontWeight: '200', color: '#000', fontFamily: 'Poppins' },
+  legendContainer: { marginTop: 24, alignItems: 'flex-start', width: '90%', maxWidth: 400 },
+  legendRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  legendBox: { width: 28, height: 28, marginRight: 12, borderRadius: 2 },
+  legendText: { fontSize: 24, fontFamily: 'BebasNeue-Regular', color: colors.primary },
 });

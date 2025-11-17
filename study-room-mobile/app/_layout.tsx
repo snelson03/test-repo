@@ -6,6 +6,7 @@ import { useFonts } from 'expo-font';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from '@/navigation/AppNavigator';
 import { UserProvider } from '@/context/UserContext';
+import { FavoritesProvider } from '@/context/FavoritesContext';
 
 // Prevent splash screen from auto-hiding before fonts are loaded
 SplashScreen.preventAutoHideAsync();
@@ -26,12 +27,9 @@ export default function RootLayout() {
 
   return (
     <UserProvider>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          animation: 'fade',
-        }}
-      />
+      <FavoritesProvider>
+      <AppNavigator />
+      </FavoritesProvider>
     </UserProvider>
   );
 }
