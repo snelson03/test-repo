@@ -36,6 +36,7 @@ async def signup(user_data: UserCreate, db: Session = Depends(get_db)):
         full_name=user_data.full_name,
         is_active=True,
         is_admin=False,  # New users are normal users by default
+        is_faculty=False,  # New users are not faculty by default
     )
 
     db.add(new_user)

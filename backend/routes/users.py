@@ -106,6 +106,9 @@ async def update_user_admin(
     if user_data.is_admin is not None:
         user.is_admin = user_data.is_admin
 
+    if user_data.is_faculty is not None:
+        user.is_faculty = user_data.is_faculty
+
     db.commit()
     db.refresh(user)
     return user

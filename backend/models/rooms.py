@@ -26,6 +26,8 @@ class Room(Base):
 
     # Relationship to building
     building = relationship("Building", back_populates="rooms")
+    # Relationship to room blocks
+    blocks = relationship("RoomBlock", back_populates="room")
 
 
 # Pydantic Models for API
