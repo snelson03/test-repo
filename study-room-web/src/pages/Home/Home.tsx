@@ -1,7 +1,7 @@
 import React from 'react';
 import Sidebar from "../../components/Sidebar/sidebar";
 import './home.css';
-import MapPlaceholder from "../../assets/map-placeholder.png";
+import Map from "../../assets/map.jpeg";
 
 const Home: React.FC = () => {
   return (
@@ -61,7 +61,7 @@ const Home: React.FC = () => {
         
           <section className="map-section">
             <div className="map">
-              <img src={MapPlaceholder} alt="Campus Map" />
+              <img src={Map} alt="Campus Map" />
             </div>
           </section>
 
