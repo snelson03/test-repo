@@ -56,13 +56,8 @@ export default function PreferencesScreen() {
     customSchedule: '',
   });
 
-  // Account info section
-  const { name, setName } = useUser();
-  const [account, setAccount] = useState({
-    name,
-    email: 'ms773121@ohio.edu',
-    phone: '(740) 555-2391',
-  });
+  // Account info section — using real user context now
+  const { user, updateUserField, logoutUser } = useUser();
 
   // example data for groups screen
   const [groups, setGroups] = useState(['Computer Science']);
@@ -128,11 +123,6 @@ export default function PreferencesScreen() {
     setModalVisible(false);
   };
 
-  // Updates the account info as the user types
-  const handleAccountChange = (key: keyof typeof account, value: string) => {
-    setAccount({ ...account, [key]: value });
-  };
-
   // Adds a group
   const addGroup = () => {
     if (newGroup.trim() && !groups.includes(newGroup)) {
@@ -153,8 +143,6 @@ export default function PreferencesScreen() {
         notificationTypes,
         methods,
         schedule,
-        account,
-        groups,
         customInputs,
         selectedFavorites,
       };
@@ -173,27 +161,11 @@ export default function PreferencesScreen() {
         setNotificationTypes(parsed.notificationTypes);
         setMethods(parsed.methods);
         setSchedule(parsed.schedule);
-        setAccount(parsed.account);
-        setGroups(parsed.groups);
         setCustomInputs(parsed.customInputs);
         setSelectedFavorites(parsed.selectedFavorites || []);
-        setName(parsed.account.name);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await AsyncStorage.removeItem('loggedInUser');
-
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
-    } catch (err) {
-      console.log('Logout error:', err);
     }
   };
 
@@ -203,7 +175,7 @@ export default function PreferencesScreen() {
 
   useEffect(() => {
     savePreferences();
-  }, [notificationTypes, methods, schedule, account, groups, customInputs, selectedFavorites]);
+  }, [notificationTypes, methods, schedule, customInputs, selectedFavorites]);
 
   // UI LAYOUT
   return (
@@ -357,33 +329,50 @@ export default function PreferencesScreen() {
       )}
 
       {/* Account Section */}
-      {activeCategory === 'Account' && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>MY ACCOUNT</Text>
+        {activeCategory === 'Account' && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>MY ACCOUNT</Text>
 
-          {Object.keys(account).map((key) => (
-            <View key={key} style={styles.inputRow}>
-              <Text style={styles.inputLabel}>{key.toUpperCase()}</Text>
+            {/* Email - NOT editable */}
+            <View style={styles.inputRow}>
+              <Text style={styles.inputLabel}>EMAIL</Text>
               <TextInput
-                style={styles.inputBox}
-                value={account[key as keyof typeof account]}
-                onChangeText={(val) => {
-                  handleAccountChange(key as keyof typeof account, val);
-                  if (key === 'name') setName(val);
-                }}
+                style={[styles.inputBox, { backgroundColor: colors.gray300 }]}
+                value={user?.email || ''}
+                editable={false}
               />
             </View>
-          ))}
 
-          {/* Logout button now opens modal  */}
-          <TouchableOpacity
-            style={styles.logoutButton}
-            onPress={() => setLogoutModalVisible(true)}
-          >
-            <Text style={styles.logoutText}>LOG OUT</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+            {/* Name */}
+            <View style={styles.inputRow}>
+              <Text style={styles.inputLabel}>NAME</Text>
+              <TextInput
+                style={styles.inputBox}
+                value={user?.name || ''}
+                onChangeText={(val) => updateUserField('name', val)}
+              />
+            </View>
+
+            {/* Phone */}
+            <View style={styles.inputRow}>
+              <Text style={styles.inputLabel}>PHONE</Text>
+              <TextInput
+                style={styles.inputBox}
+                value={user?.phone || ''}
+                onChangeText={(val) => updateUserField('phone', val)}
+              />
+            </View>
+
+            {/* Logout button now opens modal */}
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={() => setLogoutModalVisible(true)}
+            >
+              <Text style={styles.logoutText}>LOG OUT</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
 
       {/* Groups Section */}
       {activeCategory === 'Groups' && (
@@ -568,9 +557,13 @@ export default function PreferencesScreen() {
 
               <TouchableOpacity
                 style={[styles.logoutModalButton, styles.confirmLogoutButton]}
-                onPress={() => {
+                onPress={async () => {
                   setLogoutModalVisible(false);
-                  handleLogout();
+                  await logoutUser();
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: 'Login' }],
+                  });
                 }}
               >
                 <Text style={styles.confirmLogoutText}>Log out</Text>
@@ -673,8 +666,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  logoutButton: { // logout button style
-    backgroundColor: "#D9534F", //#D9534F
+  logoutButton: { 
+    backgroundColor: "#D9534F",
     paddingVertical: 10,
     borderRadius: 6,
     alignItems: 'center',
