@@ -129,7 +129,7 @@ export default function HomeScreen() {
         <TouchableOpacity onPress={() => !menuOpen && navigation.navigate('CampusMap' as never)}>
           <View style={styles.mapContainer}>
             <View style={styles.imageShadow}>
-              <Image source={require('@/assets/images/map.png')} style={styles.mapImage} />
+              <Image source={require('@/assets/images/map.jpeg')} style={styles.mapImage} />
             </View>
             <Text style={styles.mapText}>CAMPUS MAP</Text>
           </View>

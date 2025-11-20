@@ -7,6 +7,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from '@/navigation/AppNavigator';
 import { UserProvider } from '@/context/UserContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
+import 'react-native-gesture-handler';
+
 
 // Prevent splash screen from auto-hiding before fonts are loaded
 SplashScreen.preventAutoHideAsync();
