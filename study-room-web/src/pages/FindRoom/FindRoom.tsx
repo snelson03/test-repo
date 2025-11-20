@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { IoHeart, IoHeartOutline } from "react-icons/io5";
 import Sidebar from "../../components/Sidebar/sidebar";
 import './findroom.css';
 
@@ -44,8 +45,23 @@ const FindRoom: React.FC = () => {
 
     const [selectedBuilding, setSelectedBuilding] = useState<string>(defaultBuilding);
     const [selectedFloor, setSelectedFloor] = useState<string>(defaultFloor);
+    const [favorites, setFavorites] = useState<any[]>([]);
 
     const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const raw = localStorage.getItem("favorites");
+
+        if (raw === null) {
+            // Only create mock favorites the FIRST time ever
+            const mock: any[] = [];
+            localStorage.setItem("favorites", JSON.stringify(mock));
+            setFavorites(mock);
+        } else {
+            // Use whatever is in storage (even empty array)
+            setFavorites(JSON.parse(raw));
+        }
+    }, []);
 
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
@@ -56,6 +72,89 @@ const FindRoom: React.FC = () => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    const isFavorite = (room: Room) => {
+        return favorites.some(
+            (f: any) =>
+                f.number === room.number &&
+                f.floor === selectedFloor &&
+                f.building_name === selectedBuilding
+        );
+    };
+
+    // const addToFavorites = (room: Room) => {
+    //     const exists = favorites.some(
+    //         f =>
+    //             f.number === room.number &&
+    //             f.floor === selectedFloor &&
+    //             f.building_name === selectedBuilding
+    //     );
+
+    //     if (exists) return;
+
+    //     const newFavorite = {
+    //         id: Date.now(),
+    //         building_name: selectedBuilding,
+    //         floor: selectedFloor,
+    //         status: room.status,
+    //         number: room.number,
+    //     };
+
+    //     const updated = [...favorites, newFavorite];
+    //     localStorage.setItem("favorites", JSON.stringify(updated));
+    //     setFavorites(updated);
+    // };
+
+
+    const toggleFavorite = (room: Room) => {
+        const exists = favorites.some(
+            f =>
+                f.number === room.number &&
+                f.floor === selectedFloor &&
+                f.building_name === selectedBuilding
+        );
+
+        let updated;
+
+        if (exists) {
+            // REMOVE
+            updated = favorites.filter(
+                f =>
+                    !(
+                        f.number === room.number &&
+                        f.floor === selectedFloor &&
+                        f.building_name === selectedBuilding
+                    )
+            );
+        } else {
+            // ADD
+            const newFavorite = {
+                id: Date.now(),
+                building_name: selectedBuilding,
+                floor: selectedFloor,
+                status: room.status,
+                number: room.number,
+            };
+            updated = [...favorites, newFavorite];
+        }
+
+        localStorage.setItem("favorites", JSON.stringify(updated));
+        setFavorites(updated);
+    };
+
+    const removeFromFavorites = (room: Room) => {
+        const updated = favorites.filter(
+            f =>
+                !(
+                    f.number === room.number &&
+                    f.floor === selectedFloor &&
+                    f.building_name === selectedBuilding
+                )
+        );
+
+        localStorage.setItem("favorites", JSON.stringify(updated));
+        setFavorites(updated);
+    };
 
     // const floorsForSelected = Object.keys(buildingData[selectedBuilding]);
     const roomsForSelected = buildingData[selectedBuilding][selectedFloor] ?? [];
@@ -106,6 +205,18 @@ const FindRoom: React.FC = () => {
                 <section className="room-grid" aria-live="polite">
                     {roomsForSelected.map((room) => (
                         <div key={room.number} className={`room ${room.status}`}>
+
+                            <button
+                                className="favorite-heart"
+                                onClick={() => toggleFavorite(room)}
+                            >
+                                {isFavorite(room) ? (
+                                    <IoHeart size={32} color="white" />
+                                ) : (
+                                    <IoHeartOutline size={32} color="white" />
+                                )}
+                            </button>
+
                             <span className="room-number">{room.number}</span>
                         </div>
                     ))}
