@@ -1,5 +1,7 @@
 // Create Account Screen
-// Allows new users to make an account and saves it to AsyncStorage
+// Allows new users to make an account and saves it locally to AsyncStorage
+// Account credentials can then be used on login screen to enter the app
+// authentication not implemented yet, email does not have to be valid
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
@@ -37,6 +39,7 @@ export default function CreateAccountScreen() {
     }).start();
   }, []);
 
+  // checks that all fields are filled out and passwords match
   const handleCreate = async () => {
     if (!name.trim() || !email.trim() || !password.trim() || !confirm.trim()) {
       Alert.alert('Missing Information', 'Please fill out all required fields.');

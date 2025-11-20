@@ -40,7 +40,7 @@ export default function AppNavigator() {
       />
 
       <Stack.Screen
-        name="CreateAccount"           // <-- NEW
+        name="CreateAccount"          
         component={CreateAccountScreen}
         options={{ headerShown: false }}
       />

@@ -1,4 +1,6 @@
 // Login Screen – authentication using AsyncStorage accounts
+// user must enter correct username and password saved locally to enter the app,
+// account can be created by clicking create account
 
 import React, { useEffect, useState, useRef } from 'react';
 import {
@@ -20,6 +22,7 @@ import colors from '@/constants/colors';
 import { useUser } from '@/context/UserContext';
 import { RootStackParamList } from '@/navigation/AppNavigator';
 
+// navigation
 export default function LoginScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -27,7 +30,8 @@ export default function LoginScreen() {
 
   const { setUserForLogin } = useUser();   // load user into context
 
-  const [email, setEmail] = useState('');
+  // form fields
+  const [email, setEmail] = useState(''); 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -69,7 +73,7 @@ export default function LoginScreen() {
         const key = `userdata_${email.toLowerCase()}`;
         const savedUser = await AsyncStorage.getItem(key);
 
-        if (!savedUser) {
+        if (!savedUser) { // checks if user account exists
           setLoading(false);
           setError('Incorrect email or password');
           return;
@@ -77,7 +81,7 @@ export default function LoginScreen() {
 
         const userData = JSON.parse(savedUser);
 
-        if (userData.password !== password) {
+        if (userData.password !== password) { // checks if user password is correct
           setLoading(false);
           setError('Incorrect email or password');
           return;

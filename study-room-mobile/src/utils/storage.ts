@@ -1,3 +1,5 @@
+// uses Async storage to store user favorites list
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FAVORITES_KEY = 'favorites';
