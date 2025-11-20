@@ -1,4 +1,6 @@
-// Login Screen with  authentication mock system
+// Login Screen – authentication using AsyncStorage accounts
+// user must enter correct username and password saved locally to enter the app,
+// account can be created by clicking create account
 
 import React, { useEffect, useState, useRef } from 'react';
 import {
@@ -11,47 +13,42 @@ import {
   ActivityIndicator,
   Animated
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';   
+
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import colors from '@/constants/colors';
+import { useUser } from '@/context/UserContext';
+import { RootStackParamList } from '@/navigation/AppNavigator';
 
-// fake login users for now
-const fakeUsers = [
-  { email: 'test@ohio.edu', password: 'password123' },
-  { email: 'meredith@ohio.edu', password: '123456' },
-];
-
+// navigation
 export default function LoginScreen() {
-  const navigation = useNavigation();    
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  // animation fade in value
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // fields for login input
-  const [email, setEmail] = useState('');
+  const { setUserForLogin } = useUser();   // load user into context
+
+  // form fields
+  const [email, setEmail] = useState(''); 
   const [password, setPassword] = useState('');
-
-  // remember me toggle value (now always ON automatically)
-  const remember = true;
-
-  // loading spinner state
   const [loading, setLoading] = useState(false);
-
-  // error message state
   const [error, setError] = useState('');
 
-  // check if user already logged in
+  // auto-login if already signed in
   useEffect(() => {
     async function checkLogin() {
-      const savedUser = await AsyncStorage.getItem('loggedInUser');
-      if (savedUser) {
-        navigation.navigate('Home' as never); 
+      const saved = await AsyncStorage.getItem('loggedInUser');
+      if (saved) {
+        await setUserForLogin(saved);
+        navigation.navigate('Home' as never);
       }
     }
     checkLogin();
   }, []);
 
-  // fade in animation for logo
+  // fade in animation
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -60,11 +57,10 @@ export default function LoginScreen() {
     }).start();
   }, []);
 
-  // login handler
+  // Login logic (real account data, OU and email authentication not yet implemented)
   const handleLogin = async () => {
     setError('');
 
-    // basic validation
     if (!email.trim() || !password.trim()) {
       setError('Please enter both email and password.');
       return;
@@ -72,30 +68,45 @@ export default function LoginScreen() {
 
     setLoading(true);
 
-    // loading icon when login is pressed
     setTimeout(async () => {
-      const match = fakeUsers.find(
-        (user) => user.email.toLowerCase() === email.toLowerCase() && user.password === password
-      );
+      try {
+        const key = `userdata_${email.toLowerCase()}`;
+        const savedUser = await AsyncStorage.getItem(key);
 
-      if (!match) {
+        if (!savedUser) { // checks if user account exists
+          setLoading(false);
+          setError('Incorrect email or password');
+          return;
+        }
+
+        const userData = JSON.parse(savedUser);
+
+        if (userData.password !== password) { // checks if user password is correct
+          setLoading(false);
+          setError('Incorrect email or password');
+          return;
+        }
+
+        // Save login state
+        await AsyncStorage.setItem('loggedInUser', email.toLowerCase());
+
+        // Load into global context
+        await setUserForLogin(email.toLowerCase());
+
         setLoading(false);
-        setError('Incorrect email or password');
-        return;
+        navigation.navigate('Home' as never);
+
+      } catch (e) {
+        setLoading(false);
+        setError('Login error. Try again.');
       }
-
-      // always save login automatically
-      await AsyncStorage.setItem('loggedInUser', email);
-
-      setLoading(false);
-      navigation.navigate('Home' as never); 
-    }, 1200);
+    }, 800);
   };
 
   return (
     <View style={styles.container}>
 
-      {/* fade-in logo */}
+      {/* Logo */}
       <Animated.View style={{ opacity: fadeAnim }}>
         <Image
           source={require('@/assets/images/bf_logo.png')}
@@ -104,11 +115,10 @@ export default function LoginScreen() {
         />
       </Animated.View>
 
-      {/* error message */}
-      {error.length > 0 && (
-        <Text style={styles.errorText}>{error}</Text>
-      )}
+      {/* Error */}
+      {error.length > 0 && <Text style={styles.errorText}>{error}</Text>}
 
+      {/* Email */}
       <Text style={styles.label}>EMAIL</Text>
       <TextInput
         style={styles.input}
@@ -117,6 +127,7 @@ export default function LoginScreen() {
         onChangeText={setEmail}
       />
 
+      {/* Password */}
       <Text style={styles.label}>PASSWORD</Text>
       <TextInput
         style={styles.input}
@@ -125,12 +136,11 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
 
-
       <TouchableOpacity style={{ alignSelf: 'flex-end' }}>
         <Text style={styles.resetText}>Reset Password</Text>
       </TouchableOpacity>
 
-      {/* login button */}
+      {/* LOGIN BUTTON */}
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         {loading ? (
           <ActivityIndicator size="small" color={colors.primary} />
@@ -138,11 +148,17 @@ export default function LoginScreen() {
           <Text style={styles.loginText}>LOGIN</Text>
         )}
       </TouchableOpacity>
+
+      {/* CREATE ACCOUNT BUTTON */}
+      <TouchableOpacity onPress={() => navigation.navigate('CreateAccount')}>
+        <Text style={styles.createAccountText}>Create an Account</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
-// styles section
+
+// Styles section
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -155,13 +171,6 @@ const styles = StyleSheet.create({
     height: 130,
     marginBottom: 20,
     marginLeft: -10,
-  },
-  appTitle: {
-    fontFamily: 'BebasNeue-Regular',
-    fontSize: 42,
-    color: colors.white,
-    marginBottom: 50,
-    lineHeight: 45,
   },
   label: {
     fontSize: 18,
@@ -178,8 +187,9 @@ const styles = StyleSheet.create({
   resetText: {
     color: colors.white,
     textDecorationLine: 'underline',
+    fontFamily: 'Poppins',
     marginBottom: 30,
-    fontSize: 14,
+    fontSize: 13,
   },
   errorText: {
     color: '#FFB3B3',
@@ -194,10 +204,18 @@ const styles = StyleSheet.create({
     width: '55%',
     alignSelf: 'center',
     marginTop: 10,
+    marginBottom: 240,
   },
   loginText: {
     color: colors.primary,
     fontFamily: 'BebasNeue-Regular',
     fontSize: 25,
+  },
+  createAccountText: {
+    color: colors.white,
+    fontFamily: 'Poppins',
+    textDecorationLine: 'underline',
+    textAlign: 'center',
+    fontSize: 16,
   },
 });

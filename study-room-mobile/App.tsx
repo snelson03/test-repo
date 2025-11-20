@@ -6,6 +6,7 @@ import { useFonts } from 'expo-font';
 import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { UserProvider } from './src/context/UserContext';
+import 'react-native-gesture-handler';
 
 export default function App() {
   // Import fonts

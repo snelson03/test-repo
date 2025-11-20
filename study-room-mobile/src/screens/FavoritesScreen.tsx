@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import colors from '@/constants/colors';
 import { useFavorites } from '@/context/FavoritesContext'; // shared favorites context
 
-// added: define simple interface so TypeScript knows what a favorite looks like
+// define simple interface to recognize favorite
 interface FavoriteRoom {
   name: string;
   status?: string;
@@ -31,7 +31,7 @@ export default function FavoritesScreen() {
 
         <Text style={styles.title}>FAVORITES</Text>
 
-        {/* added: edit button (pencil icon turns into checkmark when editing) */}
+        {/* edit button (pencil icon turns into checkmark when editing) */}
         <Pressable onPress={toggleEdit} style={styles.backButton}>
           <Ionicons
             name={editMode ? 'checkmark' : 'create-outline'}
@@ -70,7 +70,7 @@ export default function FavoritesScreen() {
                 />
                 <Text style={styles.statusText}>{item.tstatus}</Text>
 
-                {/* added: trash button only shows when in edit mode */}
+                {/*  trash button only shows when in edit mode */}
                 {editMode && (
                   <TouchableOpacity
                     onPress={() => removeFavorite(item.name)}

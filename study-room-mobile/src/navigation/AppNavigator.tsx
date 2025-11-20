@@ -9,10 +9,12 @@ import FavoritesScreen from '@/screens/FavoritesScreen';
 import PreferencesScreen from '@/screens/PreferencesScreen';
 import RoomDetailsScreen from '@/screens/RoomDetailsScreen';
 import LoginScreen from '@/screens/LoginScreen';
+import CreateAccountScreen from '../screens/CreateAccountScreen'; 
 
 // setting up app pages
 export type RootStackParamList = {
   Login: undefined;
+  CreateAccount: undefined; 
   Home: undefined;
   FindRoom: undefined;
   CampusMap: undefined;
@@ -36,6 +38,13 @@ export default function AppNavigator() {
         component={LoginScreen}
         options={{ headerShown: false }}
       />
+
+      <Stack.Screen
+        name="CreateAccount"          
+        component={CreateAccountScreen}
+        options={{ headerShown: false }}
+      />
+
       <Stack.Screen 
         name="Home" 
         component={HomeScreen} 

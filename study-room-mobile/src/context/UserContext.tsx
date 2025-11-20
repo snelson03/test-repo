@@ -1,48 +1,112 @@
-// User context file - saves user name and any user data when it changes
+// User context file - saves user data (name, email, phone) per logged in user
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type UserContextType = {
+type UserData = {
+  email: string;
   name: string;
-  setName: (name: string) => void;
+  phone: string;
+};
+
+type UserContextType = {
+  user: UserData | null;
+  updateUserField: (field: keyof UserData, value: string) => void;
+  logoutUser: () => Promise<void>;
+  setUserForLogin: (email: string) => Promise<void>; 
 };
 
 const UserContext = createContext<UserContextType>({
-  name: 'User',
-  setName: () => {},
+  user: null,
+  updateUserField: () => {},
+  logoutUser: async () => {},
+  setUserForLogin: async () => {},
 });
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [name, setNameState] = useState('User');
+  const [user, setUser] = useState<UserData | null>(null);
 
-  // Load saved name from AsyncStorage when app starts
+  // Load user once when app starts
   useEffect(() => {
-    const loadName = async () => {
+    const loadUser = async () => {
       try {
-        const savedName = await AsyncStorage.getItem('user_name');
-        console.log(' Loaded name from storage:', savedName);
-        if (savedName) setNameState(savedName);
+        const email = await AsyncStorage.getItem('loggedInUser');
+        if (!email) return;
+
+        const saved = await AsyncStorage.getItem(`userdata_${email}`);
+
+        if (saved) {
+          setUser(JSON.parse(saved));
+        } else {
+          const newUser: UserData = {
+            email,
+            name: 'User',
+            phone: '',
+          };
+          setUser(newUser);
+          await AsyncStorage.setItem(`userdata_${email}`, JSON.stringify(newUser));
+        }
       } catch (e) {
-        console.warn('Failed to load saved name:', e);
+        console.warn('Failed to load user data:', e);
       }
     };
-    loadName();
+
+    loadUser();
   }, []);
 
-  // Save name to AsyncStorage whenever it changes
-  const setName = async (newName: string) => {
-    console.log('💾 Saving name to storage:', newName);
-    setNameState(newName);
+  //  explicitly load a user's profile after login
+  const setUserForLogin = async (email: string) => {
     try {
-      await AsyncStorage.setItem('user_name', newName);
-      console.log('Name saved successfully!');
+      const saved = await AsyncStorage.getItem(`userdata_${email}`);
+      if (saved) {
+        setUser(JSON.parse(saved));
+      } else {
+        const newUser: UserData = {
+          email,
+          name: 'User',
+          phone: '',
+        };
+        setUser(newUser);
+        await AsyncStorage.setItem(`userdata_${email}`, JSON.stringify(newUser));
+      }
     } catch (e) {
-      console.warn('Failed to save name:', e);
+      console.warn('Failed to load user for login:', e);
+    }
+  };
+
+  // update any field (name or phone)
+  const updateUserField = async (field: keyof UserData, value: string) => {
+    if (!user) return;
+
+    const updated = { ...user, [field]: value };
+    setUser(updated);
+
+    try {
+      await AsyncStorage.setItem(`userdata_${user.email}`, JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Failed to save user data:', e);
+    }
+  };
+
+  // logout clears logged-in email (preferences remain stored)
+  const logoutUser = async () => {
+    try {
+      await AsyncStorage.removeItem('loggedInUser');
+      setUser(null);
+    } catch (e) {
+      console.warn('Error logging out:', e);
     }
   };
 
   return (
-    <UserContext.Provider value={{ name, setName }}>
+    <UserContext.Provider
+      value={{
+        user,
+        updateUserField,
+        logoutUser,
+        setUserForLogin, // export the new function
+      }}
+    >
       {children}
     </UserContext.Provider>
   );

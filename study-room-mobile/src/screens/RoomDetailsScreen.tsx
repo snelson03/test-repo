@@ -26,7 +26,7 @@ export default function RoomDetailsScreen() {
   const route = useRoute() as unknown as RoomDetailsScreenRouteProp;
   const { building, roomId, status } = route.params;
 
-  // helper: determine floor number based on room ID’s first digit
+  // helper to determine floor number based on room ID’s first digit
   const getFloorFromRoom = (id: string): string => {
     const floorNum = parseInt(id.charAt(0));
     if (isNaN(floorNum)) return 'Unknown Floor';
