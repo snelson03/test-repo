@@ -110,3 +110,23 @@
     font-weight: 500;
     font-size: 1.1rem;
 }
+
+.remove-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-btn:hover svg {
+    transform: scale(1.2);
+}
+
+.remove-btn:focus {
+    outline: none;
+    box-shadow: none;
+}
+

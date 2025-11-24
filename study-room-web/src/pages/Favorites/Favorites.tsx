@@ -1,6 +1,34 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar/sidebar";
 import './favorites.css';
+import { FaTrash } from "react-icons/fa";
+
+function getCurrentUser() {
+  let session, users;
+
+  try {
+    session = JSON.parse(localStorage.getItem("mock_user_session") || "{}");
+  } catch {
+    session = {};
+  }
+
+  try {
+    users = JSON.parse(localStorage.getItem("users") || "[]");
+    if (!Array.isArray(users)) users = [];
+  } catch {
+    users = [];
+  }
+
+  return users.find((u) => u.email === session.email);
+}
+
+function saveUser(updatedUser: any) {
+  const users = JSON.parse(localStorage.getItem("users") || "[]");
+  const newUsers = users.map((u: any) =>
+    u.email === updatedUser.email ? updatedUser : u
+  );
+  localStorage.setItem("users", JSON.stringify(newUsers));
+}
 
 interface FavoriteRoom {
     id: number;
@@ -23,39 +51,39 @@ const Favorites: React.FC = () => {
     const [favorites, setFavorites] = useState<FavoriteRoom[]>([]);
     const [editMode, setEditMode] = useState<boolean>(false);
 
+    
     useEffect(() => {
-        const raw = localStorage.getItem("favorites");
+        const user = getCurrentUser();
+        if (!user) return (window.location.href = "/login");
 
-        if (!raw) {
-            // First time: load defaults
-            localStorage.setItem("favorites", JSON.stringify(defaultFavorites));
+        if (user.favorites === undefined || user.favorites === null) {
+            // First login → give defaults
+            user.favorites = defaultFavorites;
+            saveUser(user);
             setFavorites(defaultFavorites);
-            return;
-        }
-
-        try {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-                setFavorites(parsed);
-            } else {
-                setFavorites(defaultFavorites);
-            }
-        } catch {
-            setFavorites(defaultFavorites);
+        } else {
+            setFavorites(user.favorites);
         }
     }, []);
 
-    // Simulate status changes every 5 seconds
     useEffect(() => {
         if (favorites.length === 0) return;
 
         const interval = setInterval(() => {
-            setFavorites(prev => {
-                const updated = prev.map(room => ({
+            setFavorites((prev) => {
+                if (prev.length === 0) return prev;
+
+                const updated = prev.map((room) => ({
                     ...room,
-                    status: ["available", "busy", "offline"][Math.floor(Math.random() * 3)] as any
+                    status: ["available", "busy", "offline"][Math.floor(Math.random() * 3)] as FavoriteRoom["status"],
                 }));
-                localStorage.setItem("favorites", JSON.stringify(updated));
+
+                const user = getCurrentUser();
+                if (user) {
+                    user.favorites = updated;
+                    saveUser(user);
+                }
+
                 return updated;
             });
         }, 5000);
@@ -63,14 +91,31 @@ const Favorites: React.FC = () => {
         return () => clearInterval(interval);
     }, [favorites.length]);
 
-    // Remove favorite & update localStorage
+
+    useEffect(() => {
+        const handler = () => {
+            const user = getCurrentUser();
+            if (user?.favorites) {
+                setFavorites(user.favorites);
+            }
+        };
+
+        window.addEventListener("storage", handler);
+        return () => window.removeEventListener("storage", handler);
+    }, []);
+
     const removeFavorite = (id: number) => {
-        setFavorites(prev => {
-            const updated = prev.filter(room => room.id !== id);
-            localStorage.setItem("favorites", JSON.stringify(updated));
-            return updated;
-        });
+        const updated = favorites.filter((room) => room.id !== id);
+
+        setFavorites(updated);
+
+        const user = getCurrentUser();
+        if (user) {
+            user.favorites = updated;
+            saveUser(user);
+        }
     };
+
 
     const getStatusColor = (status: FavoriteRoom["status"]) => {
         switch (status) {
@@ -114,7 +159,7 @@ const Favorites: React.FC = () => {
                                             className="remove-btn"
                                             onClick={() => removeFavorite(room.id)}
                                         >
-                                            ✕
+                                            <FaTrash size={16} color="white" />
                                         </button>
                                     )}
                                 </div>

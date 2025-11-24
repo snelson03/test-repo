@@ -171,15 +171,15 @@ html, body {
 }
 
 .favorites-list li.occupied::before {
-    background-color: #CA2E2E;  /* red */
+    background-color: #CA2E2E; 
 }
 
 .favorites-list li.offline::before {
-    background-color: #9E9E9E;  /* yellow */
+    background-color: #9E9E9E;  
 }
 
 .favorites-list li.available::before {
-    background-color: #2EB159;  /* green */
+    background-color: #2EB159;  
 }
 
 .map {
