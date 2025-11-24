@@ -1,7 +1,6 @@
 .sidebar {
     font-family: 'Bebas Neue', bebas-neue;
     width: 200px;
-    /* background-color: #00694E; */
     background-color: #024230;
     color: white;
     height: 100vh;
@@ -14,7 +13,6 @@
 .sidebar .logo img {
     width: 238px;
     margin-left: -1rem;
-    margin-top: -3rem;
     margin-bottom: -1rem;
 }
 
@@ -29,4 +27,29 @@
 
 .sidebar a:hover {
     text-decoration: underline;
+}
+
+.logout-button {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.75rem;
+    display: block;
+    margin-top: 450px;
+    margin-left: -131px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.logout-button:hover {
+    text-decoration: underline;
+    outline: none;
+    box-shadow: none;
+}
+
+.logout-button:focus,
+.logout-button:active {
+    outline: none;
+    box-shadow: none;
 }

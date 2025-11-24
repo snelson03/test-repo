@@ -24,21 +24,18 @@ test("buildingData defines multiple floors per building and Alden has 7 floors",
 test("genRooms cycles statuses and is used to produce dynamic room lists", () => {
   const content = readFileSafe(findRoomPath);
 
-  // Statuses array exists
   assert.match(
     content,
     /\bconst\s+statuses\s*[:=]/,
     "genRooms should declare a statuses variable"
   );
 
-  // Array.from(...).map(...) usage (relaxed check)
   assert.match(
     content,
     /Array\.from\(\s*\{\s*length\s*:\s*count\s*\}\s*\)\.map\s*\(/,
     "genRooms should use Array.from({ length: count }).map(...) to generate rooms"
   );
 
-  // Cycling of statuses via modulus check (relaxed)
   assert.match(
     content,
     /statuses\[\s*i\s*%\s*statuses\.length\s*\]/,
@@ -57,7 +54,6 @@ test("FindRoom maps roomsForSelected to .room elements and uses room.status for 
 
   assert.match(content, /roomsForSelected\.map\(\s*\(room\)\s*=>\s*\(/, "roomsForSelected should be mapped to JSX elements");
 
-  // dynamic class usage (looser accept multiple styles)
   assert.ok(
     /className=\{`room\s*\$\{room\.status\}`\}/.test(content) ||
     /className=\{\s*["']room["']\s*\+\s*room\.status\s*\}/.test(content) ||
