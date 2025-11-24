@@ -1,14 +1,29 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import Sidebar from "../../components/Sidebar/sidebar";
 import './home.css';
-import MapPlaceholder from "../../assets/map-placeholder.png";
+import Map from "../../assets/map.jpeg";
 
 const Home: React.FC = () => {
+  const [firstName, setFirstName] = useState("");
+
+  useEffect(() => {
+    const session = JSON.parse(localStorage.getItem("mock_user_session") || "{}");
+    const users = JSON.parse(localStorage.getItem("users") || "[]");
+
+    if (session.email) {
+      const foundUser = users.find((u: any) => u.email === session.email);
+      if (foundUser) {
+        setFirstName(foundUser.firstName);
+      }
+    }
+  }, []);
+
+
   return (
     <div className="home-container">
       <Sidebar />
       <main className="home-content">
-        <h1 className="welcome-text">Welcome back, sn280121!</h1>
+        <h1 className="welcome-text">Welcome back, {firstName}!</h1>
 
         <section className="summary">
           <div className="summary-bar">
@@ -61,7 +76,7 @@ const Home: React.FC = () => {
         
           <section className="map-section">
             <div className="map">
-              <img src={MapPlaceholder} alt="Campus Map" />
+              <img src={Map} alt="Campus Map" />
             </div>
           </section>
 

@@ -30,6 +30,15 @@ html, body {
 .building-floor-selector {
     position: relative;
     margin-left: -1rem;
+    margin-bottom: -20px;
+}
+
+.top-actions {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    width: 100%;
+    margin-bottom: 1.5rem;
 }
 
 .building-floor-btn {
@@ -46,6 +55,42 @@ html, body {
     cursor: pointer;
     transition: transform 0.2s ease;
     margin-left: -1.8rem;
+    margin-bottom: -50px;
+}
+
+.edit-favorites-btn {
+    background: white;
+    color: #024230;
+    border: 2px solid#024230;
+    padding: 10px 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.15s ease-in-out;
+    margin-bottom: 10px;
+
+    white-space: nowrap;       
+    display: inline-flex;      
+    align-items: center;       
+    gap: 6px;
+}
+
+.edit-favorites-btn:not(.done-btn) {
+    margin-left: 1245px;
+}
+
+.done-btn {
+    margin-left: 1310px;
+    margin-bottom: 10px;
+}
+
+.edit-favorites-btn:hover {
+    border: 2px solid#024230;
+}
+
+.edit-favorites-btn:focus {
+    border: 2px solid#024230;
 }
 
 .building-floor-btn:hover {
@@ -131,7 +176,6 @@ html, body {
     width: 200px;
     height: 200px;
     border: 3px solid white;
-    /* border: 3px solid black; */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -144,6 +188,7 @@ html, body {
     background: lightgray;
     padding-top: 0.5rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    position: relative;
 }
 
 .room.available {
@@ -158,10 +203,30 @@ html, body {
     background: #7f8c8d;
 }
 
+.favorite-heart {
+    position: absolute;
+    top: -15px;
+    right: -25px;
+    font-size: 30px;
+    color: white;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 3;
+}
+
+.favorite-heart:hover {
+    transform: scale(1.2);
+}
+
+.favorite-heart:focus {
+    outline: none;
+    box-shadow: none;
+}
+
 .room-number {
-    /* font-size: 1.5rem; */
-    font-size: 2.5rem;
+    font-size: 2.5rem !important;
     font-weight: 500;
     color: white;
-    /* color: black; */
+    margin-top: 60px;
 }
