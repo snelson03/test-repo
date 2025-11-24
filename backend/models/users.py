@@ -1,10 +1,18 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Table, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
 from db import Base
+
+# Association table for favorite rooms (many-to-many relationship)
+favorite_rooms = Table(
+    "favorite_rooms",
+    Base.metadata,
+    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
+    Column("room_id", Integer, ForeignKey("rooms.id"), primary_key=True),
+)
 
 
 # SQLAlchemy Model
@@ -18,10 +26,16 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
     is_faculty = Column(Boolean, default=False)
+    email_verified = Column(Boolean, default=False, nullable=False)
+    email_verification_token = Column(String, nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationship to room blocks
     room_blocks = relationship("RoomBlock", back_populates="faculty")
+    # Relationship to favorite rooms
+    favorite_rooms = relationship(
+        "Room", secondary=favorite_rooms, back_populates="favorited_by"
+    )
 
 
 # Pydantic Models for API
@@ -44,6 +58,7 @@ class UserResponse(UserBase):
     is_active: bool
     is_admin: bool
     is_faculty: bool
+    email_verified: bool
     created_at: Optional[datetime] = None
 
     class Config:

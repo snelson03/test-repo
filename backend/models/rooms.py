@@ -28,6 +28,10 @@ class Room(Base):
     building = relationship("Building", back_populates="rooms")
     # Relationship to room blocks
     blocks = relationship("RoomBlock", back_populates="room")
+    # Relationship to users who favorited this room
+    favorited_by = relationship(
+        "User", secondary="favorite_rooms", back_populates="favorite_rooms"
+    )
 
 
 # Pydantic Models for API
