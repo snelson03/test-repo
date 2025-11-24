@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 from models.users import UserResponse, UserUpdate, User as UserModel
+from models.rooms import Room as RoomModel, RoomResponse
 from utils.auth import (
     get_current_active_user,
     require_admin,
@@ -28,6 +30,12 @@ async def update_current_user(
     """Update current authenticated user"""
     # Check if email is being changed and if it already exists
     if user_data.email and user_data.email != current_user.email:
+        # Validate email domain (must be ohio.edu)
+        if not user_data.email.lower().endswith("@ohio.edu"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only ohio.edu email addresses are allowed",
+            )
         existing_user = get_user_by_email(db, email=user_data.email)
         if existing_user:
             raise HTTPException(
@@ -86,6 +94,12 @@ async def update_user_admin(
 
     # Check for duplicate email if being updated
     if user_data.email and user_data.email != user.email:
+        # Validate email domain (must be ohio.edu)
+        if not user_data.email.lower().endswith("@ohio.edu"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only ohio.edu email addresses are allowed",
+            )
         existing_user = get_user_by_email(db, email=user_data.email)
         if existing_user:
             raise HTTPException(
@@ -128,3 +142,61 @@ async def delete_user_admin(
     db.delete(user)
     db.commit()
     return {"message": "User deleted successfully"}
+
+
+# Favorite rooms endpoints
+class FavoriteRoomRequest(BaseModel):
+    room_id: int
+
+
+@router.post("/me/favorites", status_code=status.HTTP_201_CREATED)
+async def add_favorite_room(
+    favorite_data: FavoriteRoomRequest,
+    current_user: UserModel = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Add a room to user's favorites"""
+    room = db.query(RoomModel).filter(RoomModel.id == favorite_data.room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    if room in current_user.favorite_rooms:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Room already in favorites"
+        )
+
+    current_user.favorite_rooms.append(room)
+    db.commit()
+
+    return {"message": "Room added to favorites"}
+
+
+@router.delete("/me/favorites/{room_id}")
+async def remove_favorite_room(
+    room_id: int,
+    current_user: UserModel = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Remove a room from user's favorites"""
+    room = db.query(RoomModel).filter(RoomModel.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+    if room not in current_user.favorite_rooms:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Room not in favorites"
+        )
+
+    current_user.favorite_rooms.remove(room)
+    db.commit()
+
+    return {"message": "Room removed from favorites"}
+
+
+@router.get("/me/favorites", response_model=List[RoomResponse])
+async def get_favorite_rooms(
+    current_user: UserModel = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Get all favorite rooms for current user"""
+    return current_user.favorite_rooms
