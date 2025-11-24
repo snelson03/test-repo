@@ -1,9 +1,10 @@
-// tsconfig file
-// sets up paths for filenames and compilation
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "target": "esnext",
+    "module": "es2020",
+    "jsx": "react-native",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
@@ -13,8 +14,7 @@
     "paths": {
       "@/*": ["src/*"],
       "@app/*": ["app/*"]
-    },
-    "types": []     
+    }
   },
   "include": [
     "app/**/*",
