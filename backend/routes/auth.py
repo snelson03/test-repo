@@ -29,20 +29,20 @@ from models.users import User as UserModel
 router = APIRouter()
 
 # Email configuration
-conf = ConnectionConfig(
-    MAIL_USERNAME=MAIL_USERNAME,
-    MAIL_PASSWORD=MAIL_PASSWORD,
-    MAIL_FROM=MAIL_FROM,
-    MAIL_PORT=MAIL_PORT,
-    MAIL_SERVER=MAIL_SERVER,
-    MAIL_FROM_NAME=MAIL_FROM_NAME,
-    MAIL_TLS=MAIL_TLS,
-    MAIL_SSL=MAIL_SSL,
-    USE_CREDENTIALS=True,
-    TEMPLATE_FOLDER=None,
-)
+# conf = ConnectionConfig(
+#     MAIL_USERNAME=MAIL_USERNAME,
+#     MAIL_PASSWORD=MAIL_PASSWORD,
+#     MAIL_FROM=MAIL_FROM,
+#     MAIL_PORT=MAIL_PORT,
+#     MAIL_SERVER=MAIL_SERVER,
+#     MAIL_FROM_NAME=MAIL_FROM_NAME,
+#     MAIL_TLS=MAIL_TLS,
+#     MAIL_SSL=MAIL_SSL,
+#     USE_CREDENTIALS=True,
+#     TEMPLATE_FOLDER=None,
+# )
 
-fm = FastMail(conf)
+# fm = FastMail(conf)
 
 
 async def send_verification_email(email: str, token: str):
@@ -54,7 +54,7 @@ async def send_verification_email(email: str, token: str):
         body=f"Please click the following link to verify your email: {verification_url}",
         subtype="html",
     )
-    await fm.send_message(message)
+    # await fm.send_message(message)
 
 
 @router.post(
@@ -92,7 +92,7 @@ async def signup(
         is_active=True,
         is_admin=False,  # New users are normal users by default
         is_faculty=False,  # New users are not faculty by default
-        email_verified=False,
+        email_verified=True,  # Temporary until email verification is implemented
         email_verification_token=verification_token,
     )
 
@@ -101,7 +101,9 @@ async def signup(
     db.refresh(new_user)
 
     # Send verification email in background
-    background_tasks.add_task(send_verification_email, new_user.email, verification_token)
+    background_tasks.add_task(
+        send_verification_email, new_user.email, verification_token
+    )
 
     return new_user
 
@@ -139,7 +141,9 @@ async def signin(
 @router.get("/verify-email")
 async def verify_email(token: str, db: Session = Depends(get_db)):
     """Verify user email with verification token"""
-    user = db.query(UserModel).filter(UserModel.email_verification_token == token).first()
+    user = (
+        db.query(UserModel).filter(UserModel.email_verification_token == token).first()
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid verification token"
