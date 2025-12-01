@@ -1,7 +1,14 @@
 // User context file - saves user data (name, email, phone) per logged in user
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { usersAPI, authAPI } from "@/utils/api";
 
 type UserData = {
   email: string;
@@ -13,7 +20,7 @@ type UserContextType = {
   user: UserData | null;
   updateUserField: (field: keyof UserData, value: string) => void;
   logoutUser: () => Promise<void>;
-  setUserForLogin: (email: string) => Promise<void>; 
+  setUserForLogin: (email: string) => Promise<void>;
 };
 
 const UserContext = createContext<UserContextType>({
@@ -30,24 +37,19 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-        const email = await AsyncStorage.getItem('loggedInUser');
-        if (!email) return;
+        const isAuth = await authAPI.isAuthenticated();
+        if (!isAuth) return;
 
-        const saved = await AsyncStorage.getItem(`userdata_${email}`);
-
-        if (saved) {
-          setUser(JSON.parse(saved));
-        } else {
-          const newUser: UserData = {
-            email,
-            name: 'User',
-            phone: '',
-          };
-          setUser(newUser);
-          await AsyncStorage.setItem(`userdata_${email}`, JSON.stringify(newUser));
-        }
+        const apiUser = await usersAPI.getCurrentUser();
+        setUser({
+          email: apiUser.email,
+          name: apiUser.full_name || "User",
+          phone: "", // Phone not in backend model
+        });
       } catch (e) {
-        console.warn('Failed to load user data:', e);
+        console.warn("Failed to load user data:", e);
+        // If auth fails, clear token
+        await authAPI.logout();
       }
     };
 
@@ -57,20 +59,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   //  explicitly load a user's profile after login
   const setUserForLogin = async (email: string) => {
     try {
-      const saved = await AsyncStorage.getItem(`userdata_${email}`);
-      if (saved) {
-        setUser(JSON.parse(saved));
-      } else {
-        const newUser: UserData = {
-          email,
-          name: 'User',
-          phone: '',
-        };
-        setUser(newUser);
-        await AsyncStorage.setItem(`userdata_${email}`, JSON.stringify(newUser));
-      }
+      const apiUser = await usersAPI.getCurrentUser();
+      setUser({
+        email: apiUser.email,
+        name: apiUser.full_name || "User",
+        phone: "", // Phone not in backend model
+      });
     } catch (e) {
-      console.warn('Failed to load user for login:', e);
+      console.warn("Failed to load user for login:", e);
     }
   };
 
@@ -78,23 +74,34 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const updateUserField = async (field: keyof UserData, value: string) => {
     if (!user) return;
 
-    const updated = { ...user, [field]: value };
-    setUser(updated);
-
     try {
-      await AsyncStorage.setItem(`userdata_${user.email}`, JSON.stringify(updated));
+      if (field === "name") {
+        // Update via API
+        const updatedUser = await usersAPI.updateCurrentUser({
+          full_name: value,
+        });
+        setUser({
+          email: updatedUser.email,
+          name: updatedUser.full_name || "User",
+          phone: user.phone,
+        });
+      } else {
+        // For phone, just update local state (not in backend)
+        const updated = { ...user, [field]: value };
+        setUser(updated);
+      }
     } catch (e) {
-      console.warn('Failed to save user data:', e);
+      console.warn("Failed to save user data:", e);
     }
   };
 
   // logout clears logged-in email (preferences remain stored)
   const logoutUser = async () => {
     try {
-      await AsyncStorage.removeItem('loggedInUser');
+      await authAPI.logout();
       setUser(null);
     } catch (e) {
-      console.warn('Error logging out:', e);
+      console.warn("Error logging out:", e);
     }
   };
 

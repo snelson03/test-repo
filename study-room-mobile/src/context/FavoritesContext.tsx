@@ -1,12 +1,15 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useUser } from '@/context/UserContext';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useUser } from "@/context/UserContext";
+import { usersAPI, buildingsAPI } from "@/utils/api";
+import type { Room } from "@/utils/api";
 
 // define what a favorite looks like
 export interface FavoriteItem {
   name: string;
   status?: string;
   tstatus?: string;
+  roomId?: number; // Add room ID for API operations
 }
 
 // define what the context provides
@@ -24,9 +27,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const { user } = useUser(); //  find which user is currently logged in
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]); // typed favorites array
 
-  const storageKey = user ? `favorites_${user.email}` : null;
-
-  // load favorites from async storage when app starts OR when logged-in user switches
+  // load favorites from API when app starts OR when logged-in user switches
   useEffect(() => {
     (async () => {
       await loadFavoritesForUser();
@@ -35,32 +36,69 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 
   //  loads favorites only for the currently logged-in user
   const loadFavoritesForUser = async () => {
-    if (!storageKey) {
+    if (!user) {
       setFavorites([]); // no logged-in user = no favorites
       return;
     }
     try {
-      const stored = await AsyncStorage.getItem(storageKey);
-      setFavorites(stored ? JSON.parse(stored) : []); // fallback to empty
+      const [favoriteRooms, buildingsData] = await Promise.all([
+        usersAPI.getFavorites(),
+        buildingsAPI.getAll(),
+      ]);
+
+      // Create building map
+      const buildingMap = new Map<number, string>();
+      buildingsData.forEach((b) => buildingMap.set(b.id, b.name));
+
+      // Convert API rooms to FavoriteItem format
+      const convertedFavorites: FavoriteItem[] = favoriteRooms.map((room) => {
+        const buildingName =
+          buildingMap.get(room.building_id) || "Unknown Building";
+        const roomName = `${buildingName} ${room.room_number}`;
+        const status = room.is_available ? "available" : "occupied";
+        return {
+          name: roomName,
+          status,
+          tstatus: status.charAt(0).toUpperCase() + status.slice(1),
+          roomId: room.id,
+        };
+      });
+
+      setFavorites(convertedFavorites);
     } catch (e) {
-      console.log('Error loading favorites:', e);
+      console.log("Error loading favorites:", e);
+      setFavorites([]);
     }
   };
 
-  // add new favorite and save to local storage 
+  // add new favorite via API
   const addFavorite = async (room: FavoriteItem) => {
-    if (!storageKey) return; // ensures user exists
-    const updated = [...favorites, room];
-    setFavorites(updated);
-    await AsyncStorage.setItem(storageKey, JSON.stringify(updated)); // save to user-specific key
+    if (!user || !room.roomId) return; // ensures user exists and room has ID
+
+    try {
+      await usersAPI.addFavorite(room.roomId);
+      // Reload favorites to get updated list
+      await loadFavoritesForUser();
+    } catch (e) {
+      console.log("Error adding favorite:", e);
+    }
   };
 
-  // remove favorite by name and save new list (per user)
+  // remove favorite via API
   const removeFavorite = async (roomName: string) => {
-    if (!storageKey) return; // ensures user exists
-    const updated = favorites.filter((f) => f.name !== roomName);
-    setFavorites(updated);
-    await AsyncStorage.setItem(storageKey, JSON.stringify(updated)); //save to user-specific key
+    if (!user) return; // ensures user exists
+
+    try {
+      // Find the room ID from the favorite name
+      const favorite = favorites.find((f) => f.name === roomName);
+      if (favorite?.roomId) {
+        await usersAPI.removeFavorite(favorite.roomId);
+        // Reload favorites to get updated list
+        await loadFavoritesForUser();
+      }
+    } catch (e) {
+      console.log("Error removing favorite:", e);
+    }
   };
 
   // provide all functions and favorites list to children
@@ -77,7 +115,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
 export function useFavorites() {
   const context = useContext(FavoritesContext);
   if (!context) {
-    throw new Error('useFavorites must be used within a FavoritesProvider');
+    throw new Error("useFavorites must be used within a FavoritesProvider");
   }
   return context;
 }

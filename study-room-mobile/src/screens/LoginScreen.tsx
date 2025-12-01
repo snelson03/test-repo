@@ -2,7 +2,7 @@
 // user must enter correct username and password saved locally to enter the app,
 // account can be created by clicking create account
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -11,38 +11,47 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
-  Animated
-} from 'react-native';
+  Animated,
+} from "react-native";
 
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import colors from '@/constants/colors';
-import { useUser } from '@/context/UserContext';
-import { RootStackParamList } from '@/navigation/AppNavigator';
+import colors from "@/constants/colors";
+import { useUser } from "@/context/UserContext";
+import { RootStackParamList } from "@/navigation/AppNavigator";
+import { authAPI } from "@/utils/api";
 
 // navigation
 export default function LoginScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const { setUserForLogin } = useUser();   // load user into context
+  const { setUserForLogin } = useUser(); // load user into context
 
   // form fields
-  const [email, setEmail] = useState(''); 
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // auto-login if already signed in
   useEffect(() => {
     async function checkLogin() {
-      const saved = await AsyncStorage.getItem('loggedInUser');
-      if (saved) {
-        await setUserForLogin(saved);
-        navigation.navigate('Home' as never);
+      const isAuth = await authAPI.isAuthenticated();
+      if (isAuth) {
+        try {
+          const { usersAPI } = await import("@/utils/api");
+          const user = await usersAPI.getCurrentUser();
+          await setUserForLogin(user.email);
+          navigation.navigate("Home" as never);
+        } catch (error) {
+          // Token invalid, clear it
+          await authAPI.logout();
+        }
       }
     }
     checkLogin();
@@ -57,59 +66,42 @@ export default function LoginScreen() {
     }).start();
   }, []);
 
-  // Login logic (real account data, OU and email authentication not yet implemented)
+  // Login logic using real API
   const handleLogin = async () => {
-    setError('');
+    setError("");
 
     if (!email.trim() || !password.trim()) {
-      setError('Please enter both email and password.');
+      setError("Please enter both email and password.");
+      return;
+    }
+
+    if (!email.endsWith("@ohio.edu")) {
+      setError("You must use an @ohio.edu email.");
       return;
     }
 
     setLoading(true);
 
-    setTimeout(async () => {
-      try {
-        const key = `userdata_${email.toLowerCase()}`;
-        const savedUser = await AsyncStorage.getItem(key);
+    try {
+      await authAPI.signin(email.toLowerCase(), password);
 
-        if (!savedUser) { // checks if user account exists
-          setLoading(false);
-          setError('Incorrect email or password');
-          return;
-        }
+      // Load user data into context
+      await setUserForLogin(email.toLowerCase());
 
-        const userData = JSON.parse(savedUser);
-
-        if (userData.password !== password) { // checks if user password is correct
-          setLoading(false);
-          setError('Incorrect email or password');
-          return;
-        }
-
-        // Save login state
-        await AsyncStorage.setItem('loggedInUser', email.toLowerCase());
-
-        // Load into global context
-        await setUserForLogin(email.toLowerCase());
-
-        setLoading(false);
-        navigation.navigate('Home' as never);
-
-      } catch (e) {
-        setLoading(false);
-        setError('Login error. Try again.');
-      }
-    }, 800);
+      setLoading(false);
+      navigation.navigate("Home" as never);
+    } catch (err: any) {
+      setLoading(false);
+      setError(err.message || "Login failed. Please try again.");
+    }
   };
 
   return (
     <View style={styles.container}>
-
       {/* Logo */}
       <Animated.View style={{ opacity: fadeAnim }}>
         <Image
-          source={require('@/assets/images/bf_logo.png')}
+          source={require("@/assets/images/bf_logo.png")}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -136,7 +128,7 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={{ alignSelf: 'flex-end' }}>
+      <TouchableOpacity style={{ alignSelf: "flex-end" }}>
         <Text style={styles.resetText}>Reset Password</Text>
       </TouchableOpacity>
 
@@ -150,13 +142,12 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       {/* CREATE ACCOUNT BUTTON */}
-      <TouchableOpacity onPress={() => navigation.navigate('CreateAccount')}>
+      <TouchableOpacity onPress={() => navigation.navigate("CreateAccount")}>
         <Text style={styles.createAccountText}>Create an Account</Text>
       </TouchableOpacity>
     </View>
   );
 }
-
 
 // Styles section
 const styles = StyleSheet.create({
@@ -174,48 +165,48 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 18,
-    fontFamily: 'BebasNeue-Regular',
+    fontFamily: "BebasNeue-Regular",
     color: colors.white,
     marginBottom: 4,
   },
   input: {
-    backgroundColor: '#D9D9D9',
+    backgroundColor: "#D9D9D9",
     borderRadius: 3,
     padding: 10,
     marginBottom: 20,
   },
   resetText: {
     color: colors.white,
-    textDecorationLine: 'underline',
-    fontFamily: 'Poppins',
+    textDecorationLine: "underline",
+    fontFamily: "Poppins",
     marginBottom: 30,
     fontSize: 13,
   },
   errorText: {
-    color: '#FFB3B3',
+    color: "#FFB3B3",
     marginBottom: 10,
     fontSize: 15,
   },
   loginButton: {
-    backgroundColor: '#D9D9D9',
+    backgroundColor: "#D9D9D9",
     paddingVertical: 14,
     borderRadius: 3,
-    alignItems: 'center',
-    width: '55%',
-    alignSelf: 'center',
+    alignItems: "center",
+    width: "55%",
+    alignSelf: "center",
     marginTop: 10,
     marginBottom: 240,
   },
   loginText: {
     color: colors.primary,
-    fontFamily: 'BebasNeue-Regular',
+    fontFamily: "BebasNeue-Regular",
     fontSize: 25,
   },
   createAccountText: {
     color: colors.white,
-    fontFamily: 'Poppins',
-    textDecorationLine: 'underline',
-    textAlign: 'center',
+    fontFamily: "Poppins",
+    textDecorationLine: "underline",
+    textAlign: "center",
     fontSize: 16,
   },
 });
