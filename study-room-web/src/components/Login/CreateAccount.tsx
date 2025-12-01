@@ -1,7 +1,8 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import BCRFLogo from "../../assets/logo.png";
 import "./createaccount.css";
-
+import { authAPI } from "../../utils/api";
 
 const CreateAccount: React.FC = () => {
   const [firstName, setFirstName] = useState("");
@@ -10,8 +11,11 @@ const CreateAccount: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleCreateAccount = () => {
+  const handleCreateAccount = async () => {
+    setError("");
 
     if (firstName.trim().length === 0) {
       return setError("First name is required.");
@@ -29,17 +33,17 @@ const CreateAccount: React.FC = () => {
       return setError("Please enter a valid 10-digit phone number.");
     }
 
-    const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-
-    if (storedUsers.find((u: any) => u.email === email)) {
-      return setError("Account with this email already exists.");
+    setLoading(true);
+    try {
+      await authAPI.signup(email, password, firstName);
+      // After signup, automatically sign in
+      await authAPI.signin(email, password);
+      navigate("/");
+    } catch (err: any) {
+      setError(err.message || "Account creation failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    storedUsers.push({ firstName, email, password, phone: cleanedPhone, favorites: [], preferences: {} });
-    localStorage.setItem("users", JSON.stringify(storedUsers));
-
-    localStorage.setItem("mock_user_session", JSON.stringify({ email }));
-    window.location.href = "/";
   };
 
   return (
@@ -50,7 +54,6 @@ const CreateAccount: React.FC = () => {
 
       <h1>Create Account</h1>
       <div className="form-box">
-
         <h2>First Name</h2>
         <input
           value={firstName}
@@ -58,13 +61,25 @@ const CreateAccount: React.FC = () => {
         />
 
         <h3>Email</h3>
-        <input type="email" value={email} onChange={e => setEmail(e.target.value)} />
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
 
         <h4>Password</h4>
-        <input type="password" value={password} onChange={e => setPassword(e.target.value)} />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
         <h5>Re-enter Password</h5>
-        <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+        <input
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
 
         <h6>Phone Number</h6>
         <input
@@ -75,11 +90,12 @@ const CreateAccount: React.FC = () => {
         />
       </div>
 
-        {error && <p className="error2">{error}</p>}
-        <div className="create">
-        <button onClick={handleCreateAccount}>Create</button>
-
-    </div>
+      {error && <p className="error2">{error}</p>}
+      <div className="create">
+        <button onClick={handleCreateAccount} disabled={loading}>
+          {loading ? "Creating..." : "Create"}
+        </button>
+      </div>
     </div>
   );
 };

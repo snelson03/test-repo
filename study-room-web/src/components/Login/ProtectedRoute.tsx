@@ -1,10 +1,9 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
+import { authAPI } from "../../utils/api";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const session = localStorage.getItem("mock_user_session");
-
-  if (!session) {
+  if (!authAPI.isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
 

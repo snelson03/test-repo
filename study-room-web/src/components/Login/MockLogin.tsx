@@ -2,41 +2,39 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./mocklogin.css";
 import BCRFLogo from "../../assets/logo.png";
+import { authAPI } from "../../utils/api";
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    setError("");
+
     if (!email.endsWith("@ohio.edu")) {
       return setError("You must use an @ohio.edu email.");
     }
 
-    const storedUsers = JSON.parse(localStorage.getItem("users") || "[]");
-
-    const user = storedUsers.find((u: any) => u.email === email);
-
-    if (!user) {
-      return setError("Account does not exist. Please create an account.");
+    setLoading(true);
+    try {
+      await authAPI.signin(email, password);
+      navigate("/");
+    } catch (err: any) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    if (user.password !== password) {
-      return setError("Incorrect password.");
-    }
-
-    localStorage.setItem("mock_user_session", JSON.stringify({ email }));
-
-    navigate("/");
   };
 
   return (
     <div className="login-container">
       <div className="logo">
-            <img src={BCRFLogo} alt="Bobcat Room Finder" />
-        </div>
+        <img src={BCRFLogo} alt="Bobcat Room Finder" />
+      </div>
 
       <h1>Email</h1>
       <input
@@ -52,19 +50,20 @@ const Login: React.FC = () => {
         onChange={(e) => setPassword(e.target.value)}
       />
       <div className="forgotpass">
-            <button>Reset Password</button>
+        <button>Reset Password</button>
       </div>
 
       {error && <p className="error">{error}</p>}
 
-      <button onClick={handleLogin}>Login</button>
+      <button onClick={handleLogin} disabled={loading}>
+        {loading ? "Logging in..." : "Login"}
+      </button>
 
       <div className="create-account">
-            <button onClick={() => navigate("/create-account")}>
-              Create an Account
-            </button>
+        <button onClick={() => navigate("/create-account")}>
+          Create an Account
+        </button>
       </div>
-      
     </div>
   );
 };
