@@ -14,6 +14,8 @@ import {
   Animated,
   Alert,
   ScrollView,
+  Platform,
+  useWindowDimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -25,6 +27,10 @@ export default function CreateAccountScreen() {
   const navigation = useNavigation();
   const { setUserForLogin } = useUser();
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // used for web sizing so the form doesn't stretch across the whole screen
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === "web";
 
   // form fields
   const [name, setName] = useState("");
@@ -88,93 +94,143 @@ export default function CreateAccountScreen() {
     }
   };
 
+  // web layout helper: keep the form at a reasonable width on desktop
+  const webMaxWidth = 520;
+  const webCardWidth = Math.min(width - 40, webMaxWidth); // leaves some padding on the sides
+
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.primary }}>
-      <View style={styles.container}>
-        {/* Logo */}
-        <Animated.View style={{ opacity: fadeAnim }}>
-          <Image
-            source={require("@/assets/images/bf_logo.png")}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </Animated.View>
+    // ScrollView is still used so it works on smaller screens and with the keyboard
+    <ScrollView
+      contentContainerStyle={[
+        styles.scrollContent,
+        isWeb && styles.scrollContentWeb, // only apply these changes on web
+      ]}
+      style={{ flex: 1, backgroundColor: colors.primary }}
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* on web, wrap the content in a fixed-width container so it doesn’t stretch */}
+      <View style={isWeb ? { width: webCardWidth } : undefined}>
+        <View style={[styles.container, isWeb && styles.containerWeb]}>
+          {/* Logo */}
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <Image
+              source={require("@/assets/images/bf_logo.png")}
+              style={styles.logo}// only adjust logo sizing on web
+              resizeMode="contain"
+            />
+          </Animated.View>
 
-        {/* Header */}
-        <Text style={styles.header}>CREATE ACCOUNT</Text>
+          {/* Header */}
+          <Text style={styles.header}>CREATE ACCOUNT</Text>
 
-        <View style={styles.formBox}>
-          {/* Name */}
-          <Text style={styles.label}>FIRST NAME</Text>
-          <TextInput style={styles.input} value={name} onChangeText={setName} />
+          <View style={styles.formBox}>
+            {/* Name */}
+            <Text style={styles.label}>FIRST NAME</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+            />
 
-          {/* Email */}
-          <Text style={styles.label}>EMAIL</Text>
-          <TextInput
-            style={styles.input}
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-          />
+            {/* Email */}
+            <Text style={styles.label}>EMAIL</Text>
+            <TextInput
+              style={styles.input}
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+            />
 
-          {/* Password */}
-          <Text style={styles.label}>PASSWORD</Text>
-          <TextInput
-            style={styles.input}
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-          />
+            {/* Password */}
+            <Text style={styles.label}>PASSWORD</Text>
+            <TextInput
+              style={styles.input}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
 
-          {/* Confirm Password */}
-          <Text style={styles.label}>RE-ENTER PASSWORD</Text>
-          <TextInput
-            style={styles.input}
-            secureTextEntry
-            value={confirm}
-            onChangeText={setConfirm}
-          />
+            {/* Confirm Password */}
+            <Text style={styles.label}>RE-ENTER PASSWORD</Text>
+            <TextInput
+              style={styles.input}
+              secureTextEntry
+              value={confirm}
+              onChangeText={setConfirm}
+            />
 
-          {/* Phone */}
-          <Text style={styles.label}>PHONE NUMBER</Text>
-          <TextInput
-            style={styles.input}
-            keyboardType="phone-pad"
-            value={phone}
-            onChangeText={setPhone}
-          />
+            {/* Phone */}
+            <Text style={styles.label}>PHONE NUMBER</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
+            />
+          </View>
+
+          {/* Create Button */}
+          <TouchableOpacity
+            style={styles.createButton}
+            onPress={handleCreate}
+            disabled={loading}
+          >
+            <Text style={styles.createButtonText}>
+              {loading ? "CREATING..." : "CREATE"}
+            </Text>
+          </TouchableOpacity>
+
+          {/* return to login*/}
+          <TouchableOpacity
+            onPress={() => navigation.navigate("Login" as never)}
+          >
+            <Text style={[styles.returnText, isWeb && styles.returnTextWeb]}>
+              Return to Login
+            </Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Create Button */}
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={handleCreate}
-          disabled={loading}
-        >
-          <Text style={styles.createButtonText}>
-            {loading ? "CREATING..." : "CREATE"}
-          </Text>
-        </TouchableOpacity>
-        {/* return to login*/}
-        <TouchableOpacity onPress={() => navigation.navigate("Login" as never)}>
-          <Text style={styles.returnText}>Return to Login</Text>
-        </TouchableOpacity>
       </View>
     </ScrollView>
   );
 }
+
 // styles section
 const styles = StyleSheet.create({
+  // used so ScrollView can center things on web without breaking mobile layout
+  scrollContent: {
+    flexGrow: 1,
+  },
+
+  // only used on web to center the whole page content
+  scrollContentWeb: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 40,
+    paddingBottom: 40,
+  },
+
   container: {
     paddingTop: 80,
     paddingHorizontal: 24,
   },
+
+  // only used on web so the top spacing isn't huge on desktop screens
+  containerWeb: {
+    paddingTop: 40,
+  },
+
   logo: {
     width: 350,
     height: 120,
     alignSelf: "center",
     marginBottom: 30,
   },
+
+  // web-only logo tweak so it scales down nicely instead of overflowing
+  logoWeb: {
+    width: "100%",
+  },
+
   header: {
     fontFamily: "BebasNeue-Regular",
     fontSize: 35,
@@ -221,5 +277,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: "center",
     marginTop: 10,
+  },
+
+  // web-only: remove the custom font so it uses the browser default
+  returnTextWeb: {
+    fontFamily: undefined,
   },
 });
