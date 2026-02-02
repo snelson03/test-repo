@@ -1,9 +1,4 @@
 // Home Screen layout file
-// ✅ Minimal responsive sizing fixes ONLY (no design changes)
-// - Uses useWindowDimensions so web resizes live
-// - Centers content + caps max width on large screens
-// - Keeps your existing layout/styles/design intact
-// - Fixes overlay to cover full screen on wide displays
 
 import React, { useState, useRef, useEffect } from "react";
 import {
@@ -15,7 +10,7 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
-  useWindowDimensions, // ✅ MIN FIX: live dimensions for web + mobile
+  useWindowDimensions, 
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import colors from "@/constants/colors";
@@ -33,7 +28,7 @@ interface FavoriteItem {
   tstatus?: string;
 }
 
-// Maximum width for large screens (kept same intent as your original)
+// Maximum width for large screens
 const MAX_SCREEN_WIDTH = 1200;
 
 export default function HomeScreen() {
@@ -42,13 +37,10 @@ export default function HomeScreen() {
   const name = (user as any)?.name ?? "User";
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // ✅ MIN FIX: responsive sizing that updates on web resize
   const { width, height } = useWindowDimensions();
-  const contentWidth = width;
-  // optional tiny padding so content doesn't touch edges on very small screens
   const pagePad = width < 480 ? 12 : 0;
+  const contentWidth = width - pagePad * 2;
 
-  // type annotations to favorites
   const { favorites, addFavorite, removeFavorite } = useFavorites() as {
     favorites: FavoriteItem[];
     addFavorite: (item: FavoriteItem) => void;
@@ -146,26 +138,23 @@ export default function HomeScreen() {
   // Dropdown animation style
   const menuTranslate = menuAnim.interpolate({
     inputRange: [0, 1],
-    // ✅ MIN FIX: use height from live dimensions so it always moves fully off-screen
     outputRange: [-height, 0],
   });
 
   return (
-    // ✅ MIN FIX: center everything; do NOT stretch content on web
     <View style={{ flex: 1, alignItems: "center", backgroundColor: colors.white }}>
-      {/* ✅ MIN FIX: ScrollView fills screen; content container centers inner view */}
       <ScrollView
         style={{ width: "100%" }}
         contentContainerStyle={{
-          alignItems: "stretch",
+          alignItems: "center",
           paddingBottom: 32,
           paddingHorizontal: pagePad,
         }}
         scrollEnabled={!menuOpen}
         keyboardShouldPersistTaps="handled"
       >
-        {/* ✅ MIN FIX: Constrain your existing design to a max width */}
-        <View style={[styles.container, { width: contentWidth }]}>
+
+        <View style={[styles.container, { width: contentWidth, alignSelf: "center" }]}>
           {/* Header style setup */}
           <View style={styles.header}>
             <Image
@@ -359,7 +348,6 @@ export default function HomeScreen() {
         <Animated.View
           style={[
             styles.menuOverlay,
-            // ✅ MIN FIX: overlay covers the FULL screen width
             { width: "100%", transform: [{ translateY: menuTranslate }] },
           ]}
         >
@@ -368,7 +356,6 @@ export default function HomeScreen() {
             onPress={toggleMenu}
             activeOpacity={1}
           />
-          {/* Keep menu content sized like your design (centered, capped) */}
           <View style={[styles.menuContent, { width: contentWidth }]}>
             {menuItems.map((item) => (
               <TouchableOpacity
@@ -408,18 +395,17 @@ const styles = StyleSheet.create({
 
   // Welcome message
   welcome: {
-    paddingHorizontal: 0,
-    bottom: 0,
     top: 15,
-    left: 12,
     fontSize: 30,
     fontWeight: "500",
     fontFamily: "BebasNeue-Regular",
     color: colors.primary,
     position: "relative",
+
+    paddingHorizontal: 12,
   },
 
-  // Find a Room banner image, spacing, text color, and shadows implemented
+
   bannerContainer: {
     marginVertical: 12,
     paddingHorizontal: 20,
@@ -450,7 +436,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 
-  // Campus Map banner image, spacing, text color, and shadows implemented
   mapContainer: {
     marginVertical: 16,
     paddingHorizontal: 20,
@@ -472,7 +457,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
   },
 
-  // room card, spacing, text color, implemented
   cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40 },
   roomCardContainer: {
     flexDirection: "row",
@@ -495,7 +479,6 @@ const styles = StyleSheet.create({
   },
   roomCardTextRight: { fontSize: 14, color: colors.white },
 
-  // available now section implemented
   availableNowCard: {
     borderRadius: 0,
     padding: 20,
@@ -550,7 +533,6 @@ const styles = StyleSheet.create({
   },
   heartIcon: { marginTop: 2, marginRight: 12 },
 
-  // favorites card implementation
   favoritesCard: {
     backgroundColor: colors.marigold,
     padding: 20,
@@ -592,7 +574,6 @@ const styles = StyleSheet.create({
   favstatusDot: { width: 11, height: 11, borderRadius: 5.5 },
   favNumber: { color: colors.white, fontSize: 14 },
 
-  // preferences card
   preferencesLeft: {
     marginTop: 0,
     flexDirection: "row",
@@ -612,7 +593,6 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
 
-  // Floating button moved to bottom-right corner
   menuButtonContainer: {
     position: "absolute",
     top: 100,

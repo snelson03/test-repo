@@ -1,14 +1,6 @@
 // Campus Map screen file
 // This screen shows the campus map that includes zoom and pins at the three selected buildings
 // implements auto zoom when a pin is pressed and pulsing animation on selected pin
-//
-// ✅ CHANGES (web/tablet layout only; mobile stays stacked)
-// - REMOVED the 420px MAX_WIDTH clamp on web so it can use full screen width
-// - On wide screens: two-column layout (Map left, Buildings right) to remove blank space
-// - Map gets a UNIFORM green frame (equal padding on all sides)
-// - Pins stay correct by measuring the SAME container the image is drawn inside
-// - ✅ NEW: “Bump everything up” on web (less whitespace on top + slightly larger layout)
-// - ✅ NEW: Map image fills the green frame better (smaller left/right green gutters on web)
 
 import React, { useRef, useState } from "react";
 import {
@@ -21,10 +13,12 @@ import {
   LayoutChangeEvent,
   Animated,
   useWindowDimensions,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import colors from "@/constants/colors";
+import { useNavigation } from "@react-navigation/native";
 
 type BuildingWithPin = {
   id: string;
@@ -37,6 +31,7 @@ type BuildingWithPin = {
 
 export default function CampusMapScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
 
   const scrollViewMainRef = useRef<ScrollView | null>(null);
   const mapScrollRef = useRef<ScrollView | null>(null);
@@ -44,13 +39,22 @@ export default function CampusMapScreen() {
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
 
+  // sidebar only on web
+  const isWeb = Platform.OS === "web";
+  const menuItems = [
+    { name: "Home", route: "Home" as const },
+    { name: "Find a Room", route: "FindRoom" as const },
+    { name: "Campus Map", route: "CampusMap" as const },
+    { name: "Favorites", route: "Favorites" as const },
+    { name: "Preferences", route: "Preferences" as const },
+  ];
+
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(
     null
   );
 
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
-  // stores the map viewport size so pin positions can be calculated correctly
   const [mapSize, setMapSize] = useState<{ width: number; height: number }>({
     width: 0,
     height: 0,
@@ -73,16 +77,16 @@ export default function CampusMapScreen() {
       name: "Academic & Research Center",
       address: "61 Oxbow Trail, Athens, OH 45701",
       image: require("../assets/images/arc.png"),
-      pinX: 0.144,
-      pinY: 0.252,
+      pinX: 0.135,
+      pinY: 0.29,
     },
     {
       id: "stocker",
       name: "Stocker Center",
       address: "28 West Green Dr, Athens, OH 45701",
       image: require("../assets/images/stocker.png"),
-      pinX: 0.097,
-      pinY: 0.285,
+      pinX: 0.087,
+      pinY: 0.325,
     },
     {
       id: "alden",
@@ -90,15 +94,14 @@ export default function CampusMapScreen() {
       address: "30 Park Pl, Athens, OH 45701",
       image: require("../assets/images/alden.png"),
       pinX: 0.483,
-      pinY: 0.445,
+      pinY: 0.455,
     },
   ];
 
-  // ✅ web gets a taller map; mobile stays ~300
+  // web gets a taller map; mobile stays ~300
   const mapHeight = isWide ? 930 : 300;
 
-
-  // compute pixel locations of pins (turns percentages into real coordinates)
+  // compute pixel locations of pins
   const pinPositions: Record<string, { x: number; y: number }> = {};
   if (mapSize.width > 0 && mapSize.height > 0) {
     buildings.forEach((b) => {
@@ -124,7 +127,6 @@ export default function CampusMapScreen() {
 
     scrollView.scrollResponderZoomTo(zoomRect);
 
-    // on wide screens, don't force-scroll to top (feels weird on desktop)
     if (!isWide) {
       scrollViewMainRef.current?.scrollTo({ y: 0, animated: true });
     }
@@ -136,30 +138,25 @@ export default function CampusMapScreen() {
     zoomToBuilding(buildingId);
   };
 
-  // ✅ IMPORTANT: this measures the SAME box that the image is rendered into
   const handleMapLayout = (e: LayoutChangeEvent) => {
     const { width: w, height: h } = e.nativeEvent.layout;
     setMapSize({ width: w, height: h });
   };
 
-  // ✅ full width on web, but still padded nicely
   const pagePadding = isWide ? 36 : 0;
 
-  // ✅ “bump everything up” on web
-  const headerTopPad = isWide ? 95 : 80; // less whitespace on top on web
-  const mainTopGap = isWide ? 50 : 20; // bring row closer to header
+  const headerTopPad = isWide ? 50 : 80; 
+  const mainTopGap = isWide ? 50 : 20; 
 
-  // ✅ subtle upscale on web only
   const webScale = isWide ? 1.0 : 1;
 
-  // ✅ reduce green gutters on web (keep mobile unchanged)
-  const framePad = isWide ? 10 : 18; // smaller padding = bigger visible map inside frame
+  const framePad = isWide ? 10 : 18; 
 
   // two-column sizing (map bigger than list)
   const leftColFlex = isWide ? 2.2 : undefined;
   const rightColFlex = isWide ? 1 : undefined;
 
-  return (
+  const screenContent = (
     <ScrollView
       ref={scrollViewMainRef}
       style={styles.container}
@@ -170,14 +167,26 @@ export default function CampusMapScreen() {
       }}
     >
       {/* Header (full width on web) */}
-      <View style={[styles.header, { width: "100%", paddingTop: headerTopPad, paddingHorizontal: isWide ? 0 : 20 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      <View
+        style={[
+          styles.header,
+          {
+            width: "100%",
+            paddingTop: headerTopPad,
+            paddingHorizontal: isWide ? 0 : 20,
+          },
+        ]}
+      >
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backButton}
+        >
           <Ionicons name="arrow-back" size={28} color={colors.primary} />
         </TouchableOpacity>
         <Text
           style={[
             styles.title,
-            isWide && { flex: 1, textAlign: "center", paddingHorizontal: 0 } // ✅ WEB ONLY
+            isWide && { flex: 1,  paddingHorizontal: 650 }, 
           ]}
         >
           CAMPUS MAP
@@ -192,8 +201,8 @@ export default function CampusMapScreen() {
             flexDirection: isWide ? "row" : "column",
             width: "100%",
             marginTop: mainTopGap,
-            transform: [{ scale: webScale }], // ✅ bump everything up on web
-            transformOrigin: "top left" as any, // ignored on native; helps some web builds
+            transform: [{ scale: webScale }], 
+            transformOrigin: "top left" as any, 
           },
         ]}
       >
@@ -221,7 +230,10 @@ export default function CampusMapScreen() {
                   centerContent
                   bounces={false}
                 >
-                  <View style={styles.mapInner} onLayout={handleMapLayout}>
+                  <View
+                    style={[styles.mapInner, { height: mapHeight }]} 
+                    onLayout={handleMapLayout}
+                  >
                     <Image
                       source={require("../assets/images/map.jpeg")}
                       style={styles.mapImage}
@@ -249,7 +261,10 @@ export default function CampusMapScreen() {
                         return (
                           <TouchableOpacity
                             key={b.id}
-                            style={[styles.pin, { left: pin.x - 11, top: pin.y - 22 }]}
+                            style={[
+                              styles.pin,
+                              { left: pin.x - 11, top: pin.y - 22 },
+                            ]}
                             onPress={() => handleSelectBuilding(b.id)}
                             activeOpacity={0.9}
                           >
@@ -321,9 +336,52 @@ export default function CampusMapScreen() {
       </View>
     </ScrollView>
   );
+
+  if (!isWeb) return screenContent;
+
+  return (
+    <View style={styles.page}>
+      <View style={styles.webSidebar}>
+        <View style={styles.webSidebarHeader}>
+          <Image
+            source={require("../assets/images/bf_logo.png")}
+            style={styles.webSidebarLogo}
+            resizeMode="contain"
+          />
+        </View>
+
+        <View style={styles.webSidebarLinks}>
+          {menuItems.map((item) => {
+            const selected = item.route === "CampusMap";
+            return (
+              <TouchableOpacity
+                key={item.route}
+                style={[styles.webNavItem, selected && styles.webNavItemSelected]}
+                onPress={() => navigation.navigate(item.route as never)}
+              >
+                <Text style={[styles.webNavText, selected && styles.webNavTextSelected]}>
+                  {item.name.toUpperCase()}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={{ flex: 1 }}>{screenContent}</View>
+    </View>
+  );
 }
 
+const SIDEBAR_WIDTH = 275;
+
 const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: colors.gray100,
+  },
+
   container: {
     flex: 1,
     backgroundColor: colors.gray100,
@@ -377,8 +435,7 @@ const styles = StyleSheet.create({
 
   zoomContent: { alignItems: "center", justifyContent: "center" },
 
-  // ✅ measured box for correct pin math
-  mapInner: { width: "100%", height: "100%" },
+  mapInner: { width: "100%", position: "relative" },
   mapImage: { width: "100%", height: "100%" },
 
   pin: { position: "absolute" },
@@ -453,5 +510,43 @@ const styles = StyleSheet.create({
     height: 200,
     borderWidth: 2.5,
     borderColor: colors.primary,
+  },
+
+  webSidebar: {
+    width: SIDEBAR_WIDTH,
+    backgroundColor: colors.primary,
+    paddingTop: 18,
+    paddingHorizontal: 12,
+  },
+  webSidebarHeader: {
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.25)",
+    marginBottom: 12,
+  },
+  webSidebarLogo: {
+    width: "100%",
+    height: 80,
+  },
+  webSidebarLinks: {
+    marginTop: 6,
+  },
+  webNavItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 2,
+    marginBottom: 6,
+  },
+  webNavItemSelected: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+  },
+  webNavText: {
+    color: colors.white,
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 22,
+    letterSpacing: 0.5,
+  },
+  webNavTextSelected: {
+    color: colors.white,
   },
 });

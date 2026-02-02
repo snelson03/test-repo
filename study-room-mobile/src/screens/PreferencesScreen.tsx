@@ -192,30 +192,25 @@ export default function PreferencesScreen() {
     }
   };
 
-  // load saved preferences on first render
   useEffect(() => {
     loadPreferences();
   }, []);
 
-  // auto-save anytime something changes
   useEffect(() => {
     savePreferences();
   }, [notificationTypes, methods, schedule, customInputs, selectedFavorites]);
 
-  // list of dropdown categories
   const categories: Array<"Notifications" | "Account" | "Groups"> = [
     "Notifications",
     "Account",
     "Groups",
   ];
 
-  // UI LAYOUT
   return (
     <View style={styles.page}>
       {/* Web left sidebar */}
       {isWeb && (
         <View style={styles.webSidebar}>
-          {/* top logo area */}
           <View style={styles.webSidebarHeader}>
             <Image
               source={require("@/assets/images/bf_logo.png")}
@@ -224,7 +219,6 @@ export default function PreferencesScreen() {
             />
           </View>
 
-          {/* list of pages */}
           <View style={styles.webSidebarLinks}>
             {menuItems.map((item) => {
               const selected = item.route === "Preferences";
@@ -254,28 +248,26 @@ export default function PreferencesScreen() {
 
       {/* MAIN CONTENT WRAP */}
       <View style={[styles.container, isWeb && styles.webContent]}>
-        {/* Header with title and back button */}
-        <View style={styles.header}>
-          {/* back arrow only on iOS */}
-          {!isWeb && (
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => {
-                if (navigation.canGoBack()) {
-                  navigation.goBack();
-                } else {
-                  navigation.navigate("Home");
-                }
-              }}
-            >
-              <Ionicons name="arrow-back" size={26} color={colors.primary} />
-            </TouchableOpacity>
-          )}
+        {/* Header */}
+        <View style={[styles.header, isWeb && styles.headerWeb]}>
+          {/* back arrow on web + mobile */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => {
+            if (navigation.canGoBack()) navigation.goBack();
+            else navigation.navigate("Home");
+          }}
+        >
+          <Ionicons name="arrow-back" size={26} color={colors.primary} />
+        </TouchableOpacity>
 
-          <Text style={styles.title}>PREFERENCES</Text>
+
+          <Text style={[styles.title, isWeb && styles.titleWeb]}>
+            PREFERENCES
+          </Text>
         </View>
 
-        {/* Dropdown to switch between sections (stays above the green box) */}
+        {/* Dropdown */}
         <View style={styles.subHeader}>
           <TouchableOpacity
             style={styles.dropdownToggle}
@@ -291,7 +283,6 @@ export default function PreferencesScreen() {
             />
           </TouchableOpacity>
 
-          {/* dropdown menu list */}
           {dropdownOpen && (
             <View style={styles.dropdownMenu}>
               {categories.map((cat) => (
@@ -321,10 +312,16 @@ export default function PreferencesScreen() {
         </View>
 
         {/* page content */}
-        <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={[
+            styles.scrollContent,
+            isWeb && styles.scrollContentWeb,
+          ]}
+        >
           {/* Notification Section */}
           {activeCategory === "Notifications" && (
-            <View style={styles.section}>
+            <View style={[styles.section, isWeb && styles.sectionWeb]}>
               <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
 
               <Text style={styles.categoryTitle}>NOTIFICATION TYPES</Text>
@@ -359,7 +356,6 @@ export default function PreferencesScreen() {
 
                   <Text style={styles.optionText}>{label}</Text>
 
-                  {/* edit button shown for the options that need it */}
                   {editable && (
                     <TouchableOpacity onPress={() => openModal(key)}>
                       <Text style={styles.editText}>Edit</Text>
@@ -424,7 +420,6 @@ export default function PreferencesScreen() {
                       : "Custom"}
                   </Text>
 
-                  {/* custom gets its own edit option */}
                   {key === "custom" && (
                     <TouchableOpacity onPress={() => openModal("customSchedule")}>
                       <Text style={styles.editText}>Edit</Text>
@@ -437,10 +432,9 @@ export default function PreferencesScreen() {
 
           {/* Account Section */}
           {activeCategory === "Account" && (
-            <View style={styles.section}>
+            <View style={[styles.section, isWeb && styles.sectionWeb]}>
               <Text style={styles.sectionTitle}>MY ACCOUNT</Text>
 
-              {/* Email - NOT editable */}
               <View style={styles.inputRow}>
                 <Text style={styles.inputLabel}>EMAIL</Text>
                 <TextInput
@@ -450,7 +444,6 @@ export default function PreferencesScreen() {
                 />
               </View>
 
-              {/* Name */}
               <View style={styles.inputRow}>
                 <Text style={styles.inputLabel}>NAME</Text>
                 <TextInput
@@ -460,7 +453,6 @@ export default function PreferencesScreen() {
                 />
               </View>
 
-              {/* Phone */}
               <View style={styles.inputRow}>
                 <Text style={styles.inputLabel}>PHONE</Text>
                 <TextInput
@@ -470,7 +462,6 @@ export default function PreferencesScreen() {
                 />
               </View>
 
-              {/* Logout button now opens modal */}
               <TouchableOpacity
                 style={styles.logoutButton}
                 onPress={() => setLogoutModalVisible(true)}
@@ -482,7 +473,7 @@ export default function PreferencesScreen() {
 
           {/* Groups Section */}
           {activeCategory === "Groups" && (
-            <View style={styles.section}>
+            <View style={[styles.section, isWeb && styles.sectionWeb]}>
               <Text style={styles.sectionTitle}>MY GROUPS</Text>
 
               {groups.map((g) => (
@@ -514,7 +505,6 @@ export default function PreferencesScreen() {
         <Modal transparent visible={modalVisible} animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={styles.modalContainer}>
-              {/* Favorites Modal */}
               {modalType === "favoritesOnly" && (
                 <>
                   <Text style={styles.modalTitle}>My Favorites</Text>
@@ -530,7 +520,9 @@ export default function PreferencesScreen() {
                           );
                           setSelectedFavorites(
                             exists
-                              ? selectedFavorites.filter((f) => f.name !== fav.name)
+                              ? selectedFavorites.filter(
+                                  (f) => f.name !== fav.name
+                                )
                               : [...selectedFavorites, fav]
                           );
                         }}
@@ -559,16 +551,12 @@ export default function PreferencesScreen() {
                     ))}
                   </View>
 
-                  <TouchableOpacity
-                    style={styles.modalButton}
-                    onPress={closeModal}
-                  >
+                  <TouchableOpacity style={styles.modalButton} onPress={closeModal}>
                     <Text style={styles.modalButtonText}>Close</Text>
                   </TouchableOpacity>
                 </>
               )}
 
-              {/* Building Specific Modal */}
               {modalType === "buildingSpecific" && (
                 <>
                   <Text style={styles.modalTitle}>Select Buildings</Text>
@@ -619,16 +607,12 @@ export default function PreferencesScreen() {
                     ))}
                   </View>
 
-                  <TouchableOpacity
-                    style={styles.modalButton}
-                    onPress={closeModal}
-                  >
+                  <TouchableOpacity style={styles.modalButton} onPress={closeModal}>
                     <Text style={styles.modalButtonText}>Close</Text>
                   </TouchableOpacity>
                 </>
               )}
 
-              {/* Custom Schedule Modal */}
               {modalType === "customSchedule" && (
                 <>
                   <Text style={styles.modalTitle}>Custom Schedule</Text>
@@ -718,57 +702,74 @@ export default function PreferencesScreen() {
 
 const SIDEBAR_WIDTH = 275;
 
-// Styles section -implements layout of screen with all components applied
 const styles = StyleSheet.create({
-  // outer wrapper for web layout (sidebar + content)
   page: {
     flex: 1,
     flexDirection: "row",
     backgroundColor: colors.gray100,
   },
 
-  // main content container (still works on iOS)
   container: {
     flex: 1,
     backgroundColor: colors.gray100,
     paddingHorizontal: 16,
   },
 
-  // on web, give padding
+  // ✅ reduced top whitespace on web
   webContent: {
-    paddingTop: 30,
-    paddingLeft: 150,
+    paddingTop: 16, // was 40
+    paddingLeft: 36,
     paddingRight: 36,
+    flex: 1,
+    alignSelf: "stretch",
   },
 
-  // header row
+  scrollContent: {
+    paddingBottom: 60,
+  },
+  scrollContentWeb: {
+    alignItems: "stretch",
+    width: "100%",
+  },
+
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: 80,
-    marginBottom: 6,
+    marginTop: 80, // mobile spacing
+    marginBottom: 10,
+    paddingHorizontal: 36
+  },
+
+  // ✅ center header + reduce top whitespace on web
+  headerWeb: {
+    justifyContent: "center",
+    marginTop: 35, // was 80 visually on web
   },
 
   backButton: {
     padding: 5,
+    marginLeft: -40,
     marginRight: 8,
   },
 
-  // title text
   title: {
-    fontSize: 32,
+    flex: 1,
+    fontSize: 38,
     fontFamily: "BebasNeue-Regular",
     color: colors.primary,
-    textAlign: "left",
+    textAlign: "center",
   },
 
-  // dropdown area under the title
+  // ✅ center title on web
+  titleWeb: {
+    textAlign: "center",
+  },
+
   subHeader: {
     marginTop: 6,
-    marginBottom: 6,
-    alignSelf: "flex-start",
+    marginBottom: 10,
+    alignSelf: "stretch",
     width: "100%",
-    maxWidth: 1200, // lets the header align with the bigger green box on web
   },
 
   dropdownToggle: {
@@ -786,7 +787,6 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins-Regular",
   },
 
-  // dropdown list itself
   dropdownMenu: {
     backgroundColor: colors.white,
     borderRadius: 6,
@@ -819,33 +819,35 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
 
-  // section setup 
   section: {
     backgroundColor: colors.primary,
     borderRadius: 0,
-    paddingVertical: 18,
-    paddingHorizontal: 18,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
     marginTop: 10,
     marginBottom: 40,
-
     width: "100%",
-    maxWidth: 1100,
-
     alignSelf: "flex-start",
   },
 
+  sectionWeb: {
+    maxWidth: undefined,
+    width: "100%",
+    alignSelf: "stretch",
+  },
+
   sectionTitle: {
-    fontSize: 26,
+    fontSize: 30,
     fontFamily: "BebasNeue-Regular",
     color: colors.white,
     marginBottom: 14,
   },
 
   categoryTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontFamily: "BebasNeue-Regular",
     color: colors.white,
-    marginTop: 10,
+    marginTop: 12,
     marginBottom: 8,
   },
 
@@ -855,7 +857,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  // checkboxes
   checkbox: {
     width: 18,
     height: 18,
@@ -870,7 +871,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
 
-  // input text from user
   optionText: {
     color: colors.white,
     fontSize: 14,
@@ -920,7 +920,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  // left nav sidebar on web
   webSidebar: {
     width: SIDEBAR_WIDTH,
     backgroundColor: colors.primary,
@@ -966,7 +965,6 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
 
-  // modal overlay background
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
@@ -974,7 +972,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.6)",
   },
 
-  // modal container
   modalContainer: {
     backgroundColor: colors.white,
     borderRadius: 12,
@@ -1040,7 +1037,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
 
-  // green box inside the modal for list items
   greenBox: {
     backgroundColor: colors.primary,
     borderRadius: 8,
@@ -1050,7 +1046,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
-  // logout button in account section
   logoutButton: {
     backgroundColor: "#D9534F",
     paddingVertical: 10,
@@ -1067,7 +1062,6 @@ const styles = StyleSheet.create({
     fontSize: 25,
   },
 
-  /* Logout modal styles */
   logoutOverlay: {
     position: "absolute",
     top: 0,
