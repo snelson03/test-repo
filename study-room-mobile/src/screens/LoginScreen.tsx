@@ -12,6 +12,9 @@ import {
   Image,
   ActivityIndicator,
   Animated,
+  Platform,
+  useWindowDimensions,
+  ScrollView,
 } from "react-native";
 
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -28,9 +31,14 @@ export default function LoginScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+  // used for the fade in on the logo
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const { setUserForLogin } = useUser(); // load user into context
+
+  // used for web sizing so it can be centered and not stretched across the screen
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === "web";
 
   // form fields
   const [email, setEmail] = useState("");
@@ -96,73 +104,104 @@ export default function LoginScreen() {
     }
   };
 
+  // web layout helper: keep the login area at a reasonable width on desktop
+  const webMaxWidth = 480;
+  const webCardWidth = Math.min(width - 40, webMaxWidth); // leaves some padding on the sides
+
   return (
-    <View style={styles.container}>
-      {/* Logo */}
-      <Animated.View style={{ opacity: fadeAnim }}>
-        <Image
-          source={require("@/assets/images/bf_logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
+    // ScrollView helps on smaller screens and also lets us center things on web
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        isWeb && styles.containerWeb, // only apply these changes on web
+      ]}
+      keyboardShouldPersistTaps="handled"
+    >
+      {/* on web, wrap the content in a fixed-width container so it doesn’t stretch */}
+      <View style={isWeb ? { width: webCardWidth } : undefined}>
+        {/* Logo */}
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <Image
+            source={require("@/assets/images/bf_logo.png")}
+            style={[styles.logo, isWeb && styles.logoWeb]} // only adjust logo sizing on web
+            resizeMode="contain"
+          />
+        </Animated.View>
+
+        {/* Error */}
+        {error.length > 0 && <Text style={styles.errorText}>{error}</Text>}
+
+        {/* Email */}
+        <Text style={styles.label}>EMAIL</Text>
+        <TextInput
+          style={styles.input}
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
         />
-      </Animated.View>
 
-      {/* Error */}
-      {error.length > 0 && <Text style={styles.errorText}>{error}</Text>}
+        {/* Password */}
+        <Text style={styles.label}>PASSWORD</Text>
+        <TextInput
+          style={styles.input}
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
 
-      {/* Email */}
-      <Text style={styles.label}>EMAIL</Text>
-      <TextInput
-        style={styles.input}
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
+        <TouchableOpacity style={{ alignSelf: "flex-end" }}>
+          <Text style={styles.resetText}>Reset Password</Text>
+        </TouchableOpacity>
 
-      {/* Password */}
-      <Text style={styles.label}>PASSWORD</Text>
-      <TextInput
-        style={styles.input}
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+        {/* LOGIN BUTTON */}
+        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          {loading ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Text style={styles.loginText}>LOGIN</Text>
+          )}
+        </TouchableOpacity>
 
-      <TouchableOpacity style={{ alignSelf: "flex-end" }}>
-        <Text style={styles.resetText}>Reset Password</Text>
-      </TouchableOpacity>
-
-      {/* LOGIN BUTTON */}
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-        {loading ? (
-          <ActivityIndicator size="small" color={colors.primary} />
-        ) : (
-          <Text style={styles.loginText}>LOGIN</Text>
-        )}
-      </TouchableOpacity>
-
-      {/* CREATE ACCOUNT BUTTON */}
-      <TouchableOpacity onPress={() => navigation.navigate("CreateAccount")}>
-        <Text style={styles.createAccountText}>Create an Account</Text>
-      </TouchableOpacity>
-    </View>
+        {/* CREATE ACCOUNT BUTTON */}
+        <TouchableOpacity onPress={() => navigation.navigate("CreateAccount")}>
+          <Text style={styles.createAccountText}>Create an Account</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }
 
 // Styles section
 const styles = StyleSheet.create({
+  // main container (same look on iOS), but using flexGrow so ScrollView works correctly
   container: {
-    flex: 1,
+    flexGrow: 1, // changed from flex: 1 so the ScrollView can size + center properly
     backgroundColor: colors.primary,
     paddingHorizontal: 30,
     paddingTop: 120,
   },
+
+  // only used on web to center the login form and reduce the huge top padding
+  containerWeb: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 40,
+    paddingBottom: 40,
+  },
+
   logo: {
     width: 370,
     height: 130,
     marginBottom: 20,
     marginLeft: -10,
   },
+
+  // web-only logo tweak so it scales down nicely instead of overflowing
+  logoWeb: {
+    width: "100%",
+    marginLeft: 0,
+  },
+
   label: {
     fontSize: 18,
     fontFamily: "BebasNeue-Regular",
@@ -178,7 +217,7 @@ const styles = StyleSheet.create({
   resetText: {
     color: colors.white,
     textDecorationLine: "underline",
-    fontFamily: "Poppins",
+    fontFamily: Platform.OS === "web" ? undefined : "Poppins",
     marginBottom: 30,
     fontSize: 13,
   },
@@ -204,7 +243,7 @@ const styles = StyleSheet.create({
   },
   createAccountText: {
     color: colors.white,
-    fontFamily: "Poppins",
+    fontFamily: Platform.OS === "web" ? undefined : "Poppins",
     textDecorationLine: "underline",
     textAlign: "center",
     fontSize: 16,

@@ -5,6 +5,7 @@ from routes.auth import router as auth_router
 from routes.buildings import router as building_router
 from routes.rooms import router as room_router
 from routes.room_blocks import router as room_blocks_router
+from routes.raspberrypi import router as raspberrypi_router
 from db import create_tables
 
 app = FastAPI(
@@ -36,6 +37,9 @@ app.include_router(building_router, prefix="/api/v1/buildings", tags=["buildings
 app.include_router(room_router, prefix="/api/v1/rooms", tags=["rooms"])
 app.include_router(
     room_blocks_router, prefix="/api/v1/room-blocks", tags=["room-blocks"]
+)
+app.include_router(
+    raspberrypi_router, prefix="/api/v1/raspberrypi", tags=["raspberrypi"]
 )
 
 
