@@ -1,0 +1,16 @@
+[Unit]
+Description=API Caller Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/pi/dmps/api_caller.py
+WorkingDirectory=/home/pi/dmps
+Restart=always
+RestartSec=3
+User=pi
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
