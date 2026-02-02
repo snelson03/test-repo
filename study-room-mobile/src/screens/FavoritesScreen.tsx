@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between', // centers title between two equal sides
-    marginBottom: 24,
+    marginBottom: 60,
   },
   backButton: {
     // back button
