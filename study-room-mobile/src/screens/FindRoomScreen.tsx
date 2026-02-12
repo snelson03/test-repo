@@ -38,11 +38,25 @@ interface FavoriteItem {
   roomId?: number;
 }
 
+interface WebMenuItem {
+  name: string;
+  route: MenuRoute;
+}
+
 const getRoomStatus = (
   isAvailable: boolean
 ): "available" | "occupied" | "offline" => {
   return isAvailable ? "available" : "occupied";
 };
+
+// Maximum width for large screens
+const MAX_SCREEN_WIDTH = 1400;
+
+// Web sizing (matches Home Screen)
+const WEB_SIDEBAR_WIDTH = 300;
+const WEB_TOPBAR_HEIGHT = 170;
+
+type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
 
 export default function FindARoomScreen() {
   const navigation =
@@ -54,8 +68,8 @@ export default function FindARoomScreen() {
 
   const usableWidth = Math.max(320, width - pagePad * 2);
 
-  const tileMargin = 12; 
-  const gridSidePad = 16; 
+  const tileMargin = 12;
+  const gridSidePad = 16;
 
   const numColumns = useMemo(() => {
     const w = usableWidth - gridSidePad * 2;
@@ -94,12 +108,18 @@ export default function FindARoomScreen() {
   const [editMode, setEditMode] = useState(false);
 
   const isWeb = Platform.OS === "web";
-  const menuItems = [
-    { name: "Home", route: "Home" as const },
-    { name: "Find a Room", route: "FindRoom" as const },
-    { name: "Campus Map", route: "CampusMap" as const },
-    { name: "Favorites", route: "Favorites" as const },
-    { name: "Preferences", route: "Preferences" as const },
+
+  // used to size the web content area like Home Screen
+  const webPagePad = width < 480 ? 12 : 0;
+  const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
+  const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
+
+  const menuItems: WebMenuItem[] = [
+    { name: "Home", route: "Home" },
+    { name: "Find a Room", route: "FindRoom" },
+    { name: "Campus Map", route: "CampusMap" },
+    { name: "Favorites", route: "Favorites" },
+    { name: "Preferences", route: "Preferences" },
   ];
 
   useEffect(() => {
@@ -175,7 +195,7 @@ export default function FindARoomScreen() {
         contentContainerStyle={{
           alignItems: "center",
           paddingBottom: 40,
-          paddingHorizontal: pagePad, 
+          paddingHorizontal: pagePad,
         }}
       >
         <View style={{ width: "100%" }}>
@@ -410,45 +430,73 @@ export default function FindARoomScreen() {
     </View>
   );
 
-  if (!isWeb) return oldUI;
-
-  return (
-    <View style={styles.page}>
-      <View style={styles.webSidebar}>
-        <View style={styles.webSidebarHeader}>
+  // WEB VERSION (adds the same top bar + sidebar as Home Screen)
+  if (isWeb) {
+    return (
+      <View style={styles.webPage}>
+        {/* top bar */}
+        <View style={styles.webTopBar}>
           <Image
             source={require("@/assets/images/bf_logo.png")}
-            style={styles.webSidebarLogo}
+            style={styles.webTopBarLogo}
             resizeMode="contain"
           />
         </View>
 
-        <View style={styles.webSidebarLinks}>
-          {menuItems.map((item) => {
-            const selected = item.route === "FindRoom";
-            return (
-              <TouchableOpacity
-                key={item.route}
-                style={[styles.webNavItem, selected && styles.webNavItemSelected]}
-                onPress={() => navigation.navigate(item.route as any)}
-              >
-                <Text
-                  style={[
-                    styles.webNavText,
-                    selected && styles.webNavTextSelected,
-                  ]}
-                >
-                  {item.name.toUpperCase()}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+        {/* sidebar + main */}
+        <View style={styles.webBody}>
+          {/* Left Sidebar */}
+          <View style={styles.webSidebar}>
+            <View style={styles.webSidebarLinks}>
+              {menuItems.map((item) => {
+                const selected = item.route === "FindRoom";
+                return (
+                  <TouchableOpacity
+                    key={item.route}
+                    style={[
+                      styles.webNavItem,
+                      selected && styles.webNavItemSelected,
+                    ]}
+                    onPress={() => navigation.navigate(item.route as any)}
+                  >
+                    <Text
+                      style={[
+                        styles.webNavText,
+                        selected && styles.webNavTextSelected,
+                      ]}
+                    >
+                      {item.name.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Main area */}
+          <View style={styles.webMain}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                alignItems: "center",
+                paddingBottom: 32,
+                paddingHorizontal: 0,
+              }}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={[styles.webContentWrap, { width: contentWidthWeb }]}>
+                {/* page content (same as before, only wrapped for the web frame) */}
+                {oldUI}
+              </View>
+            </ScrollView>
+          </View>
         </View>
       </View>
+    );
+  }
 
-      <View style={{ flex: 1 }}>{oldUI}</View>
-    </View>
-  );
+  // Mobile version (unchanged)
+  return oldUI;
 }
 
 const SIDEBAR_WIDTH = 275;
@@ -457,12 +505,12 @@ const styles = StyleSheet.create({
   page: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.gray100,
+    backgroundColor: colors.white,
   },
 
   mainContent: {
     flex: 1,
-    backgroundColor: colors.gray100,
+    backgroundColor: colors.white,
     paddingTop: 80,
     paddingHorizontal: 16,
   },
@@ -586,42 +634,90 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
 
+  // Web styles (same top bar + sidebar as Home Screen)
+  webPage: {
+    flex: 1,
+    flexDirection: "column",
+    backgroundColor: colors.white,
+  },
+
+  webTopBar: {
+    height: WEB_TOPBAR_HEIGHT,
+    backgroundColor: colors.darkAccent,
+    width: "100%",
+    justifyContent: "center",
+    paddingLeft: 20,
+    // shadow 
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    // android
+    elevation: 10,
+    zIndex: 10,
+  },
+
+  webTopBarLogo: {
+    height: 130,
+    width: 400,
+  },
+
+  webBody: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: colors.white,
+  },
+
   // sidebar styles (web only)
   webSidebar: {
-    width: SIDEBAR_WIDTH,
+    width: WEB_SIDEBAR_WIDTH,
     backgroundColor: colors.primary,
-    paddingTop: 18,
-    paddingHorizontal: 12,
+    paddingTop: 0,
+    paddingHorizontal: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 6, height: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    // android
+    elevation: 8,
+    zIndex: 5,
   },
+
   webSidebarHeader: {
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.25)",
     marginBottom: 12,
   },
+
   webSidebarLogo: {
     width: "100%",
     height: 80,
   },
-  webSidebarLinks: {
-    marginTop: 6,
-  },
+
+  webSidebarLinks: { marginTop: 6 },
+
   webNavItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     borderRadius: 2,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   webNavItemSelected: {
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
   webNavText: {
     color: colors.white,
     fontFamily: "BebasNeue-Regular",
-    fontSize: 22,
-    letterSpacing: 0.5,
+    fontSize: 28,
+    letterSpacing: 0.8,
+    textShadowColor: "rgba(0, 0, 0, 0.1)",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 8,
   },
-  webNavTextSelected: {
-    color: colors.white,
-  },
+  webNavTextSelected: { color: colors.white },
+
+  webMain: { flex: 1, backgroundColor: colors.white },
+
+  webContentWrap: { paddingTop: 22, paddingBottom: 24 },
 });

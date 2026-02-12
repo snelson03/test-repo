@@ -32,7 +32,12 @@ const Stack = createNativeStackNavigator();
 // setting up navigation routes for pages
 export default function AppNavigator() {
   return (
-    <Stack.Navigator initialRouteName="Login">
+    <Stack.Navigator initialRouteName="Home">
+      <Stack.Screen 
+        name="Home" 
+        component={HomeScreen} 
+        options={{ headerShown: false }} 
+      />
       <Stack.Screen
         name="Login"
         component={LoginScreen}
@@ -43,12 +48,6 @@ export default function AppNavigator() {
         name="CreateAccount"          
         component={CreateAccountScreen}
         options={{ headerShown: false }}
-      />
-
-      <Stack.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{ headerShown: false }} 
       />
       <Stack.Screen 
         name="FindRoom" 

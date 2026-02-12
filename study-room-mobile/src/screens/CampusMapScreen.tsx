@@ -145,12 +145,12 @@ export default function CampusMapScreen() {
 
   const pagePadding = isWide ? 36 : 0;
 
-  const headerTopPad = isWide ? 50 : 80; 
-  const mainTopGap = isWide ? 50 : 20; 
+  const headerTopPad = isWide ? 50 : 80;
+  const mainTopGap = isWide ? 50 : 20;
 
   const webScale = isWide ? 1.0 : 1;
 
-  const framePad = isWide ? 10 : 18; 
+  const framePad = isWide ? 10 : 18;
 
   // two-column sizing (map bigger than list)
   const leftColFlex = isWide ? 2.2 : undefined;
@@ -186,7 +186,7 @@ export default function CampusMapScreen() {
         <Text
           style={[
             styles.title,
-            isWide && { flex: 1,  paddingHorizontal: 650 }, 
+            isWide && { flex: 1, paddingHorizontal: 650 },
           ]}
         >
           CAMPUS MAP
@@ -201,8 +201,8 @@ export default function CampusMapScreen() {
             flexDirection: isWide ? "row" : "column",
             width: "100%",
             marginTop: mainTopGap,
-            transform: [{ scale: webScale }], 
-            transformOrigin: "top left" as any, 
+            transform: [{ scale: webScale }],
+            transformOrigin: "top left" as any,
           },
         ]}
       >
@@ -231,7 +231,7 @@ export default function CampusMapScreen() {
                   bounces={false}
                 >
                   <View
-                    style={[styles.mapInner, { height: mapHeight }]} 
+                    style={[styles.mapInner, { height: mapHeight }]}
                     onLayout={handleMapLayout}
                   >
                     <Image
@@ -339,43 +339,133 @@ export default function CampusMapScreen() {
 
   if (!isWeb) return screenContent;
 
+  // WEB ONLY: use the same top bar + sidebar layout as HomeScreen
   return (
-    <View style={styles.page}>
-      <View style={styles.webSidebar}>
-        <View style={styles.webSidebarHeader}>
-          <Image
-            source={require("../assets/images/bf_logo.png")}
-            style={styles.webSidebarLogo}
-            resizeMode="contain"
-          />
-        </View>
-
-        <View style={styles.webSidebarLinks}>
-          {menuItems.map((item) => {
-            const selected = item.route === "CampusMap";
-            return (
-              <TouchableOpacity
-                key={item.route}
-                style={[styles.webNavItem, selected && styles.webNavItemSelected]}
-                onPress={() => navigation.navigate(item.route as never)}
-              >
-                <Text style={[styles.webNavText, selected && styles.webNavTextSelected]}>
-                  {item.name.toUpperCase()}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+    <View style={styles.webPage}>
+      {/* top bar */}
+      <View style={styles.webTopBar}>
+        <Image
+          source={require("../assets/images/bf_logo.png")}
+          style={styles.webTopBarLogo}
+          resizeMode="contain"
+        />
       </View>
 
-      <View style={{ flex: 1 }}>{screenContent}</View>
+      {/* sidebar + main */}
+      <View style={styles.webBody}>
+        {/* Left Sidebar */}
+        <View style={styles.webSidebar}>
+          <View style={styles.webSidebarLinks}>
+            {menuItems.map((item) => {
+              const selected = item.route === "CampusMap";
+              return (
+                <TouchableOpacity
+                  key={item.route}
+                  style={[
+                    styles.webNavItem,
+                    selected && styles.webNavItemSelected,
+                  ]}
+                  onPress={() => navigation.navigate(item.route as never)}
+                >
+                  <Text
+                    style={[
+                      styles.webNavText,
+                      selected && styles.webNavTextSelected,
+                    ]}
+                  >
+                    {item.name.toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Main area */}
+        <View style={styles.webMain}>{screenContent}</View>
+      </View>
     </View>
   );
 }
 
-const SIDEBAR_WIDTH = 275;
+const WEB_SIDEBAR_WIDTH = 300;
+const WEB_TOPBAR_HEIGHT = 170;
 
 const styles = StyleSheet.create({
+  // Web styles
+  webPage: {
+    flex: 1,
+    flexDirection: "column",
+    backgroundColor: colors.white,
+  },
+
+  webTopBar: {
+    height: WEB_TOPBAR_HEIGHT,
+    backgroundColor: colors.darkAccent,
+    width: "100%",
+    justifyContent: "center",
+    paddingLeft: 20,
+    // shadow
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    // android
+    elevation: 10,
+    zIndex: 10,
+  },
+
+  webTopBarLogo: {
+    height: 130,
+    width: 400,
+  },
+
+  webBody: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: colors.white,
+  },
+
+  webSidebar: {
+    width: WEB_SIDEBAR_WIDTH,
+    backgroundColor: colors.primary,
+    paddingTop: 0,
+    paddingHorizontal: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 6, height: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    // android
+    elevation: 8,
+    zIndex: 5,
+  },
+
+  webSidebarLinks: { marginTop: 6 },
+
+  webNavItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 2,
+    marginBottom: 8,
+  },
+
+  webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
+
+  webNavText: {
+    color: colors.white,
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 28,
+    letterSpacing: 0.8,
+    textShadowColor: "rgba(0, 0, 0, 0.1)",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 8,
+  },
+
+  webNavTextSelected: { color: colors.white },
+
+  webMain: { flex: 1, backgroundColor: colors.white },
+
+  // Existing styles (kept as-is)
   page: {
     flex: 1,
     flexDirection: "row",
@@ -390,8 +480,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
-    gap: 20,
+    //paddingHorizontal: 20,
+    //gap: 20,
   },
   backButton: { padding: 5 },
 
@@ -512,12 +602,6 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
 
-  webSidebar: {
-    width: SIDEBAR_WIDTH,
-    backgroundColor: colors.primary,
-    paddingTop: 18,
-    paddingHorizontal: 12,
-  },
   webSidebarHeader: {
     paddingBottom: 16,
     borderBottomWidth: 1,
@@ -527,26 +611,5 @@ const styles = StyleSheet.create({
   webSidebarLogo: {
     width: "100%",
     height: 80,
-  },
-  webSidebarLinks: {
-    marginTop: 6,
-  },
-  webNavItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 2,
-    marginBottom: 6,
-  },
-  webNavItemSelected: {
-    backgroundColor: "rgba(255,255,255,0.15)",
-  },
-  webNavText: {
-    color: colors.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 22,
-    letterSpacing: 0.5,
-  },
-  webNavTextSelected: {
-    color: colors.white,
   },
 });

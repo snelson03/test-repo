@@ -1,5 +1,5 @@
 // Home Screen layout file
-
+// formattingfor IOS and web
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -10,13 +10,13 @@ import {
   TouchableOpacity,
   Animated,
   Easing,
-  useWindowDimensions, 
+  useWindowDimensions,
+  Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import colors from "@/constants/colors";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import { useUser } from "@/context/UserContext";
-import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
 import { buildingsAPI } from "@/utils/api";
@@ -29,30 +29,43 @@ interface FavoriteItem {
 }
 
 // Maximum width for large screens
-const MAX_SCREEN_WIDTH = 1200;
+const MAX_SCREEN_WIDTH = 1400;
+
+// Web sizing
+const WEB_SIDEBAR_WIDTH = 300;
+const WEB_TOPBAR_HEIGHT = 170;
+
+type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { user } = useUser();
   const name = (user as any)?.name ?? "User";
-  const [menuOpen, setMenuOpen] = useState(false);
+
+  const isWeb = Platform.OS === "web";
 
   const { width, height } = useWindowDimensions();
   const pagePad = width < 480 ? 12 : 0;
-  const contentWidth = width - pagePad * 2;
 
-  const { favorites, addFavorite, removeFavorite } = useFavorites() as {
+  // mobile content
+  const contentWidthMobile = width - pagePad * 2;
+
+  // Web content width accounts for sidebar and max width
+  const webAvailable = width - WEB_SIDEBAR_WIDTH - pagePad * 2;
+  const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
+
+  const { favorites } = useFavorites() as {
     favorites: FavoriteItem[];
     addFavorite: (item: FavoriteItem) => void;
     removeFavorite: (name: string) => void;
   };
 
-  const [roomStatuses, setRoomStatuses] = useState<Record<string, string>>({}); // store live status changes
+  const [roomStatuses, setRoomStatuses] = useState<Record<string, string>>({});
 
-  // Animation for menu dropdown
+  // Mobile Menu
+  const [menuOpen, setMenuOpen] = useState(false);
   const menuAnim = useRef(new Animated.Value(0)).current;
 
-  // Menu animation
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
     Animated.timing(menuAnim, {
@@ -63,10 +76,29 @@ export default function HomeScreen() {
     }).start();
   };
 
+  const menuTranslate = menuAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-height, 0],
+  });
+
   const [rooms, setRooms] = useState<
     Array<{ name: string; status: string; subtitle: string }>
   >([]);
   const [loading, setLoading] = useState(true);
+
+  // only used for the "No rooms available" message
+  const availableRooms = rooms.filter(
+    (room) => room.status === "available" || room.status === "almost_filled"
+  );
+
+  // menu items
+  const menuItems: { name: string; route: MenuRoute }[] = [
+    { name: "Home", route: "Home" },
+    { name: "Find a Room", route: "FindRoom" },
+    { name: "Campus Map", route: "CampusMap" },
+    { name: "Favorites", route: "Favorites" },
+    { name: "Preferences", route: "Preferences" },
+  ];
 
   // Load building data
   useEffect(() => {
@@ -79,7 +111,6 @@ export default function HomeScreen() {
             const availableCount = buildingRooms.filter(
               (r: any) => r.is_available
             ).length;
-            const totalCount = buildingRooms.length;
 
             let status = "busy";
             let subtitle = "All rooms full";
@@ -91,11 +122,7 @@ export default function HomeScreen() {
               } free`;
             }
 
-            return {
-              name: building.name,
-              status,
-              subtitle,
-            };
+            return { name: building.name, status, subtitle };
           })
         );
         setRooms(buildingSummaries);
@@ -116,33 +143,260 @@ export default function HomeScreen() {
         const updated = { ...prev };
         favorites.forEach((fav: FavoriteItem) => {
           const statuses = ["available", "occupied", "offline"];
-          // randomly assign new status
           updated[fav.name] =
             statuses[Math.floor(Math.random() * statuses.length)];
         });
         return updated;
       });
-    }, 4000); // updates every 4 seconds
+    }, 4000);
+
     return () => clearInterval(interval);
   }, [favorites]);
 
-  // Menu items
-  const menuItems = [
-    { name: "Home", route: "Home" },
-    { name: "Find a Room", route: "FindRoom" },
-    { name: "Campus Map", route: "CampusMap" },
-    { name: "Favorites", route: "Favorites" },
-    { name: "Preferences", route: "Preferences" },
-  ];
+  // WEB VERSION 
+  if (isWeb) {
+    return (
+      <View style={styles.webPage}>
+        {/* top bar */}
+        <View style={styles.webTopBar}>
+          <Image
+            source={require("@/assets/images/bf_logo.png")}
+            style={styles.webTopBarLogo}
+            resizeMode="contain"
+          />
+        </View>
 
-  // Dropdown animation style
-  const menuTranslate = menuAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [-height, 0],
-  });
+        {/* sidebar + main */}
+        <View style={styles.webBody}>
+          {/* Left Sidebar */}
+          <View style={styles.webSidebar}>
+            <View style={styles.webSidebarLinks}>
+              {menuItems.map((item) => {
+                const selected = item.route === "Home";
+                return (
+                  <TouchableOpacity
+                    key={item.route}
+                    style={[
+                      styles.webNavItem,
+                      selected && styles.webNavItemSelected,
+                    ]}
+                    onPress={() => navigation.navigate(item.route as never)}
+                  >
+                    <Text
+                      style={[
+                        styles.webNavText,
+                        selected && styles.webNavTextSelected,
+                      ]}
+                    >
+                      {item.name.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
 
+          {/* Main area */}
+          <View style={styles.webMain}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                alignItems: "center",
+                paddingBottom: 32,
+                paddingHorizontal: 0, 
+              }}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={[styles.webContentWrap, { width: contentWidthWeb }]}>
+                <View style={styles.webWelcomeWrap}>
+                  <Text style={styles.webWelcomeText}>
+                    WELCOME BACK, {name}!
+                  </Text>
+                </View>
+
+                {/* WEB: Find a Room + Campus Map side-by-side */}
+                <View style={styles.webTwoColRow}>
+                  <TouchableOpacity
+                    style={styles.webTwoColItem}
+                    onPress={() => navigation.navigate("FindRoom" as never)}
+                    activeOpacity={0.9}
+                  >
+                    <View style={styles.bannerContainerWeb}>
+                      <View style={styles.imageShadow}>
+                        <Image
+                          source={require("@/assets/images/library.jpg")}
+                          style={styles.bannerImageWeb}
+                        />
+                      </View>
+                      <Text style={styles.bannerTextWeb}>FIND A ROOM</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.webTwoColItem}
+                    onPress={() => navigation.navigate("CampusMap" as never)}
+                    activeOpacity={0.9}
+                  >
+                    <View style={styles.mapContainerWeb}>
+                      <View style={styles.imageShadow}>
+                        <Image
+                          source={require("@/assets/images/map.jpeg")}
+                          style={styles.mapImageWeb}
+                        />
+                      </View>
+                      <Text style={styles.mapTextWeb}>CAMPUS MAP</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Cards */}
+                <View style={styles.cardsContainerWeb}>
+                  {/* Available Now + Favorites side-by-side for web */}
+                  <View style={styles.webTwoColRow}>
+                    <View style={[styles.webTwoColItem, styles.cardShadow]}>
+                      <LinearGradient
+                        colors={["#F4F4F4", "#A1B5A8"]}
+                        style={styles.availableNowCard}
+                      >
+                        <View style={styles.availableHeader}>
+                          <Text style={styles.availableTitle}>
+                            AVAILABLE NOW
+                          </Text>
+                          <Ionicons
+                            name="location-sharp"
+                            size={22}
+                            color={colors.primary}
+                          />
+                        </View>
+
+                        {loading ? (
+                          <Text style={styles.loadingText}>Loading...</Text>
+                        ) : availableRooms.length === 0 ? (
+                          <Text style={styles.noAvailableText}>
+                            No rooms available right now
+                          </Text>
+                        ) : (
+                          availableRooms.map((room) => (
+                            <View key={room.name} style={styles.availableItem}>
+                              <Text style={styles.availableItemText}>
+                                {room.name}
+                              </Text>
+                              <View style={styles.availableRight}>
+                                <View
+                                  style={[
+                                    styles.availableStatusDot,
+                                    {
+                                      backgroundColor:
+                                        room.status === "available"
+                                          ? colors.available
+                                          : colors.occupied,
+                                    },
+                                  ]}
+                                />
+                                <Text style={styles.availableSubtitle}>
+                                  {room.subtitle}
+                                </Text>
+                              </View>
+                            </View>
+                          ))
+                        )}
+                      </LinearGradient>
+                    </View>
+
+                    <TouchableOpacity
+                      style={styles.webTwoColItem}
+                      onPress={() => navigation.navigate("Favorites" as never)}
+                      activeOpacity={0.9}
+                    >
+                      <View style={styles.cardShadow}>
+                        <LinearGradient
+                          colors={["#F4F4F4", "#A1B5A8"]}
+                          style={styles.favoritesCard}
+                        >
+                          <View style={styles.favoritesHeader}>
+                            <Text style={styles.favoritesTitle}>
+                              MY FAVORITES
+                            </Text>
+                            <Feather
+                              name="heart"
+                              size={22}
+                              color={colors.primary}
+                            />
+                          </View>
+
+                          {favorites.length === 0 ? (
+                            <Text style={styles.emptyText}>
+                              No favorites added yet
+                            </Text>
+                          ) : (
+                            favorites.map((fav: FavoriteItem) => {
+                              const status =
+                                roomStatuses[fav.name] ||
+                                fav.status ||
+                                "available";
+                              return (
+                                <View key={fav.name} style={styles.favItem}>
+                                  <Text style={styles.favItemText}>
+                                    {fav.name}
+                                  </Text>
+                                  <View style={styles.favRight}>
+                                    <View
+                                      style={[
+                                        styles.favstatusDot,
+                                        {
+                                          backgroundColor:
+                                            status === "available"
+                                              ? colors.available
+                                              : status === "occupied"
+                                              ? colors.occupied
+                                              : colors.offline,
+                                        },
+                                      ]}
+                                    />
+                                    <Text style={styles.favNumber}>
+                                      {status.charAt(0).toUpperCase() +
+                                        status.slice(1)}
+                                    </Text>
+                                  </View>
+                                </View>
+                              );
+                            })
+                          )}
+                        </LinearGradient>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Preferences (full width) */}
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate("Preferences" as never)}
+                  >
+                    <View style={styles.roomCardContainer}>
+                      <View style={styles.preferencesLeft}>
+                        <Text style={styles.roomCardTextLeft}>PREFERENCES</Text>
+                      </View>
+                      <Feather
+                        name="menu"
+                        size={25}
+                        color={colors.white}
+                        style={styles.prefIcon}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Mobile version
   return (
-    <View style={{ flex: 1, alignItems: "center", backgroundColor: colors.white }}>
+    <View
+      style={{ flex: 1, alignItems: "center", backgroundColor: colors.white }}
+    >
       <ScrollView
         style={{ width: "100%" }}
         contentContainerStyle={{
@@ -153,8 +407,12 @@ export default function HomeScreen() {
         scrollEnabled={!menuOpen}
         keyboardShouldPersistTaps="handled"
       >
-
-        <View style={[styles.container, { width: contentWidth, alignSelf: "center" }]}>
+        <View
+          style={[
+            styles.container,
+            { width: contentWidthMobile, alignSelf: "center" },
+          ]}
+        >
           {/* Header style setup */}
           <View style={styles.header}>
             <Image
@@ -185,7 +443,9 @@ export default function HomeScreen() {
 
           {/* Campus Map style setup*/}
           <TouchableOpacity
-            onPress={() => !menuOpen && navigation.navigate("CampusMap" as never)}
+            onPress={() =>
+              !menuOpen && navigation.navigate("CampusMap" as never)
+            }
           >
             <View style={styles.mapContainer}>
               <View style={styles.imageShadow}>
@@ -216,17 +476,13 @@ export default function HomeScreen() {
                 </View>
 
                 {loading ? (
-                  <Text
-                    style={{
-                      color: colors.white,
-                      textAlign: "center",
-                      marginVertical: 10,
-                    }}
-                  >
-                    Loading...
+                  <Text style={styles.loadingText}>Loading...</Text>
+                ) : availableRooms.length === 0 ? (
+                  <Text style={styles.noAvailableText}>
+                    No rooms available right now
                   </Text>
                 ) : (
-                  rooms.map((room) => (
+                  availableRooms.map((room) => (
                     <View key={room.name} style={styles.availableItem}>
                       <Text style={styles.availableItemText}>{room.name}</Text>
                       <View style={styles.availableRight}>
@@ -237,9 +493,7 @@ export default function HomeScreen() {
                               backgroundColor:
                                 room.status === "available"
                                   ? colors.available
-                                  : room.status === "busy"
-                                  ? colors.occupied
-                                  : colors.offline,
+                                  : colors.occupied,
                             },
                           ]}
                         />
@@ -270,18 +524,8 @@ export default function HomeScreen() {
                     <Feather name="heart" size={22} color={colors.primary} />
                   </View>
 
-                  {/* dynamically show saved favorites with live status */}
                   {favorites.length === 0 ? (
-                    <Text
-                      style={{
-                        color: colors.primary,
-                        fontSize: 16,
-                        textAlign: "center",
-                        marginVertical: 10,
-                      }}
-                    >
-                      No favorites added yet
-                    </Text>
+                    <Text style={styles.emptyText}>No favorites added yet</Text>
                   ) : (
                     favorites.map((fav: FavoriteItem) => {
                       const status =
@@ -304,7 +548,8 @@ export default function HomeScreen() {
                               ]}
                             />
                             <Text style={styles.favNumber}>
-                              {status.charAt(0).toUpperCase() + status.slice(1)}
+                              {status.charAt(0).toUpperCase() +
+                                status.slice(1)}
                             </Text>
                           </View>
                         </View>
@@ -336,14 +581,14 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
-      {/* Floating Menu Button */}
+      {/* Floating Menu Button (MOBILE ONLY) */}
       <View style={styles.menuButtonContainer}>
         <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
           <Feather name="menu" size={28} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Overlay Dropdown Menu setup */}
+      {/* Overlay Dropdown Menu setup (MOBILE ONLY) */}
       {menuOpen && (
         <Animated.View
           style={[
@@ -356,7 +601,7 @@ export default function HomeScreen() {
             onPress={toggleMenu}
             activeOpacity={1}
           />
-          <View style={[styles.menuContent, { width: contentWidth }]}>
+          <View style={[styles.menuContent, { width: contentWidthMobile }]}>
             {menuItems.map((item) => (
               <TouchableOpacity
                 key={item.route}
@@ -376,12 +621,143 @@ export default function HomeScreen() {
   );
 }
 
-// Implements object styles and sets colors + spacing, etc
 const styles = StyleSheet.create({
-  // background color
-  container: { flex: 1, backgroundColor: colors.white },
+  // Web styles
+  webPage: {
+    flex: 1,
+    flexDirection: "column",
+    backgroundColor: colors.gray100,
+  },
 
-  // header color and logo alignment
+  webTopBar: {
+    height: WEB_TOPBAR_HEIGHT,
+    backgroundColor: colors.darkAccent,
+    width: "100%",
+    justifyContent: "center",
+    paddingLeft: 20,
+      // shadow 
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    // android
+    elevation: 10,
+    zIndex: 10,
+  },
+
+  webTopBarLogo: {
+    height: 130,
+    width: 400,
+  },
+
+  webBody: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: colors.gray100,
+  },
+
+  webSidebar: {
+    width: WEB_SIDEBAR_WIDTH,
+    backgroundColor: colors.primary,
+    paddingTop: 0,
+    paddingHorizontal: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 6, height: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    // android
+    elevation: 8,
+    zIndex: 5,
+  },
+
+  webSidebarLinks: { marginTop: 6 },
+
+  webNavItem: {
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    borderRadius: 2,
+    marginBottom: 8,
+  },
+  webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
+  webNavText: {
+    color: colors.white,
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 28,
+    letterSpacing: 0.8,
+    textShadowColor: "rgba(0, 0, 0, 0.1)",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 8,
+  },
+  webNavTextSelected: { color: colors.white },
+
+  webMain: { flex: 1, backgroundColor: colors.gray100 },
+
+  webContentWrap: { paddingTop: 22, paddingBottom: 24 },
+
+  webWelcomeWrap: { paddingHorizontal: 20, marginBottom: 14, marginTop: 15 },
+  webWelcomeText: {
+    fontSize: 46,
+    fontWeight: "500",
+    fontFamily: "BebasNeue-Regular",
+    color: colors.primary,
+  },
+
+  // Two-column web rows
+  webTwoColRow: {
+    flexDirection: "row",
+    gap: 20,
+    paddingHorizontal: 12,
+    marginBottom: 16,
+    alignItems: "flex-start",
+  },
+  webTwoColItem: { flex: 1 },
+
+  // Web image blocks
+  bannerContainerWeb: {
+    marginVertical: 12,
+    paddingHorizontal: 0,
+    position: "relative",
+  },
+  bannerImageWeb: { width: "100%", height: 230, borderRadius: 0 },
+  bannerTextWeb: {
+    position: "absolute",
+    paddingHorizontal: 20,
+    bottom: 14,
+    left: 12,
+    fontSize: 44,
+    fontFamily: "BebasNeue-Regular",
+    fontWeight: "500",
+    color: colors.white,
+    textShadowColor: "rgba(0, 0, 0, 200)",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 15,
+  },
+
+  mapContainerWeb: {
+    marginVertical: 12,
+    paddingHorizontal: 0,
+    position: "relative",
+  },
+  mapImageWeb: { width: "100%", height: 230, borderRadius: 0 },
+  mapTextWeb: {
+    position: "absolute",
+    paddingHorizontal: 20,
+    bottom: 14,
+    left: 12,
+    fontSize: 44,
+    fontFamily: "BebasNeue-Regular",
+    fontWeight: "500",
+    color: colors.white,
+    textShadowColor: "rgba(0, 0, 0, 200)",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 10,
+  },
+
+  cardsContainerWeb: { marginVertical: 16, paddingHorizontal: 0 },
+
+  // Mobile styles (unchanged)
+  container: { flex: 1, backgroundColor: colors.gray100 },
+
   header: {
     flexDirection: "row",
     backgroundColor: colors.primary,
@@ -391,9 +767,8 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     width: "100%",
   },
-  logo: { width: 300, height: 80, marginRight: 12 },
+  logo: { width: 300, height: 80, marginRight: 20 },
 
-  // Welcome message
   welcome: {
     top: 15,
     fontSize: 30,
@@ -401,10 +776,8 @@ const styles = StyleSheet.create({
     fontFamily: "BebasNeue-Regular",
     color: colors.primary,
     position: "relative",
-
     paddingHorizontal: 12,
   },
-
 
   bannerContainer: {
     marginVertical: 12,
@@ -427,6 +800,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 15,
   },
+
   imageShadow: {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
@@ -458,6 +832,7 @@ const styles = StyleSheet.create({
   },
 
   cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40 },
+
   roomCardContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -477,7 +852,6 @@ const styles = StyleSheet.create({
     fontFamily: "BebasNeue-Regular",
     color: colors.white,
   },
-  roomCardTextRight: { fontSize: 14, color: colors.white },
 
   availableNowCard: {
     borderRadius: 0,
@@ -522,17 +896,6 @@ const styles = StyleSheet.create({
   availableStatusDot: { width: 11, height: 11, borderRadius: 5.5 },
   availableSubtitle: { color: colors.white, fontSize: 14 },
 
-  statusDot: { width: 8, height: 9, borderRadius: 4, marginHorizontal: 8 },
-  rightSection: { flexDirection: "row", alignItems: "center", gap: 8 },
-
-  favoritesLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flex: 1,
-  },
-  heartIcon: { marginTop: 2, marginRight: 12 },
-
   favoritesCard: {
     backgroundColor: colors.marigold,
     padding: 20,
@@ -556,6 +919,23 @@ const styles = StyleSheet.create({
     fontFamily: "BebasNeue-Regular",
     color: colors.primary,
   },
+
+  emptyText: {
+    color: colors.primary,
+    fontSize: 16,
+    textAlign: "center",
+    marginVertical: 10,
+  },
+
+  // no rooms available text
+  noAvailableText: {
+    color: colors.primary,
+    fontSize: 18,
+    textAlign: "center",
+    marginVertical: 10,
+    //fontFamily: "BebasNeue-Regular",
+  },
+
   favItem: {
     backgroundColor: colors.primary,
     flexDirection: "row",
@@ -593,6 +973,13 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
 
+  loadingText: {
+    color: colors.white,
+    textAlign: "center",
+    marginVertical: 10,
+  },
+
+  // MOBILE floating menu (unchanged)
   menuButtonContainer: {
     position: "absolute",
     top: 100,
@@ -610,8 +997,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 5,
   },
-
-  // Dropdown menu options and background shading upon opening menu
   menuOverlay: {
     position: "absolute",
     top: 0,
