@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Platform,
   Image,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import colors from "@/constants/colors";
@@ -26,6 +27,15 @@ interface FavoriteRoom {
   tstatus?: string;
 }
 
+// Maximum width for large screens
+const MAX_SCREEN_WIDTH = 1400;
+
+// Web sizing (matches Home Screen)
+const WEB_SIDEBAR_WIDTH = 300;
+const WEB_TOPBAR_HEIGHT = 170;
+
+type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
+
 export default function FavoritesScreen() {
   // Navigation setup 
   type FavoritesNavProp = NativeStackNavigationProp<
@@ -40,18 +50,170 @@ export default function FavoritesScreen() {
   // checks if on web
   const isWeb = Platform.OS === "web";
 
+  // used to size the web content area like Home Screen
+  const { width } = useWindowDimensions();
+  const pagePad = width < 480 ? 12 : 0;
+  const webAvailable = width - WEB_SIDEBAR_WIDTH - pagePad * 2;
+  const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
+
   // menu items for the web sidebar
-  const menuItems = [
-    { name: "Home", route: "Home" as const },
-    { name: "Find a Room", route: "FindRoom" as const },
-    { name: "Campus Map", route: "CampusMap" as const },
-    { name: "Favorites", route: "FavoritesScreen" as const }, 
-    { name: "Preferences", route: "Preferences" as const },
+  const menuItems: { name: string; route: MenuRoute }[] = [
+    { name: "Home", route: "Home" },
+    { name: "Find a Room", route: "FindRoom" },
+    { name: "Campus Map", route: "CampusMap" },
+    { name: "Favorites", route: "Favorites" },
+    { name: "Preferences", route: "Preferences" },
   ];
 
   // toggle edit mode on or off
   const toggleEdit = () => setEditMode(!editMode);
 
+  // WEB VERSION (adds the same top bar + sidebar as Home Screen)
+  if (isWeb) {
+    return (
+      <View style={styles.webPage}>
+        {/* top bar */}
+        <View style={styles.webTopBar}>
+          <Image
+            source={require("@/assets/images/bf_logo.png")}
+            style={styles.webTopBarLogo}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* sidebar + main */}
+        <View style={styles.webBody}>
+          {/* Left Sidebar */}
+          <View style={styles.webSidebar}>
+            <View style={styles.webSidebarLinks}>
+              {menuItems.map((item) => {
+                // highlights the current page
+                const selected = item.route === "Favorites";
+                return (
+                  <TouchableOpacity
+                    key={item.route}
+                    style={[
+                      styles.webNavItem,
+                      selected && styles.webNavItemSelected,
+                    ]}
+                    onPress={() => navigation.navigate(item.route)}
+                  >
+                    <Text
+                      style={[
+                        styles.webNavText,
+                        selected && styles.webNavTextSelected,
+                      ]}
+                    >
+                      {item.name.toUpperCase()}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Main area */}
+          <View style={styles.webMain}>
+            <ScrollView
+              style={{ flex: 1 }}
+              contentContainerStyle={{
+                alignItems: "center",
+                paddingBottom: 32,
+                paddingHorizontal: 0,
+              }}
+              keyboardShouldPersistTaps="handled"
+            >
+              <View style={[styles.webContentWrap, { width: contentWidthWeb }]}>
+                {/* main page container (same iOS layout, just placed inside the web frame) */}
+                <View style={styles.container}>
+                  {/* Header */}
+                  <View style={styles.header}>
+                    <Pressable
+                      onPress={() => {
+                        if (navigation.canGoBack()) {
+                          navigation.goBack();
+                        } else {
+                          navigation.navigate("Home"); // fallback to Home
+                        }
+                      }}
+                      style={styles.backButton}
+                    >
+                      <Ionicons
+                        name="arrow-back"
+                        size={35}
+                        color={colors.primary}
+                      />
+                    </Pressable>
+
+                    <Text style={styles.title}>FAVORITES</Text>
+
+                    {/* edit button (pencil icon turns into checkmark when editing) */}
+                    <Pressable onPress={toggleEdit} style={styles.backButton}>
+                      <Ionicons
+                        name={editMode ? "checkmark" : "create-outline"}
+                        size={30}
+                        color={colors.primary}
+                      />
+                    </Pressable>
+                  </View>
+
+                  {/* Favorite Rooms List */}
+                  <ScrollView contentContainerStyle={styles.listContainer}>
+                    {favorites.length === 0 ? (
+                      <View style={{ alignItems: "center", marginTop: 50 }}>
+                        <Text style={{ color: colors.primary, fontSize: 18 }}>
+                          No favorites added yet.
+                        </Text>
+                      </View>
+                    ) : (
+                      favorites.map((item: FavoriteRoom) => (
+                        <View key={item.name} style={styles.card}>
+                          <Text style={styles.roomText}>{item.name}</Text>
+
+                          <View style={styles.rightSection}>
+                            <View
+                              style={[
+                                styles.statusDot, // status dot color coded by available, occupied, offline
+                                {
+                                  backgroundColor:
+                                    item.status === "available"
+                                      ? colors.available
+                                      : item.status === "occupied"
+                                      ? colors.occupied
+                                      : colors.offline,
+                                },
+                              ]}
+                            />
+                            <Text style={styles.statusText}>{item.tstatus}</Text>
+
+                            {/*  trash button only shows when in edit mode */}
+                            {editMode && (
+                              <TouchableOpacity
+                                onPress={() => removeFavorite(item.name)}
+                                style={{ marginLeft: 12 }}
+                              >
+                                <Ionicons
+                                  name="trash"
+                                  size={22}
+                                  color={colors.white}
+                                />
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                        </View>
+                      ))
+                    )}
+                  </ScrollView>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Mobile version (unchanged)
   return (
     // wrapper holds sidebar + main content on web 
     <View style={styles.page}>
@@ -71,7 +233,7 @@ export default function FavoritesScreen() {
           <View style={styles.webSidebarLinks}>
             {menuItems.map((item) => {
               // highlights the current page
-              const selected = item.route === "FavoritesScreen";
+              const selected = item.route === "Favorites";
               return (
                 <TouchableOpacity
                   key={item.route}
@@ -174,20 +336,18 @@ export default function FavoritesScreen() {
 }
 
 // applies styles and sets up page
-const SIDEBAR_WIDTH = 275;
-
 const styles = StyleSheet.create({
   page: {
     // wrapper for web layout (sidebar + page content)
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.gray100,
+    backgroundColor: colors.white,
   },
 
   container: {
     // background container
     flex: 1,
-    backgroundColor: colors.gray100,
+    backgroundColor: colors.white,
     paddingTop: 80,
     paddingHorizontal: 16,
   },
@@ -199,12 +359,53 @@ const styles = StyleSheet.create({
     paddingRight: 36,
   },
 
+  // Web styles (same top bar + sidebar as Home Screen)
+  webPage: {
+    flex: 1,
+    flexDirection: "column",
+    backgroundColor: colors.white,
+  },
+
+  webTopBar: {
+    height: WEB_TOPBAR_HEIGHT,
+    backgroundColor: colors.darkAccent,
+    width: "100%",
+    justifyContent: "center",
+    paddingLeft: 20,
+    // shadow 
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    // android
+    elevation: 10,
+    zIndex: 10,
+  },
+
+  webTopBarLogo: {
+    height: 130,
+    width: 400,
+  },
+
+  webBody: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: colors.white,
+  },
+
   // left sidebar styles (web only)
   webSidebar: {
-    width: SIDEBAR_WIDTH,
+    width: WEB_SIDEBAR_WIDTH,
     backgroundColor: colors.primary,
-    paddingTop: 18,
-    paddingHorizontal: 12,
+    paddingTop: 0,
+    paddingHorizontal: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 6, height: 0 },
+    shadowOpacity: 0.22,
+    shadowRadius: 10,
+    // android
+    elevation: 8,
+    zIndex: 5,
   },
 
   webSidebarHeader: {
@@ -219,31 +420,40 @@ const styles = StyleSheet.create({
     height: 80,
   },
 
-  webSidebarLinks: {
-    marginTop: 6,
-  },
+  webSidebarLinks: { marginTop: 6 },
 
   webNavItem: {
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     borderRadius: 2,
-    marginBottom: 6,
+    marginBottom: 8,
   },
 
   webNavItemSelected: {
     // highlights current page
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.18)",
   },
 
   webNavText: {
     color: colors.white,
     fontFamily: "BebasNeue-Regular",
-    fontSize: 22,
-    letterSpacing: 0.5,
+    fontSize: 28,
+    letterSpacing: 0.8,
+    textShadowColor: "rgba(0, 0, 0, 0.1)",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 8,
   },
 
   webNavTextSelected: {
     color: colors.white,
+  },
+
+  webMain: { flex: 1, backgroundColor: colors.white },
+
+  webContentWrap: {
+    // keeps the page content centered with the same max width rules as Home Screen
+    paddingTop: 22,
+    paddingBottom: 24,
   },
 
   header: {
