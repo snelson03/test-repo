@@ -35,7 +35,12 @@ const MAX_SCREEN_WIDTH = 1400;
 const WEB_SIDEBAR_WIDTH = 300;
 const WEB_TOPBAR_HEIGHT = 170;
 
-type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
+type MenuRoute =
+  | "Home"
+  | "FindRoom"
+  | "CampusMap"
+  | "Favorites"
+  | "Preferences";
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -88,7 +93,7 @@ export default function HomeScreen() {
 
   // only used for the "No rooms available" message
   const availableRooms = rooms.filter(
-    (room) => room.status === "available" || room.status === "almost_filled"
+    (room) => room.status === "available" || room.status === "almost_filled",
   );
 
   // menu items
@@ -109,7 +114,7 @@ export default function HomeScreen() {
           buildings.map(async (building: any) => {
             const buildingRooms = await buildingsAPI.getRooms(building.id);
             const availableCount = buildingRooms.filter(
-              (r: any) => r.is_available
+              (r: any) => r.is_available,
             ).length;
 
             let status = "busy";
@@ -123,7 +128,7 @@ export default function HomeScreen() {
             }
 
             return { name: building.name, status, subtitle };
-          })
+          }),
         );
         setRooms(buildingSummaries);
       } catch (error) {
@@ -137,23 +142,23 @@ export default function HomeScreen() {
   }, []);
 
   // simulate changing status for favorites every few seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRoomStatuses((prev) => {
-        const updated = { ...prev };
-        favorites.forEach((fav: FavoriteItem) => {
-          const statuses = ["available", "occupied", "offline"];
-          updated[fav.name] =
-            statuses[Math.floor(Math.random() * statuses.length)];
-        });
-        return updated;
-      });
-    }, 4000);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setRoomStatuses((prev) => {
+  //       const updated = { ...prev };
+  //       favorites.forEach((fav: FavoriteItem) => {
+  //         const statuses = ["available", "occupied", "offline"];
+  //         updated[fav.name] =
+  //           statuses[Math.floor(Math.random() * statuses.length)];
+  //       });
+  //       return updated;
+  //     });
+  //   }, 4000);
 
-    return () => clearInterval(interval);
-  }, [favorites]);
+  //   return () => clearInterval(interval);
+  // }, [favorites]);
 
-  // WEB VERSION 
+  // WEB VERSION
   if (isWeb) {
     return (
       <View style={styles.webPage}>
@@ -203,7 +208,7 @@ export default function HomeScreen() {
               contentContainerStyle={{
                 alignItems: "center",
                 paddingBottom: 32,
-                paddingHorizontal: 0, 
+                paddingHorizontal: 0,
               }}
               keyboardShouldPersistTaps="handled"
             >
@@ -348,8 +353,8 @@ export default function HomeScreen() {
                                             status === "available"
                                               ? colors.available
                                               : status === "occupied"
-                                              ? colors.occupied
-                                              : colors.offline,
+                                                ? colors.occupied
+                                                : colors.offline,
                                         },
                                       ]}
                                     />
@@ -428,7 +433,9 @@ export default function HomeScreen() {
 
           {/* Find a Room Banner style setup */}
           <TouchableOpacity
-            onPress={() => !menuOpen && navigation.navigate("FindRoom" as never)}
+            onPress={() =>
+              !menuOpen && navigation.navigate("FindRoom" as never)
+            }
           >
             <View style={styles.bannerContainer}>
               <View style={styles.imageShadow}>
@@ -542,14 +549,13 @@ export default function HomeScreen() {
                                     status === "available"
                                       ? colors.available
                                       : status === "occupied"
-                                      ? colors.occupied
-                                      : colors.offline,
+                                        ? colors.occupied
+                                        : colors.offline,
                                 },
                               ]}
                             />
                             <Text style={styles.favNumber}>
-                              {status.charAt(0).toUpperCase() +
-                                status.slice(1)}
+                              {status.charAt(0).toUpperCase() + status.slice(1)}
                             </Text>
                           </View>
                         </View>
@@ -635,7 +641,7 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
     paddingLeft: 20,
-      // shadow 
+    // shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
