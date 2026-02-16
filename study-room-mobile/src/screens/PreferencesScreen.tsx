@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, Feather } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import colors from "@/constants/colors";
 import { useUser } from "@/context/UserContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -38,6 +38,9 @@ export default function PreferencesScreen() {
     "Preferences"
   >;
   const navigation = useNavigation<PreferencesNavProp>();
+  type PreferencesRouteProp = RouteProp<RootStackParamList, "Preferences">;
+  const route = useRoute<PreferencesRouteProp>();
+
 
   // check if running on web
   const isWeb = Platform.OS === "web";
@@ -58,6 +61,15 @@ export default function PreferencesScreen() {
 
   // handles the dropdown open or closed state
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const section = (route.params as any)?.section;
+  
+    if (section === "Notifications") setActiveCategory("Notifications");
+    if (section === "Account") setActiveCategory("Account");
+    if (section === "Groups") setActiveCategory("Groups");
+  }, [route.params]);
+  
 
   // Notification states
   const [notificationTypes, setNotificationTypes] = useState({
