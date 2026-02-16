@@ -128,7 +128,7 @@ export default function FindARoomScreen() {
   const FLOOR_PLANS: Record<string, any> = {
     // Example filenames — replace with your actual assets:
     "Stocker Center": require("@/assets/images/placeholder.png"),
-    ARC: require("@/assets/images/placeholder.png"),
+    "Academic Research Center": require("@/assets/images/placeholder.png"),
     "Alden Library": require("@/assets/images/placeholder.png"),
   };
 
