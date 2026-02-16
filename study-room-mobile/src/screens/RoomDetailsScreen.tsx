@@ -14,7 +14,7 @@ import colors from '@/constants/colors';
 // typed props for screen
 type RoomDetailsScreenRouteProp = {
   params: {
-    building: 'Stocker Center' | 'ARC' | 'Alden Library';
+    building: 'Stocker Center' | 'ARC' | 'Academic & Research Center' | 'Alden Library';
     roomId: string;
     status: 'available' | 'occupied' | 'offline';
   };
@@ -38,7 +38,7 @@ export default function RoomDetailsScreen() {
 
   // Building info record 
   const BuildingInfo: Record<
-    'Stocker Center' | 'ARC' | 'Alden Library',
+    'Stocker Center' | 'ARC' | 'Academic & Research Center' | 'Alden Library',
     { address: string; restrictions: string }
   > = {
     'Stocker Center': {
@@ -46,6 +46,10 @@ export default function RoomDetailsScreen() {
       restrictions: 'Computer Science Students',
     },
     ARC: {
+      address: '20 South Green Dr, Athens, OH 45701',
+      restrictions: 'Open to All Students',
+    },
+    'Academic & Research Center': {
       address: '20 South Green Dr, Athens, OH 45701',
       restrictions: 'Open to All Students',
     },
@@ -107,7 +111,7 @@ export default function RoomDetailsScreen() {
       </View>
 
       {/* Availability Section */}
-      <View style={[
+      {/* <View style={[
         styles.sectionBox,
         { 
           backgroundColor:
@@ -125,7 +129,7 @@ export default function RoomDetailsScreen() {
             ? 'OCCUPIED'
             : 'OFFLINE'}
         </Text>
-      </View>
+      </View> */}
 
       {/* View on Map Section */}
       <TouchableOpacity
@@ -189,7 +193,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 20,
     paddingHorizontal: 18,
-    borderRadius: 2,
+    borderRadius: 6,
     marginBottom: 24,
   },
   buildingName: {
@@ -212,7 +216,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D9D9D9',
     paddingVertical: 16,
     paddingHorizontal: 18,
-    borderRadius: 2,
+    borderRadius: 6,
     marginBottom: 18,
   },
   sectionTitle: {
@@ -234,7 +238,7 @@ const styles = StyleSheet.create({
   sectionBox: {
     paddingVertical: 20,
     paddingHorizontal: 16,
-    borderRadius: 4,
+    borderRadius: 6,
     marginBottom: 12,
     alignItems: 'center',
     justifyContent: 'center',
