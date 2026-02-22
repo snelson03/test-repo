@@ -40,6 +40,13 @@ export default function CreateAccountScreen() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // refs for better screen reader + keyboard flow (minimal, no UI changes)
+  const nameRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+
   // fade logo in
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -52,10 +59,7 @@ export default function CreateAccountScreen() {
   // checks that all fields are filled out and passwords match
   const handleCreate = async () => {
     if (!name.trim() || !email.trim() || !password.trim() || !confirm.trim()) {
-      Alert.alert(
-        "Missing Information",
-        "Please fill out all required fields."
-      );
+      Alert.alert("Missing Information", "Please fill out all required fields.");
       return;
     }
 
@@ -87,10 +91,7 @@ export default function CreateAccountScreen() {
       ]);
     } catch (err: any) {
       setLoading(false);
-      Alert.alert(
-        "Error",
-        err.message || "Account creation failed. Please try again."
-      );
+      Alert.alert("Error", err.message || "Account creation failed. Please try again.");
     }
   };
 
@@ -107,65 +108,110 @@ export default function CreateAccountScreen() {
       ]}
       style={{ flex: 1, backgroundColor: colors.primary }}
       keyboardShouldPersistTaps="handled"
+      accessibilityLabel="Create account screen"
     >
       {/* on web, wrap the content in a fixed-width container so it doesn’t stretch */}
       <View style={isWeb ? { width: webCardWidth } : undefined}>
-        <View style={[styles.container, isWeb && styles.containerWeb]}>
+        <View
+          style={[styles.container, isWeb && styles.containerWeb]}
+          accessibilityLabel="Create account form"
+        >
           {/* Logo */}
           <Animated.View style={{ opacity: fadeAnim }}>
             <Image
               source={require("@/assets/images/bf_logo.png")}
-              style={styles.logo}// only adjust logo sizing on web
+              style={styles.logo} // only adjust logo sizing on web
               resizeMode="contain"
+              accessibilityRole="image"
+              accessibilityLabel="Bobcat Finder logo"
+              accessibilityIgnoresInvertColors
             />
           </Animated.View>
 
           {/* Header */}
-          <Text style={styles.header}>CREATE ACCOUNT</Text>
+          <Text style={styles.header} accessibilityRole="header">
+            CREATE ACCOUNT
+          </Text>
 
-          <View style={styles.formBox}>
+          <View style={styles.formBox} accessibilityLabel="Account details">
             {/* Name */}
             <Text style={styles.label}>FIRST NAME</Text>
             <TextInput
+              ref={nameRef}
               style={styles.input}
               value={name}
               onChangeText={setName}
+              autoComplete="name"
+              textContentType="givenName"
+              returnKeyType="next"
+              onSubmitEditing={() => emailRef.current?.focus()}
+              accessibilityLabel="First name"
+              accessibilityHint="Enter your first name"
             />
 
             {/* Email */}
             <Text style={styles.label}>EMAIL</Text>
             <TextInput
+              ref={emailRef}
               style={styles.input}
               autoCapitalize="none"
               value={email}
               onChangeText={setEmail}
+              keyboardType="email-address"
+              autoComplete="email"
+              textContentType="emailAddress"
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              accessibilityLabel="Email"
+              accessibilityHint="Enter your Ohio University email ending in at ohio dot edu"
             />
 
             {/* Password */}
             <Text style={styles.label}>PASSWORD</Text>
             <TextInput
+              ref={passwordRef}
               style={styles.input}
               secureTextEntry
               value={password}
               onChangeText={setPassword}
+              autoComplete="password-new"
+              textContentType="newPassword"
+              returnKeyType="next"
+              onSubmitEditing={() => confirmRef.current?.focus()}
+              accessibilityLabel="Password"
+              accessibilityHint="Enter a password"
             />
 
             {/* Confirm Password */}
             <Text style={styles.label}>RE-ENTER PASSWORD</Text>
             <TextInput
+              ref={confirmRef}
               style={styles.input}
               secureTextEntry
               value={confirm}
               onChangeText={setConfirm}
+              autoComplete="password-new"
+              textContentType="newPassword"
+              returnKeyType="next"
+              onSubmitEditing={() => phoneRef.current?.focus()}
+              accessibilityLabel="Re-enter password"
+              accessibilityHint="Re-enter your password to confirm"
             />
 
             {/* Phone */}
             <Text style={styles.label}>PHONE NUMBER</Text>
             <TextInput
+              ref={phoneRef}
               style={styles.input}
               keyboardType="phone-pad"
               value={phone}
               onChangeText={setPhone}
+              autoComplete="tel"
+              textContentType="telephoneNumber"
+              returnKeyType="done"
+              onSubmitEditing={handleCreate}
+              accessibilityLabel="Phone number"
+              accessibilityHint="Enter your phone number"
             />
           </View>
 
@@ -174,15 +220,22 @@ export default function CreateAccountScreen() {
             style={styles.createButton}
             onPress={handleCreate}
             disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel={loading ? "Creating account" : "Create account"}
+            accessibilityHint="Creates your account and signs you in"
+            accessibilityState={{ disabled: loading, busy: loading }}
           >
             <Text style={styles.createButtonText}>
               {loading ? "CREATING..." : "CREATE"}
             </Text>
           </TouchableOpacity>
 
-          {/* return to login*/}
+          {/* return to login */}
           <TouchableOpacity
             onPress={() => navigation.navigate("Login" as never)}
+            accessibilityRole="button"
+            accessibilityLabel="Return to login"
+            accessibilityHint="Goes back to the login screen"
           >
             <Text style={[styles.returnText, isWeb && styles.returnTextWeb]}>
               Return to Login

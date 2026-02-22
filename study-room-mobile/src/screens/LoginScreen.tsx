@@ -116,54 +116,107 @@ export default function LoginScreen() {
         isWeb && styles.containerWeb, // only apply these changes on web
       ]}
       keyboardShouldPersistTaps="handled"
+      accessibilityLabel="Login screen"
     >
       {/* on web, wrap the content in a fixed-width container so it doesn’t stretch */}
-      <View style={isWeb ? { width: webCardWidth } : undefined}>
+      <View
+        style={isWeb ? { width: webCardWidth } : undefined}
+        accessibilityLabel="Login form"
+      >
         {/* Logo */}
-        <Animated.View style={{ opacity: fadeAnim }}>
+        <Animated.View
+          style={{ opacity: fadeAnim }}
+          accessibilityLabel="App logo"
+        >
           <Image
             source={require("@/assets/images/bf_logo.png")}
             style={[styles.logo, isWeb && styles.logoWeb]} // only adjust logo sizing on web
             resizeMode="contain"
+            accessibilityRole="image"
+            accessibilityLabel="Bobcat Finder logo"
+            accessibilityIgnoresInvertColors
           />
         </Animated.View>
 
         {/* Error */}
-        {error.length > 0 && <Text style={styles.errorText}>{error}</Text>}
+        {error.length > 0 && (
+          <Text
+            style={styles.errorText}
+            accessibilityRole="alert"
+            accessibilityLabel={`Error: ${error}`}
+          >
+            {error}
+          </Text>
+        )}
 
         {/* Email */}
-        <Text style={styles.label}>EMAIL</Text>
+        <Text style={styles.label} accessibilityRole="text">
+          EMAIL
+        </Text>
         <TextInput
           style={styles.input}
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
+          accessibilityLabel="Email"
+          accessibilityHint="Enter your ohio.edu email address"
+          textContentType="emailAddress"
+          keyboardType="email-address"
+          autoComplete="email"
         />
 
         {/* Password */}
-        <Text style={styles.label}>PASSWORD</Text>
+        <Text style={styles.label} accessibilityRole="text">
+          PASSWORD
+        </Text>
         <TextInput
           style={styles.input}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
+          accessibilityLabel="Password"
+          accessibilityHint="Enter your password"
+          textContentType="password"
+          autoComplete="password"
         />
 
-        <TouchableOpacity style={{ alignSelf: "flex-end" }}>
+        <TouchableOpacity
+          style={{ alignSelf: "flex-end" }}
+          accessibilityRole="button"
+          accessibilityLabel="Reset password"
+          accessibilityHint="Password reset is not implemented yet"
+        >
           <Text style={styles.resetText}>Reset Password</Text>
         </TouchableOpacity>
 
         {/* LOGIN BUTTON */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+        <TouchableOpacity
+          style={styles.loginButton}
+          onPress={handleLogin}
+          accessibilityRole="button"
+          accessibilityLabel={loading ? "Logging in" : "Login"}
+          accessibilityHint="Attempts to sign you in"
+          accessibilityState={{ busy: loading, disabled: loading }}
+          disabled={loading}
+        >
           {loading ? (
-            <ActivityIndicator size="small" color={colors.primary} />
+            <ActivityIndicator
+              size="small"
+              color={colors.primary}
+              accessibilityLabel="Loading"
+            />
           ) : (
             <Text style={styles.loginText}>LOGIN</Text>
           )}
         </TouchableOpacity>
 
         {/* CREATE ACCOUNT BUTTON */}
-        <TouchableOpacity onPress={() => navigation.navigate("CreateAccount")}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate("CreateAccount")}
+          accessibilityRole="button"
+          accessibilityLabel="Create an account"
+          accessibilityHint="Opens the Create Account screen"
+        >
           <Text style={styles.createAccountText}>Create an Account</Text>
         </TouchableOpacity>
       </View>
