@@ -38,7 +38,7 @@ export default function RoomDetailsScreen() {
     return `${floorNum}th Floor`;
   };
 
-  // Building info record 
+  // Building info record
   const BuildingInfo: Record<
     'Stocker Center' | 'ARC' | 'Academic & Research Center' | 'Alden Library',
     { address: string; restrictions: string }
@@ -77,61 +77,75 @@ export default function RoomDetailsScreen() {
     }
   };
 
+  const statusLabel =
+    status === 'available' ? 'Available' : status === 'occupied' ? 'Occupied' : 'Offline';
+
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      accessibilityLabel="Room details screen"
+      accessibilityRole="summary"
+    >
       {/* Back button and page title */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+      <View style={styles.header} accessibilityRole="header" accessibilityLabel="Room details">
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          accessibilityHint="Returns to the previous screen"
+        >
           <Ionicons name="arrow-back" size={28} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.title}>ROOM DETAILS</Text>
+
+        <Text style={styles.title} accessibilityRole="header">
+          ROOM DETAILS
+        </Text>
       </View>
 
       {/* Top green section with building and room number */}
       <LinearGradient
         colors={[colors.primary, '#005E39']}
         style={styles.topBox}
+        accessible
+        accessibilityRole="summary"
+        accessibilityLabel={`${building}, room ${roomId}. Status: ${statusLabel}.`}
       >
         <Text style={styles.buildingName}>{building}</Text>
+
         <View style={styles.statusDotRow}>
-          <View style={[styles.statusDot, { backgroundColor: getColor(status) }]} />
+          <View
+            style={[styles.statusDot, { backgroundColor: getColor(status) }]}
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel={`Status indicator: ${statusLabel}`}
+          />
           <Text style={styles.roomNumber}>{roomId}</Text>
         </View>
       </LinearGradient>
 
       {/* Location box */}
-      <View style={styles.infoBox}>
-        <Text style={styles.sectionTitle}>LOCATION</Text>
-        <Text style={styles.boldText}>{building}, {floor}</Text>
+      <View style={styles.infoBox} accessible accessibilityRole="summary" accessibilityLabel="Location">
+        <Text style={styles.sectionTitle} accessibilityRole="header">
+          LOCATION
+        </Text>
+        <Text style={styles.boldText}>
+          {building}, {floor}
+        </Text>
         <Text style={styles.subText}>{info.address}</Text>
       </View>
 
       {/* Restrictions box */}
-      <View style={styles.infoBox}>
-        <Text style={styles.sectionTitle}>RESTRICTIONS</Text>
+      <View
+        style={styles.infoBox}
+        accessible
+        accessibilityRole="summary"
+        accessibilityLabel="Restrictions"
+      >
+        <Text style={styles.sectionTitle} accessibilityRole="header">
+          RESTRICTIONS
+        </Text>
         <Text style={styles.subText}>{info.restrictions}</Text>
       </View>
-
-      {/* Availability Section */}
-      {/* <View style={[
-        styles.sectionBox,
-        { 
-          backgroundColor:
-            status === 'available'
-              ? colors.available
-              : status === 'occupied'
-              ? colors.occupied
-              : colors.offline,
-        },
-      ]}>
-        <Text style={[styles.availabilityTitle, { color: colors.white }]}>
-          {status === 'available'
-            ? 'AVAILABLE NOW'
-            : status === 'occupied'
-            ? 'OCCUPIED'
-            : 'OFFLINE'}
-        </Text>
-      </View> */}
 
       {/* View on Map Section */}
       <TouchableOpacity
@@ -151,22 +165,40 @@ export default function RoomDetailsScreen() {
             elevation: 3,
             flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'space-between', 
+            justifyContent: 'space-between',
             paddingHorizontal: 20,
           },
         ]}
         onPress={() => navigation.navigate('CampusMap')}
+        accessibilityRole="button"
+        accessibilityLabel="View on map"
+        accessibilityHint="Opens the campus map screen"
       >
         {/* Invisible spacer on left to balance icon */}
-        <View style={{ width: 24 }} />
+        <View
+          style={{ width: 24 }}
+          importantForAccessibility="no"
+          accessibilityElementsHidden
+        />
 
         {/* Centered text */}
-        <Text style={[styles.sectionTitle, { color: colors.white, textAlign: 'center', transform: [{ translateY: 6 }] }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: colors.white, textAlign: 'center', transform: [{ translateY: 6 }] },
+          ]}
+        >
           VIEW ON MAP
         </Text>
 
         {/* Icon on right */}
-        <Ionicons name="location-sharp" size={24} color={colors.white} />
+        <Ionicons
+          name="location-sharp"
+          size={24}
+          color={colors.white}
+          accessibilityElementsHidden
+          importantForAccessibility="no"
+        />
       </TouchableOpacity>
     </View>
   );
@@ -256,5 +288,4 @@ function createStyles(c: ThemeColors) {
     fontFamily: 'BebasNeue-Regular',
     textAlign: 'center',
   },
-  });
-}
+});

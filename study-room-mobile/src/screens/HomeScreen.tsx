@@ -144,40 +144,26 @@ export default function HomeScreen() {
     loadBuildings();
   }, []);
 
-  // simulate changing status for favorites every few seconds
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     setRoomStatuses((prev) => {
-  //       const updated = { ...prev };
-  //       favorites.forEach((fav: FavoriteItem) => {
-  //         const statuses = ["available", "occupied", "offline"];
-  //         updated[fav.name] =
-  //           statuses[Math.floor(Math.random() * statuses.length)];
-  //       });
-  //       return updated;
-  //     });
-  //   }, 4000);
-
-  //   return () => clearInterval(interval);
-  // }, [favorites]);
-
   // WEB VERSION
   if (isWeb) {
     return (
-      <View style={styles.webPage}>
+      <View style={styles.webPage} accessibilityLabel="Home screen">
         {/* top bar */}
-        <View style={styles.webTopBar}>
+        <View style={styles.webTopBar} accessibilityLabel="Top bar">
           <Image
             source={require("@/assets/images/bf_logo.png")}
             style={styles.webTopBarLogo}
             resizeMode="contain"
+            accessibilityRole="image"
+            accessibilityLabel="Bobcat Finder logo"
+            accessibilityIgnoresInvertColors
           />
         </View>
 
         {/* sidebar + main */}
         <View style={styles.webBody}>
           {/* Left Sidebar */}
-          <View style={styles.webSidebar}>
+          <View style={styles.webSidebar} accessibilityLabel="Navigation sidebar">
             <View style={styles.webSidebarLinks}>
               {menuItems.map((item) => {
                 const selected = item.route === "Home";
@@ -189,6 +175,9 @@ export default function HomeScreen() {
                       selected && styles.webNavItemSelected,
                     ]}
                     onPress={() => navigation.navigate(item.route as never)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Go to ${item.name}`}
+                    accessibilityState={{ selected }}
                   >
                     <Text
                       style={[
@@ -214,26 +203,36 @@ export default function HomeScreen() {
                 paddingHorizontal: 0,
               }}
               keyboardShouldPersistTaps="handled"
+              accessibilityLabel="Home content"
             >
               <View style={[styles.webContentWrap, { width: contentWidthWeb }]}>
                 <View style={styles.webWelcomeWrap}>
-                  <Text style={styles.webWelcomeText}>
+                  <Text style={styles.webWelcomeText} accessibilityRole="header">
                     WELCOME BACK, {name}!
                   </Text>
                 </View>
 
                 {/* WEB: Find a Room + Campus Map side-by-side */}
-                <View style={styles.webTwoColRow}>
+                <View
+                  style={styles.webTwoColRow}
+                  accessibilityLabel="Quick actions"
+                >
                   <TouchableOpacity
                     style={styles.webTwoColItem}
                     onPress={() => navigation.navigate("FindRoom" as never)}
                     activeOpacity={0.9}
+                    accessibilityRole="button"
+                    accessibilityLabel="Find a room"
+                    accessibilityHint="Opens the Find a Room screen"
                   >
                     <View style={styles.bannerContainerWeb}>
                       <View style={styles.imageShadow}>
                         <Image
                           source={require("@/assets/images/library.jpg")}
                           style={styles.bannerImageWeb}
+                          accessibilityRole="image"
+                          accessibilityLabel="Library"
+                          accessibilityIgnoresInvertColors
                         />
                       </View>
                       <Text style={styles.bannerTextWeb}>FIND A ROOM</Text>
@@ -244,12 +243,18 @@ export default function HomeScreen() {
                     style={styles.webTwoColItem}
                     onPress={() => navigation.navigate("CampusMap" as never)}
                     activeOpacity={0.9}
+                    accessibilityRole="button"
+                    accessibilityLabel="Campus map"
+                    accessibilityHint="Opens the Campus Map screen"
                   >
                     <View style={styles.mapContainerWeb}>
                       <View style={styles.imageShadow}>
                         <Image
                           source={require("@/assets/images/map.jpeg")}
                           style={styles.mapImageWeb}
+                          accessibilityRole="image"
+                          accessibilityLabel="Campus map preview"
+                          accessibilityIgnoresInvertColors
                         />
                       </View>
                       <Text style={styles.mapTextWeb}>CAMPUS MAP</Text>
@@ -258,10 +263,13 @@ export default function HomeScreen() {
                 </View>
 
                 {/* Cards */}
-                <View style={styles.cardsContainerWeb}>
+                <View style={styles.cardsContainerWeb} accessibilityLabel="Cards">
                   {/* Available Now + Favorites side-by-side for web */}
                   <View style={styles.webTwoColRow}>
-                    <View style={[styles.webTwoColItem, styles.cardShadow]}>
+                    <View
+                      style={[styles.webTwoColItem, styles.cardShadow]}
+                      accessibilityLabel="Available now"
+                    >
                       <LinearGradient
                         colors={["#F4F4F4", "#A1B5A8"]}
                         style={styles.availableNowCard}
@@ -274,18 +282,26 @@ export default function HomeScreen() {
                             name="location-sharp"
                             size={22}
                             color={colors.primary}
+                            accessibilityElementsHidden
+                            importantForAccessibility="no"
                           />
                         </View>
 
                         {loading ? (
-                          <Text style={styles.loadingText}>Loading...</Text>
+                          <Text style={styles.loadingText} accessibilityLabel="Loading available rooms">
+                            Loading...
+                          </Text>
                         ) : availableRooms.length === 0 ? (
                           <Text style={styles.noAvailableText}>
                             No rooms available right now
                           </Text>
                         ) : (
                           availableRooms.map((room) => (
-                            <View key={room.name} style={styles.availableItem}>
+                            <View
+                              key={room.name}
+                              style={styles.availableItem}
+                              accessibilityLabel={`${room.name}, ${room.subtitle}`}
+                            >
                               <Text style={styles.availableItemText}>
                                 {room.name}
                               </Text>
@@ -300,6 +316,11 @@ export default function HomeScreen() {
                                           : colors.occupied,
                                     },
                                   ]}
+                                  accessibilityLabel={`Status ${
+                                    room.status === "available"
+                                      ? "available"
+                                      : "occupied"
+                                  }`}
                                 />
                                 <Text style={styles.availableSubtitle}>
                                   {room.subtitle}
@@ -315,6 +336,9 @@ export default function HomeScreen() {
                       style={styles.webTwoColItem}
                       onPress={() => navigation.navigate("Favorites" as never)}
                       activeOpacity={0.9}
+                      accessibilityRole="button"
+                      accessibilityLabel="My favorites"
+                      accessibilityHint="Opens the Favorites screen"
                     >
                       <View style={styles.cardShadow}>
                         <LinearGradient
@@ -329,6 +353,8 @@ export default function HomeScreen() {
                               name="heart"
                               size={22}
                               color={colors.primary}
+                              accessibilityElementsHidden
+                              importantForAccessibility="no"
                             />
                           </View>
 
@@ -343,7 +369,11 @@ export default function HomeScreen() {
                                 fav.status ||
                                 "available";
                               return (
-                                <View key={fav.name} style={styles.favItem}>
+                                <View
+                                  key={fav.name}
+                                  style={styles.favItem}
+                                  accessibilityLabel={`${fav.name}, ${status}`}
+                                >
                                   <Text style={styles.favItemText}>
                                     {fav.name}
                                   </Text>
@@ -360,6 +390,7 @@ export default function HomeScreen() {
                                                 : colors.offline,
                                         },
                                       ]}
+                                      accessibilityLabel={`Status ${status}`}
                                     />
                                     <Text style={styles.favNumber}>
                                       {status.charAt(0).toUpperCase() +
@@ -378,6 +409,9 @@ export default function HomeScreen() {
                   {/* Preferences (full width) */}
                   <TouchableOpacity
                     onPress={() => navigation.navigate("Preferences" as never)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Preferences"
+                    accessibilityHint="Opens the Preferences screen"
                   >
                     <View style={styles.roomCardContainer}>
                       <View style={styles.preferencesLeft}>
@@ -388,6 +422,8 @@ export default function HomeScreen() {
                         size={25}
                         color={colors.white}
                         style={styles.prefIcon}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no"
                       />
                     </View>
                   </TouchableOpacity>
@@ -403,7 +439,8 @@ export default function HomeScreen() {
   // Mobile version
   return (
     <View
-      style={{ flex: 1, alignItems: "center", backgroundColor: colors.gray100 }}
+      style={{ flex: 1, alignItems: "center", backgroundColor: colors.white }}
+      accessibilityLabel="Home screen"
     >
       <ScrollView
         style={{ width: "100%" }}
@@ -414,6 +451,7 @@ export default function HomeScreen() {
         }}
         scrollEnabled={!menuOpen}
         keyboardShouldPersistTaps="handled"
+        accessibilityLabel="Home content"
       >
         <View
           style={[
@@ -422,16 +460,21 @@ export default function HomeScreen() {
           ]}
         >
           {/* Header style setup */}
-          <View style={styles.header}>
+          <View style={styles.header} accessibilityLabel="Header">
             <Image
               source={require("@/assets/images/bf_logo.png")}
               style={styles.logo}
+              accessibilityRole="image"
+              accessibilityLabel="Bobcat Finder logo"
+              accessibilityIgnoresInvertColors
             />
           </View>
 
           {/* Welcome message style setup */}
           <View style={styles.welcome}>
-            <Text style={styles.welcome}>Welcome Back, {name}!</Text>
+            <Text style={styles.welcome} accessibilityRole="header">
+              Welcome Back, {name}!
+            </Text>
           </View>
 
           {/* Find a Room Banner style setup */}
@@ -439,12 +482,18 @@ export default function HomeScreen() {
             onPress={() =>
               !menuOpen && navigation.navigate("FindRoom" as never)
             }
+            accessibilityRole="button"
+            accessibilityLabel="Find a room"
+            accessibilityHint="Opens the Find a Room screen"
           >
             <View style={styles.bannerContainer}>
               <View style={styles.imageShadow}>
                 <Image
                   source={require("@/assets/images/library.jpg")}
                   style={styles.bannerImage}
+                  accessibilityRole="image"
+                  accessibilityLabel="Library"
+                  accessibilityIgnoresInvertColors
                 />
               </View>
               <Text style={styles.bannerText}>FIND A ROOM</Text>
@@ -456,12 +505,18 @@ export default function HomeScreen() {
             onPress={() =>
               !menuOpen && navigation.navigate("CampusMap" as never)
             }
+            accessibilityRole="button"
+            accessibilityLabel="Campus map"
+            accessibilityHint="Opens the Campus Map screen"
           >
             <View style={styles.mapContainer}>
               <View style={styles.imageShadow}>
                 <Image
                   source={require("@/assets/images/map.jpeg")}
                   style={styles.mapImage}
+                  accessibilityRole="image"
+                  accessibilityLabel="Campus map preview"
+                  accessibilityIgnoresInvertColors
                 />
               </View>
               <Text style={styles.mapText}>CAMPUS MAP</Text>
@@ -469,9 +524,9 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           {/* Room Cards + Favorites style setup */}
-          <View style={styles.cardsContainer}>
+          <View style={styles.cardsContainer} accessibilityLabel="Cards">
             {/* Available Now Section */}
-            <View style={styles.cardShadow}>
+            <View style={styles.cardShadow} accessibilityLabel="Available now">
               <LinearGradient
                 colors={["#F4F4F4", "#A1B5A8"]}
                 style={styles.availableNowCard}
@@ -482,18 +537,26 @@ export default function HomeScreen() {
                     name="location-sharp"
                     size={22}
                     color={colors.primary}
+                    accessibilityElementsHidden
+                    importantForAccessibility="no"
                   />
                 </View>
 
                 {loading ? (
-                  <Text style={styles.loadingText}>Loading...</Text>
+                  <Text style={styles.loadingText} accessibilityLabel="Loading available rooms">
+                    Loading...
+                  </Text>
                 ) : availableRooms.length === 0 ? (
                   <Text style={styles.noAvailableText}>
                     No rooms available right now
                   </Text>
                 ) : (
                   availableRooms.map((room) => (
-                    <View key={room.name} style={styles.availableItem}>
+                    <View
+                      key={room.name}
+                      style={styles.availableItem}
+                      accessibilityLabel={`${room.name}, ${room.subtitle}`}
+                    >
                       <Text style={styles.availableItemText}>{room.name}</Text>
                       <View style={styles.availableRight}>
                         <View
@@ -506,6 +569,9 @@ export default function HomeScreen() {
                                   : colors.occupied,
                             },
                           ]}
+                          accessibilityLabel={`Status ${
+                            room.status === "available" ? "available" : "occupied"
+                          }`}
                         />
                         <Text style={styles.availableSubtitle}>
                           {room.subtitle}
@@ -522,6 +588,9 @@ export default function HomeScreen() {
                 !menuOpen && navigation.navigate("Favorites" as never)
               }
               activeOpacity={0.9}
+              accessibilityRole="button"
+              accessibilityLabel="My favorites"
+              accessibilityHint="Opens the Favorites screen"
             >
               <View style={styles.cardShadow}>
                 <LinearGradient
@@ -531,7 +600,13 @@ export default function HomeScreen() {
                   {/* Header with title and heart icon */}
                   <View style={styles.favoritesHeader}>
                     <Text style={styles.favoritesTitle}>MY FAVORITES</Text>
-                    <Feather name="heart" size={22} color={colors.primary} />
+                    <Feather
+                      name="heart"
+                      size={22}
+                      color={colors.primary}
+                      accessibilityElementsHidden
+                      importantForAccessibility="no"
+                    />
                   </View>
 
                   {favorites.length === 0 ? (
@@ -541,7 +616,11 @@ export default function HomeScreen() {
                       const status =
                         roomStatuses[fav.name] || fav.status || "available";
                       return (
-                        <View key={fav.name} style={styles.favItem}>
+                        <View
+                          key={fav.name}
+                          style={styles.favItem}
+                          accessibilityLabel={`${fav.name}, ${status}`}
+                        >
                           <Text style={styles.favItemText}>{fav.name}</Text>
                           <View style={styles.favRight}>
                             <View
@@ -556,6 +635,7 @@ export default function HomeScreen() {
                                         : colors.offline,
                                 },
                               ]}
+                              accessibilityLabel={`Status ${status}`}
                             />
                             <Text style={styles.favNumber}>
                               {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -573,6 +653,9 @@ export default function HomeScreen() {
               onPress={() =>
                 !menuOpen && navigation.navigate("Preferences" as never)
               }
+              accessibilityRole="button"
+              accessibilityLabel="Preferences"
+              accessibilityHint="Opens the Preferences screen"
             >
               <View style={styles.roomCardContainer}>
                 <View style={styles.preferencesLeft}>
@@ -583,6 +666,8 @@ export default function HomeScreen() {
                   size={25}
                   color={colors.white}
                   style={styles.prefIcon}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no"
                 />
               </View>
             </TouchableOpacity>
@@ -592,8 +677,21 @@ export default function HomeScreen() {
 
       {/* Floating Menu Button (MOBILE ONLY) */}
       <View style={styles.menuButtonContainer}>
-        <TouchableOpacity style={styles.menuButton} onPress={toggleMenu}>
-          <Feather name="menu" size={28} color="white" />
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={toggleMenu}
+          accessibilityRole="button"
+          accessibilityLabel={menuOpen ? "Close menu" : "Open menu"}
+          accessibilityHint="Opens the navigation menu"
+          accessibilityState={{ expanded: menuOpen }}
+        >
+          <Feather
+            name="menu"
+            size={28}
+            color="white"
+            accessibilityElementsHidden
+            importantForAccessibility="no"
+          />
         </TouchableOpacity>
       </View>
 
@@ -604,11 +702,14 @@ export default function HomeScreen() {
             styles.menuOverlay,
             { width: "100%", transform: [{ translateY: menuTranslate }] },
           ]}
+          accessibilityLabel="Menu overlay"
         >
           <TouchableOpacity
             style={styles.overlayBackground}
             onPress={toggleMenu}
             activeOpacity={1}
+            accessibilityRole="button"
+            accessibilityLabel="Close menu"
           />
           <View style={[styles.menuContent, { width: contentWidthMobile }]}>
             {menuItems.map((item) => (
@@ -619,6 +720,8 @@ export default function HomeScreen() {
                   toggleMenu();
                   navigation.navigate(item.route as never);
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={`Go to ${item.name}`}
               >
                 <Text style={styles.menuItemText}>{item.name}</Text>
               </TouchableOpacity>
@@ -1042,5 +1145,4 @@ function createStyles(c: ThemeColors) {
     fontFamily: "BebasNeue-Regular",
     color: c.primary,
   },
-  });
-}
+});

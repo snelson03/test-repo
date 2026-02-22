@@ -215,20 +215,23 @@ export default function PreferencesScreen() {
   // WEB ONLY: use the same top bar + sidebar layout as HomeScreen
   if (isWeb) {
     return (
-      <View style={styles.webPage}>
+      <View style={styles.webPage} accessibilityLabel="Preferences screen">
         {/* top bar */}
-        <View style={styles.webTopBar}>
+        <View style={styles.webTopBar} accessibilityLabel="Top bar">
           <Image
             source={require("@/assets/images/bf_logo.png")}
             style={styles.webTopBarLogo}
             resizeMode="contain"
+            accessibilityRole="image"
+            accessibilityLabel="Bobcat Finder logo"
+            accessibilityIgnoresInvertColors
           />
         </View>
 
         {/* sidebar + main */}
-        <View style={styles.webBody}>
+        <View style={styles.webBody} accessibilityLabel="Preferences page layout">
           {/* Left Sidebar */}
-          <View style={styles.webSidebar}>
+          <View style={styles.webSidebar} accessibilityLabel="Sidebar navigation">
             <View style={styles.webSidebarLinks}>
               {menuItems.map((item) => {
                 const selected = item.route === "Preferences";
@@ -240,6 +243,9 @@ export default function PreferencesScreen() {
                       selected && styles.webNavItemSelected,
                     ]}
                     onPress={() => navigation.navigate(item.route)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${item.name} page`}
+                    accessibilityState={{ selected }}
                   >
                     <Text
                       style={[
@@ -258,7 +264,10 @@ export default function PreferencesScreen() {
           {/* Main area */}
           <View style={styles.webMain}>
             {/* MAIN CONTENT WRAP */}
-            <View style={[styles.container, styles.webContent]}>
+            <View
+              style={[styles.container, styles.webContent]}
+              accessibilityLabel="Preferences content"
+            >
               {/* Header */}
               <View style={[styles.header, styles.headerWeb]}>
                 {/* back arrow on web + mobile */}
@@ -268,6 +277,8 @@ export default function PreferencesScreen() {
                     if (navigation.canGoBack()) navigation.goBack();
                     else navigation.navigate("Home");
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Go back"
                 >
                   <Ionicons
                     name="arrow-back"
@@ -276,7 +287,12 @@ export default function PreferencesScreen() {
                   />
                 </TouchableOpacity>
 
-                <Text style={[styles.title, styles.titleWeb]}>PREFERENCES</Text>
+                <Text
+                  style={[styles.title, styles.titleWeb]}
+                  accessibilityRole="header"
+                >
+                  PREFERENCES
+                </Text>
               </View>
 
               {/* Dropdown */}
@@ -284,6 +300,9 @@ export default function PreferencesScreen() {
                 <TouchableOpacity
                   style={styles.dropdownToggle}
                   onPress={() => setDropdownOpen(!dropdownOpen)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select preferences section. Currently ${activeCategory}`}
+                  accessibilityState={{ expanded: dropdownOpen }}
                 >
                   <Feather name="menu" size={16} color={colors.primary} />
                   <Text style={styles.subHeaderText}>{activeCategory}</Text>
@@ -296,7 +315,10 @@ export default function PreferencesScreen() {
                 </TouchableOpacity>
 
                 {dropdownOpen && (
-                  <View style={styles.dropdownMenu}>
+                  <View
+                    style={styles.dropdownMenu}
+                    accessibilityLabel="Preferences sections"
+                  >
                     {categories.map((cat) => (
                       <TouchableOpacity
                         key={cat}
@@ -308,6 +330,9 @@ export default function PreferencesScreen() {
                           setActiveCategory(cat);
                           setDropdownOpen(false);
                         }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Show ${cat} settings`}
+                        accessibilityState={{ selected: activeCategory === cat }}
                       >
                         <Text
                           style={[
@@ -331,13 +356,24 @@ export default function PreferencesScreen() {
                   styles.scrollContent,
                   styles.scrollContentWeb,
                 ]}
+                accessibilityLabel="Preferences options"
               >
                 {/* Notification Section */}
                 {activeCategory === "Notifications" && (
-                  <View style={[styles.section, styles.sectionWeb]}>
-                    <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+                  <View
+                    style={[styles.section, styles.sectionWeb]}
+                    accessibilityLabel="Notifications settings"
+                  >
+                    <Text
+                      style={styles.sectionTitle}
+                      accessibilityRole="header"
+                    >
+                      NOTIFICATIONS
+                    </Text>
 
-                    <Text style={styles.categoryTitle}>NOTIFICATION TYPES</Text>
+                    <Text style={styles.categoryTitle} accessibilityRole="header">
+                      NOTIFICATION TYPES
+                    </Text>
                     {[
                       { key: "allRooms", label: "All Available Rooms" },
                       {
@@ -350,118 +386,147 @@ export default function PreferencesScreen() {
                         label: "Building Specific",
                         editable: true,
                       },
-                    ].map(({ key, label, editable }) => (
-                      <View key={key} style={styles.optionRow}>
-                        <TouchableOpacity
-                          style={[
-                            styles.checkbox,
-                            notificationTypes[
-                              key as keyof typeof notificationTypes
-                            ] && styles.checkboxChecked,
-                          ]}
-                          onPress={() =>
-                            toggle("types", key as keyof typeof notificationTypes)
-                          }
-                        >
-                          {notificationTypes[
-                            key as keyof typeof notificationTypes
-                          ] && (
-                            <Ionicons
-                              name="checkmark"
-                              size={16}
-                              color={colors.primary}
-                            />
-                          )}
-                        </TouchableOpacity>
-
-                        <Text style={styles.optionText}>{label}</Text>
-
-                        {editable && (
-                          <TouchableOpacity onPress={() => openModal(key)}>
-                            <Text style={styles.editText}>Edit</Text>
+                    ].map(({ key, label, editable }) => {
+                      const checked =
+                        notificationTypes[key as keyof typeof notificationTypes];
+                      return (
+                        <View key={key} style={styles.optionRow}>
+                          <TouchableOpacity
+                            style={[
+                              styles.checkbox,
+                              checked && styles.checkboxChecked,
+                            ]}
+                            onPress={() =>
+                              toggle(
+                                "types",
+                                key as keyof typeof notificationTypes
+                              )
+                            }
+                            accessibilityRole="checkbox"
+                            accessibilityLabel={label}
+                            accessibilityState={{ checked }}
+                          >
+                            {checked && (
+                              <Ionicons
+                                name="checkmark"
+                                size={16}
+                                color={colors.primary}
+                              />
+                            )}
                           </TouchableOpacity>
-                        )}
-                      </View>
-                    ))}
 
-                    <Text style={styles.categoryTitle}>
+                          <Text style={styles.optionText}>{label}</Text>
+
+                          {editable && (
+                            <TouchableOpacity
+                              onPress={() => openModal(key)}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Edit ${label}`}
+                            >
+                              <Text style={styles.editText}>Edit</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      );
+                    })}
+
+                    <Text style={styles.categoryTitle} accessibilityRole="header">
                       NOTIFICATION METHODS
                     </Text>
-                    {Object.keys(methods).map((key) => (
-                      <View key={key} style={styles.optionRow}>
-                        <TouchableOpacity
-                          style={[
-                            styles.checkbox,
-                            methods[key as keyof typeof methods] &&
-                              styles.checkboxChecked,
-                          ]}
-                          onPress={() =>
-                            toggle("methods", key as keyof typeof methods)
-                          }
-                        >
-                          {methods[key as keyof typeof methods] && (
-                            <Ionicons
-                              name="checkmark"
-                              size={16}
-                              color={colors.primary}
-                            />
-                          )}
-                        </TouchableOpacity>
+                    {Object.keys(methods).map((key) => {
+                      const checked = methods[key as keyof typeof methods];
+                      const label = key === "sms" ? "SMS" : "Email";
+                      return (
+                        <View key={key} style={styles.optionRow}>
+                          <TouchableOpacity
+                            style={[
+                              styles.checkbox,
+                              checked && styles.checkboxChecked,
+                            ]}
+                            onPress={() =>
+                              toggle("methods", key as keyof typeof methods)
+                            }
+                            accessibilityRole="checkbox"
+                            accessibilityLabel={label}
+                            accessibilityState={{ checked }}
+                          >
+                            {checked && (
+                              <Ionicons
+                                name="checkmark"
+                                size={16}
+                                color={colors.primary}
+                              />
+                            )}
+                          </TouchableOpacity>
 
-                        <Text style={styles.optionText}>
-                          {key === "sms" ? "SMS" : "Email"}
-                        </Text>
-                      </View>
-                    ))}
+                          <Text style={styles.optionText}>{label}</Text>
+                        </View>
+                      );
+                    })}
 
-                    <Text style={styles.categoryTitle}>
+                    <Text style={styles.categoryTitle} accessibilityRole="header">
                       NOTIFICATION SCHEDULING
                     </Text>
-                    {Object.keys(schedule).map((key) => (
-                      <View key={key} style={styles.optionRow}>
-                        <TouchableOpacity
-                          style={[
-                            styles.checkbox,
-                            schedule[key as keyof typeof schedule] &&
-                              styles.checkboxChecked,
-                          ]}
-                          onPress={() =>
-                            toggle("schedule", key as keyof typeof schedule)
-                          }
-                        >
-                          {schedule[key as keyof typeof schedule] && (
-                            <Ionicons
-                              name="checkmark"
-                              size={16}
-                              color={colors.primary}
-                            />
-                          )}
-                        </TouchableOpacity>
-
-                        <Text style={styles.optionText}>
-                          {key === "standard"
-                            ? "9:00AM - 5:00PM"
-                            : key === "alwaysOn"
-                            ? "Always On"
-                            : "Custom"}
-                        </Text>
-
-                        {key === "custom" && (
+                    {Object.keys(schedule).map((key) => {
+                      const checked = schedule[key as keyof typeof schedule];
+                      const label =
+                        key === "standard"
+                          ? "9:00AM - 5:00PM"
+                          : key === "alwaysOn"
+                          ? "Always On"
+                          : "Custom";
+                      return (
+                        <View key={key} style={styles.optionRow}>
                           <TouchableOpacity
-                            onPress={() => openModal("customSchedule")}
+                            style={[
+                              styles.checkbox,
+                              checked && styles.checkboxChecked,
+                            ]}
+                            onPress={() =>
+                              toggle("schedule", key as keyof typeof schedule)
+                            }
+                            accessibilityRole="checkbox"
+                            accessibilityLabel={label}
+                            accessibilityState={{ checked }}
                           >
-                            <Text style={styles.editText}>Edit</Text>
+                            {checked && (
+                              <Ionicons
+                                name="checkmark"
+                                size={16}
+                                color={colors.primary}
+                              />
+                            )}
                           </TouchableOpacity>
-                        )}
-                      </View>
-                    ))}
+
+                          <Text style={styles.optionText}>{label}</Text>
+
+                          {key === "custom" && (
+                            <TouchableOpacity
+                              onPress={() => openModal("customSchedule")}
+                              accessibilityRole="button"
+                              accessibilityLabel="Edit custom schedule"
+                            >
+                              <Text style={styles.editText}>Edit</Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                      );
+                    })}
                   </View>
                 )}
 
                 {/* Account Section */}
                 {activeCategory === "Account" && (
-                  <View style={[styles.section, styles.sectionWeb]}>
-                    <Text style={styles.sectionTitle}>MY ACCOUNT</Text>
+                  <View
+                    style={[styles.section, styles.sectionWeb]}
+                    accessibilityLabel="Account settings"
+                  >
+                    <Text
+                      style={styles.sectionTitle}
+                      accessibilityRole="header"
+                    >
+                      MY ACCOUNT
+                    </Text>
 
                     <View style={styles.inputRow}>
                       <Text style={styles.inputLabel}>EMAIL</Text>
@@ -472,6 +537,8 @@ export default function PreferencesScreen() {
                         ]}
                         value={user?.email || ""}
                         editable={false}
+                        accessibilityLabel="Email"
+                        accessibilityHint="Email cannot be edited"
                       />
                     </View>
 
@@ -481,6 +548,8 @@ export default function PreferencesScreen() {
                         style={styles.inputBox}
                         value={user?.name || ""}
                         onChangeText={(val) => updateUserField("name", val)}
+                        accessibilityLabel="Name"
+                        accessibilityHint="Edit your name"
                       />
                     </View>
 
@@ -490,12 +559,17 @@ export default function PreferencesScreen() {
                         style={styles.inputBox}
                         value={user?.phone || ""}
                         onChangeText={(val) => updateUserField("phone", val)}
+                        accessibilityLabel="Phone number"
+                        accessibilityHint="Edit your phone number"
                       />
                     </View>
 
                     <TouchableOpacity
                       style={styles.logoutButton}
                       onPress={() => setLogoutModalVisible(true)}
+                      accessibilityRole="button"
+                      accessibilityLabel="Log out"
+                      accessibilityHint="Opens confirmation dialog"
                     >
                       <Text style={styles.logoutText}>LOG OUT</Text>
                     </TouchableOpacity>
@@ -504,13 +578,29 @@ export default function PreferencesScreen() {
 
                 {/* Groups Section */}
                 {activeCategory === "Groups" && (
-                  <View style={[styles.section, styles.sectionWeb]}>
-                    <Text style={styles.sectionTitle}>MY GROUPS</Text>
+                  <View
+                    style={[styles.section, styles.sectionWeb]}
+                    accessibilityLabel="Groups settings"
+                  >
+                    <Text
+                      style={styles.sectionTitle}
+                      accessibilityRole="header"
+                    >
+                      MY GROUPS
+                    </Text>
 
                     {groups.map((g) => (
-                      <View key={g} style={styles.groupRow}>
+                      <View
+                        key={g}
+                        style={styles.groupRow}
+                        accessibilityLabel={`Group ${g}`}
+                      >
                         <Text style={styles.groupItem}>• {g}</Text>
-                        <TouchableOpacity onPress={() => removeGroup(g)}>
+                        <TouchableOpacity
+                          onPress={() => removeGroup(g)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Remove group ${g}`}
+                        >
                           <Ionicons
                             name="trash"
                             size={22}
@@ -527,10 +617,14 @@ export default function PreferencesScreen() {
                         style={styles.inputBox}
                         value={newGroup}
                         onChangeText={setNewGroup}
+                        accessibilityLabel="New group name"
+                        accessibilityHint="Type a group name to add"
                       />
                       <TouchableOpacity
                         style={styles.addButton}
                         onPress={addGroup}
+                        accessibilityRole="button"
+                        accessibilityLabel="Add group"
                       >
                         <Ionicons
                           name="add-circle"
@@ -578,67 +672,90 @@ export default function PreferencesScreen() {
               </ScrollView>
 
               {/* Modal for custom preferences */}
-              <Modal transparent visible={modalVisible} animationType="fade">
-                <View style={styles.modalOverlay}>
+              <Modal
+                transparent
+                visible={modalVisible}
+                animationType="fade"
+                accessibilityViewIsModal
+                onRequestClose={closeModal}
+              >
+                <View
+                  style={styles.modalOverlay}
+                  accessibilityLabel="Preferences dialog"
+                >
                   <View style={styles.modalContainer}>
                     {modalType === "favoritesOnly" && (
                       <>
-                        <Text style={styles.modalTitle}>My Favorites</Text>
+                        <Text
+                          style={styles.modalTitle}
+                          accessibilityRole="header"
+                        >
+                          My Favorites
+                        </Text>
 
-                        <View style={styles.greenBox}>
-                          {favorites.map((fav) => (
-                            <TouchableOpacity
-                              key={fav.name}
-                              style={styles.optionRow}
-                              onPress={() => {
-                                const exists = selectedFavorites.some(
-                                  (f) => f.name === fav.name
-                                );
-                                setSelectedFavorites(
-                                  exists
-                                    ? selectedFavorites.filter(
-                                        (f) => f.name !== fav.name
-                                      )
-                                    : [...selectedFavorites, fav]
-                                );
-                              }}
-                            >
-                              <View
-                                style={[
-                                  styles.checkbox,
-                                  selectedFavorites.some(
+                        <View
+                          style={styles.greenBox}
+                          accessibilityLabel="Favorite rooms list"
+                        >
+                          {favorites.map((fav) => {
+                            const checked = selectedFavorites.some(
+                              (f) => f.name === fav.name
+                            );
+                            return (
+                              <TouchableOpacity
+                                key={fav.name}
+                                style={styles.optionRow}
+                                onPress={() => {
+                                  const exists = selectedFavorites.some(
                                     (f) => f.name === fav.name
-                                  ) && {
-                                    backgroundColor: colors.white,
-                                  },
-                                ]}
+                                  );
+                                  setSelectedFavorites(
+                                    exists
+                                      ? selectedFavorites.filter(
+                                          (f) => f.name !== fav.name
+                                        )
+                                      : [...selectedFavorites, fav]
+                                  );
+                                }}
+                                accessibilityRole="checkbox"
+                                accessibilityLabel={fav.name}
+                                accessibilityState={{ checked }}
                               >
-                                {selectedFavorites.some(
-                                  (f) => f.name === fav.name
-                                ) && (
-                                  <Ionicons
-                                    name="checkmark"
-                                    size={16}
-                                    color={colors.primary}
-                                  />
-                                )}
-                              </View>
+                                <View
+                                  style={[
+                                    styles.checkbox,
+                                    checked && {
+                                      backgroundColor: colors.white,
+                                    },
+                                  ]}
+                                >
+                                  {checked && (
+                                    <Ionicons
+                                      name="checkmark"
+                                      size={16}
+                                      color={colors.primary}
+                                    />
+                                  )}
+                                </View>
 
-                              <Text
-                                style={[
-                                  styles.optionText,
-                                  { color: colors.white },
-                                ]}
-                              >
-                                {fav.name}
-                              </Text>
-                            </TouchableOpacity>
-                          ))}
+                                <Text
+                                  style={[
+                                    styles.optionText,
+                                    { color: colors.white },
+                                  ]}
+                                >
+                                  {fav.name}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
                         </View>
 
                         <TouchableOpacity
                           style={styles.modalButton}
                           onPress={closeModal}
+                          accessibilityRole="button"
+                          accessibilityLabel="Close dialog"
                         >
                           <Text style={styles.modalButtonText}>Close</Text>
                         </TouchableOpacity>
@@ -647,63 +764,79 @@ export default function PreferencesScreen() {
 
                     {modalType === "buildingSpecific" && (
                       <>
-                        <Text style={styles.modalTitle}>Select Buildings</Text>
+                        <Text
+                          style={styles.modalTitle}
+                          accessibilityRole="header"
+                        >
+                          Select Buildings
+                        </Text>
 
-                        <View style={styles.greenBox}>
-                          {["ARC", "Alden Library", "Stocker"].map((bld) => (
-                            <TouchableOpacity
-                              key={bld}
-                              style={styles.optionRow}
-                              onPress={() => {
-                                const selected =
-                                  customInputs.buildingSpecific
+                        <View
+                          style={styles.greenBox}
+                          accessibilityLabel="Buildings list"
+                        >
+                          {["ARC", "Alden Library", "Stocker"].map((bld) => {
+                            const checked =
+                              customInputs.buildingSpecific.includes(bld);
+                            return (
+                              <TouchableOpacity
+                                key={bld}
+                                style={styles.optionRow}
+                                onPress={() => {
+                                  const selected = customInputs.buildingSpecific
                                     .split(",")
                                     .map((x) => x.trim())
                                     .filter(Boolean);
 
-                                const exists = selected.includes(bld);
-                                const newList = exists
-                                  ? selected.filter((x) => x !== bld)
-                                  : [...selected, bld];
+                                  const exists = selected.includes(bld);
+                                  const newList = exists
+                                    ? selected.filter((x) => x !== bld)
+                                    : [...selected, bld];
 
-                                setCustomInputs({
-                                  ...customInputs,
-                                  buildingSpecific: newList.join(", "),
-                                });
-                              }}
-                            >
-                              <View
-                                style={[
-                                  styles.checkbox,
-                                  customInputs.buildingSpecific.includes(bld) && {
-                                    backgroundColor: colors.white,
-                                  },
-                                ]}
+                                  setCustomInputs({
+                                    ...customInputs,
+                                    buildingSpecific: newList.join(", "),
+                                  });
+                                }}
+                                accessibilityRole="checkbox"
+                                accessibilityLabel={bld}
+                                accessibilityState={{ checked }}
                               >
-                                {customInputs.buildingSpecific.includes(bld) && (
-                                  <Ionicons
-                                    name="checkmark"
-                                    size={16}
-                                    color={colors.primary}
-                                  />
-                                )}
-                              </View>
+                                <View
+                                  style={[
+                                    styles.checkbox,
+                                    checked && {
+                                      backgroundColor: colors.white,
+                                    },
+                                  ]}
+                                >
+                                  {checked && (
+                                    <Ionicons
+                                      name="checkmark"
+                                      size={16}
+                                      color={colors.primary}
+                                    />
+                                  )}
+                                </View>
 
-                              <Text
-                                style={[
-                                  styles.optionText,
-                                  { color: colors.white },
-                                ]}
-                              >
-                                {bld}
-                              </Text>
-                            </TouchableOpacity>
-                          ))}
+                                <Text
+                                  style={[
+                                    styles.optionText,
+                                    { color: colors.white },
+                                  ]}
+                                >
+                                  {bld}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
                         </View>
 
                         <TouchableOpacity
                           style={styles.modalButton}
                           onPress={closeModal}
+                          accessibilityRole="button"
+                          accessibilityLabel="Close dialog"
                         >
                           <Text style={styles.modalButtonText}>Close</Text>
                         </TouchableOpacity>
@@ -712,7 +845,12 @@ export default function PreferencesScreen() {
 
                     {modalType === "customSchedule" && (
                       <>
-                        <Text style={styles.modalTitle}>Custom Schedule</Text>
+                        <Text
+                          style={styles.modalTitle}
+                          accessibilityRole="header"
+                        >
+                          Custom Schedule
+                        </Text>
 
                         <TextInput
                           style={styles.modalInput}
@@ -720,12 +858,19 @@ export default function PreferencesScreen() {
                           placeholderTextColor={colors.gray400}
                           value={tempText}
                           onChangeText={setTempText}
+                          accessibilityLabel="Custom schedule"
+                          accessibilityHint="Enter a time range"
                         />
 
                         <View style={styles.modalActionsRow}>
                           <TouchableOpacity
-                            style={[styles.modalButtonSmall, styles.modalCancel]}
+                            style={[
+                              styles.modalButtonSmall,
+                              styles.modalCancel,
+                            ]}
                             onPress={closeModal}
+                            accessibilityRole="button"
+                            accessibilityLabel="Cancel"
                           >
                             <Text
                               style={[
@@ -747,6 +892,8 @@ export default function PreferencesScreen() {
                               setModalVisible(false);
                               setTempText("");
                             }}
+                            accessibilityRole="button"
+                            accessibilityLabel="Save custom schedule"
                           >
                             <Text
                               style={[
@@ -766,17 +913,31 @@ export default function PreferencesScreen() {
 
               {/* Logout Confirmation Modal */}
               {logoutModalVisible && (
-                <View style={styles.logoutOverlay}>
+                <View
+                  style={styles.logoutOverlay}
+                  accessibilityViewIsModal
+                  accessibilityLabel="Log out confirmation"
+                >
                   <View style={styles.logoutBox}>
-                    <Text style={styles.logoutModalTitle}>Log Out</Text>
+                    <Text
+                      style={styles.logoutModalTitle}
+                      accessibilityRole="header"
+                    >
+                      Log Out
+                    </Text>
                     <Text style={styles.logoutModalMessage}>
                       Are you sure you want to log out?
                     </Text>
 
                     <View style={styles.logoutButtonsRow}>
                       <TouchableOpacity
-                        style={[styles.logoutModalButton, styles.cancelButton]}
+                        style={[
+                          styles.logoutModalButton,
+                          styles.cancelButton,
+                        ]}
                         onPress={() => setLogoutModalVisible(false)}
+                        accessibilityRole="button"
+                        accessibilityLabel="Cancel log out"
                       >
                         <Text style={styles.cancelText}>Cancel</Text>
                       </TouchableOpacity>
@@ -794,6 +955,8 @@ export default function PreferencesScreen() {
                             routes: [{ name: "Login" }],
                           });
                         }}
+                        accessibilityRole="button"
+                        accessibilityLabel="Confirm log out"
                       >
                         <Text style={styles.confirmLogoutText}>Log out</Text>
                       </TouchableOpacity>
@@ -810,15 +973,18 @@ export default function PreferencesScreen() {
 
   // Mobile version (unchanged)
   return (
-    <View style={styles.page}>
+    <View style={styles.page} accessibilityLabel="Preferences screen">
       {/* Web left sidebar */}
       {isWeb && (
-        <View style={styles.webSidebar}>
+        <View style={styles.webSidebar} accessibilityLabel="Sidebar navigation">
           <View style={styles.webSidebarHeader}>
             <Image
               source={require("@/assets/images/bf_logo.png")}
               style={styles.webSidebarLogo}
               resizeMode="contain"
+              accessibilityRole="image"
+              accessibilityLabel="Bobcat Finder logo"
+              accessibilityIgnoresInvertColors
             />
           </View>
 
@@ -833,6 +999,9 @@ export default function PreferencesScreen() {
                     selected && styles.webNavItemSelected,
                   ]}
                   onPress={() => navigation.navigate(item.route)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${item.name} page`}
+                  accessibilityState={{ selected }}
                 >
                   <Text
                     style={[
@@ -850,7 +1019,10 @@ export default function PreferencesScreen() {
       )}
 
       {/* MAIN CONTENT WRAP */}
-      <View style={[styles.container, isWeb && styles.webContent]}>
+      <View
+        style={[styles.container, isWeb && styles.webContent]}
+        accessibilityLabel="Preferences content"
+      >
         {/* Header */}
         <View style={[styles.header, isWeb && styles.headerWeb]}>
           {/* back arrow on web + mobile */}
@@ -860,11 +1032,16 @@ export default function PreferencesScreen() {
               if (navigation.canGoBack()) navigation.goBack();
               else navigation.navigate("Home");
             }}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
           >
             <Ionicons name="arrow-back" size={26} color={colors.primary} />
           </TouchableOpacity>
 
-          <Text style={[styles.title, isWeb && styles.titleWeb]}>
+          <Text
+            style={[styles.title, isWeb && styles.titleWeb]}
+            accessibilityRole="header"
+          >
             PREFERENCES
           </Text>
         </View>
@@ -874,6 +1051,9 @@ export default function PreferencesScreen() {
           <TouchableOpacity
             style={styles.dropdownToggle}
             onPress={() => setDropdownOpen(!dropdownOpen)}
+            accessibilityRole="button"
+            accessibilityLabel={`Select preferences section. Currently ${activeCategory}`}
+            accessibilityState={{ expanded: dropdownOpen }}
           >
             <Feather name="menu" size={16} color={colors.primary} />
             <Text style={styles.subHeaderText}>{activeCategory}</Text>
@@ -886,7 +1066,10 @@ export default function PreferencesScreen() {
           </TouchableOpacity>
 
           {dropdownOpen && (
-            <View style={styles.dropdownMenu}>
+            <View
+              style={styles.dropdownMenu}
+              accessibilityLabel="Preferences sections"
+            >
               {categories.map((cat) => (
                 <TouchableOpacity
                   key={cat}
@@ -898,6 +1081,9 @@ export default function PreferencesScreen() {
                     setActiveCategory(cat);
                     setDropdownOpen(false);
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Show ${cat} settings`}
+                  accessibilityState={{ selected: activeCategory === cat }}
                 >
                   <Text
                     style={[
@@ -920,13 +1106,21 @@ export default function PreferencesScreen() {
             styles.scrollContent,
             isWeb && styles.scrollContentWeb,
           ]}
+          accessibilityLabel="Preferences options"
         >
           {/* Notification Section */}
           {activeCategory === "Notifications" && (
-            <View style={[styles.section, isWeb && styles.sectionWeb]}>
-              <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+            <View
+              style={[styles.section, isWeb && styles.sectionWeb]}
+              accessibilityLabel="Notifications settings"
+            >
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                NOTIFICATIONS
+              </Text>
 
-              <Text style={styles.categoryTitle}>NOTIFICATION TYPES</Text>
+              <Text style={styles.categoryTitle} accessibilityRole="header">
+                NOTIFICATION TYPES
+              </Text>
               {[
                 { key: "allRooms", label: "All Available Rooms" },
                 { key: "favoritesOnly", label: "Favorites Only", editable: true },
@@ -935,107 +1129,139 @@ export default function PreferencesScreen() {
                   label: "Building Specific",
                   editable: true,
                 },
-              ].map(({ key, label, editable }) => (
-                <View key={key} style={styles.optionRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.checkbox,
-                      notificationTypes[key as keyof typeof notificationTypes] &&
-                        styles.checkboxChecked,
-                    ]}
-                    onPress={() =>
-                      toggle("types", key as keyof typeof notificationTypes)
-                    }
-                  >
-                    {notificationTypes[key as keyof typeof notificationTypes] && (
-                      <Ionicons
-                        name="checkmark"
-                        size={16}
-                        color={colors.primary}
-                      />
-                    )}
-                  </TouchableOpacity>
-
-                  <Text style={styles.optionText}>{label}</Text>
-
-                  {editable && (
-                    <TouchableOpacity onPress={() => openModal(key)}>
-                      <Text style={styles.editText}>Edit</Text>
+              ].map(({ key, label, editable }) => {
+                const checked =
+                  notificationTypes[key as keyof typeof notificationTypes];
+                return (
+                  <View key={key} style={styles.optionRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.checkbox,
+                        checked && styles.checkboxChecked,
+                      ]}
+                      onPress={() =>
+                        toggle("types", key as keyof typeof notificationTypes)
+                      }
+                      accessibilityRole="checkbox"
+                      accessibilityLabel={label}
+                      accessibilityState={{ checked }}
+                    >
+                      {checked && (
+                        <Ionicons
+                          name="checkmark"
+                          size={16}
+                          color={colors.primary}
+                        />
+                      )}
                     </TouchableOpacity>
-                  )}
-                </View>
-              ))}
 
-              <Text style={styles.categoryTitle}>NOTIFICATION METHODS</Text>
-              {Object.keys(methods).map((key) => (
-                <View key={key} style={styles.optionRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.checkbox,
-                      methods[key as keyof typeof methods] &&
-                        styles.checkboxChecked,
-                    ]}
-                    onPress={() => toggle("methods", key as keyof typeof methods)}
-                  >
-                    {methods[key as keyof typeof methods] && (
-                      <Ionicons
-                        name="checkmark"
-                        size={16}
-                        color={colors.primary}
-                      />
+                    <Text style={styles.optionText}>{label}</Text>
+
+                    {editable && (
+                      <TouchableOpacity
+                        onPress={() => openModal(key)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Edit ${label}`}
+                      >
+                        <Text style={styles.editText}>Edit</Text>
+                      </TouchableOpacity>
                     )}
-                  </TouchableOpacity>
+                  </View>
+                );
+              })}
 
-                  <Text style={styles.optionText}>
-                    {key === "sms" ? "SMS" : "Email"}
-                  </Text>
-                </View>
-              ))}
-
-              <Text style={styles.categoryTitle}>NOTIFICATION SCHEDULING</Text>
-              {Object.keys(schedule).map((key) => (
-                <View key={key} style={styles.optionRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.checkbox,
-                      schedule[key as keyof typeof schedule] &&
-                        styles.checkboxChecked,
-                    ]}
-                    onPress={() =>
-                      toggle("schedule", key as keyof typeof schedule)
-                    }
-                  >
-                    {schedule[key as keyof typeof schedule] && (
-                      <Ionicons
-                        name="checkmark"
-                        size={16}
-                        color={colors.primary}
-                      />
-                    )}
-                  </TouchableOpacity>
-
-                  <Text style={styles.optionText}>
-                    {key === "standard"
-                      ? "9:00AM - 5:00PM"
-                      : key === "alwaysOn"
-                      ? "Always On"
-                      : "Custom"}
-                  </Text>
-
-                  {key === "custom" && (
-                    <TouchableOpacity onPress={() => openModal("customSchedule")}>
-                      <Text style={styles.editText}>Edit</Text>
+              <Text style={styles.categoryTitle} accessibilityRole="header">
+                NOTIFICATION METHODS
+              </Text>
+              {Object.keys(methods).map((key) => {
+                const checked = methods[key as keyof typeof methods];
+                const label = key === "sms" ? "SMS" : "Email";
+                return (
+                  <View key={key} style={styles.optionRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.checkbox,
+                        checked && styles.checkboxChecked,
+                      ]}
+                      onPress={() => toggle("methods", key as keyof typeof methods)}
+                      accessibilityRole="checkbox"
+                      accessibilityLabel={label}
+                      accessibilityState={{ checked }}
+                    >
+                      {checked && (
+                        <Ionicons
+                          name="checkmark"
+                          size={16}
+                          color={colors.primary}
+                        />
+                      )}
                     </TouchableOpacity>
-                  )}
-                </View>
-              ))}
+
+                    <Text style={styles.optionText}>{label}</Text>
+                  </View>
+                );
+              })}
+
+              <Text style={styles.categoryTitle} accessibilityRole="header">
+                NOTIFICATION SCHEDULING
+              </Text>
+              {Object.keys(schedule).map((key) => {
+                const checked = schedule[key as keyof typeof schedule];
+                const label =
+                  key === "standard"
+                    ? "9:00AM - 5:00PM"
+                    : key === "alwaysOn"
+                    ? "Always On"
+                    : "Custom";
+                return (
+                  <View key={key} style={styles.optionRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.checkbox,
+                        checked && styles.checkboxChecked,
+                      ]}
+                      onPress={() =>
+                        toggle("schedule", key as keyof typeof schedule)
+                      }
+                      accessibilityRole="checkbox"
+                      accessibilityLabel={label}
+                      accessibilityState={{ checked }}
+                    >
+                      {checked && (
+                        <Ionicons
+                          name="checkmark"
+                          size={16}
+                          color={colors.primary}
+                        />
+                      )}
+                    </TouchableOpacity>
+
+                    <Text style={styles.optionText}>{label}</Text>
+
+                    {key === "custom" && (
+                      <TouchableOpacity
+                        onPress={() => openModal("customSchedule")}
+                        accessibilityRole="button"
+                        accessibilityLabel="Edit custom schedule"
+                      >
+                        <Text style={styles.editText}>Edit</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })}
             </View>
           )}
 
           {/* Account Section */}
           {activeCategory === "Account" && (
-            <View style={[styles.section, isWeb && styles.sectionWeb]}>
-              <Text style={styles.sectionTitle}>MY ACCOUNT</Text>
+            <View
+              style={[styles.section, isWeb && styles.sectionWeb]}
+              accessibilityLabel="Account settings"
+            >
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                MY ACCOUNT
+              </Text>
 
               <View style={styles.inputRow}>
                 <Text style={styles.inputLabel}>EMAIL</Text>
@@ -1043,6 +1269,8 @@ export default function PreferencesScreen() {
                   style={[styles.inputBox, { backgroundColor: colors.gray300 }]}
                   value={user?.email || ""}
                   editable={false}
+                  accessibilityLabel="Email"
+                  accessibilityHint="Email cannot be edited"
                 />
               </View>
 
@@ -1052,6 +1280,8 @@ export default function PreferencesScreen() {
                   style={styles.inputBox}
                   value={user?.name || ""}
                   onChangeText={(val) => updateUserField("name", val)}
+                  accessibilityLabel="Name"
+                  accessibilityHint="Edit your name"
                 />
               </View>
 
@@ -1061,12 +1291,17 @@ export default function PreferencesScreen() {
                   style={styles.inputBox}
                   value={user?.phone || ""}
                   onChangeText={(val) => updateUserField("phone", val)}
+                  accessibilityLabel="Phone number"
+                  accessibilityHint="Edit your phone number"
                 />
               </View>
 
               <TouchableOpacity
                 style={styles.logoutButton}
                 onPress={() => setLogoutModalVisible(true)}
+                accessibilityRole="button"
+                accessibilityLabel="Log out"
+                accessibilityHint="Opens confirmation dialog"
               >
                 <Text style={styles.logoutText}>LOG OUT</Text>
               </TouchableOpacity>
@@ -1075,13 +1310,26 @@ export default function PreferencesScreen() {
 
           {/* Groups Section */}
           {activeCategory === "Groups" && (
-            <View style={[styles.section, isWeb && styles.sectionWeb]}>
-              <Text style={styles.sectionTitle}>MY GROUPS</Text>
+            <View
+              style={[styles.section, isWeb && styles.sectionWeb]}
+              accessibilityLabel="Groups settings"
+            >
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                MY GROUPS
+              </Text>
 
               {groups.map((g) => (
-                <View key={g} style={styles.groupRow}>
+                <View
+                  key={g}
+                  style={styles.groupRow}
+                  accessibilityLabel={`Group ${g}`}
+                >
                   <Text style={styles.groupItem}>• {g}</Text>
-                  <TouchableOpacity onPress={() => removeGroup(g)}>
+                  <TouchableOpacity
+                    onPress={() => removeGroup(g)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Remove group ${g}`}
+                  >
                     <Ionicons name="trash" size={22} color={colors.offWhite} />
                   </TouchableOpacity>
                 </View>
@@ -1094,8 +1342,15 @@ export default function PreferencesScreen() {
                   style={styles.inputBox}
                   value={newGroup}
                   onChangeText={setNewGroup}
+                  accessibilityLabel="New group name"
+                  accessibilityHint="Type a group name to add"
                 />
-                <TouchableOpacity style={styles.addButton} onPress={addGroup}>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={addGroup}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add group"
+                >
                   <Ionicons name="add-circle" size={28} color={colors.white} />
                 </TouchableOpacity>
               </View>
@@ -1138,56 +1393,75 @@ export default function PreferencesScreen() {
         </ScrollView>
 
         {/* Modal for custom preferences */}
-        <Modal transparent visible={modalVisible} animationType="fade">
-          <View style={styles.modalOverlay}>
+        <Modal
+          transparent
+          visible={modalVisible}
+          animationType="fade"
+          accessibilityViewIsModal
+          onRequestClose={closeModal}
+        >
+          <View style={styles.modalOverlay} accessibilityLabel="Preferences dialog">
             <View style={styles.modalContainer}>
               {modalType === "favoritesOnly" && (
                 <>
-                  <Text style={styles.modalTitle}>My Favorites</Text>
+                  <Text style={styles.modalTitle} accessibilityRole="header">
+                    My Favorites
+                  </Text>
 
-                  <View style={styles.greenBox}>
-                    {favorites.map((fav) => (
-                      <TouchableOpacity
-                        key={fav.name}
-                        style={styles.optionRow}
-                        onPress={() => {
-                          const exists = selectedFavorites.some(
-                            (f) => f.name === fav.name
-                          );
-                          setSelectedFavorites(
-                            exists
-                              ? selectedFavorites.filter(
-                                  (f) => f.name !== fav.name
-                                )
-                              : [...selectedFavorites, fav]
-                          );
-                        }}
-                      >
-                        <View
-                          style={[
-                            styles.checkbox,
-                            selectedFavorites.some((f) => f.name === fav.name) && {
-                              backgroundColor: colors.white,
-                            },
-                          ]}
+                  <View style={styles.greenBox} accessibilityLabel="Favorite rooms list">
+                    {favorites.map((fav) => {
+                      const checked = selectedFavorites.some(
+                        (f) => f.name === fav.name
+                      );
+                      return (
+                        <TouchableOpacity
+                          key={fav.name}
+                          style={styles.optionRow}
+                          onPress={() => {
+                            const exists = selectedFavorites.some(
+                              (f) => f.name === fav.name
+                            );
+                            setSelectedFavorites(
+                              exists
+                                ? selectedFavorites.filter(
+                                    (f) => f.name !== fav.name
+                                  )
+                                : [...selectedFavorites, fav]
+                            );
+                          }}
+                          accessibilityRole="checkbox"
+                          accessibilityLabel={fav.name}
+                          accessibilityState={{ checked }}
                         >
-                          {selectedFavorites.some((f) => f.name === fav.name) && (
-                            <Ionicons
-                              name="checkmark"
-                              size={16}
-                              color={colors.primary}
-                            />
-                          )}
-                        </View>
+                          <View
+                            style={[
+                              styles.checkbox,
+                              checked && { backgroundColor: colors.white },
+                            ]}
+                          >
+                            {checked && (
+                              <Ionicons
+                                name="checkmark"
+                                size={16}
+                                color={colors.primary}
+                              />
+                            )}
+                          </View>
 
-                        <Text style={[styles.optionText, { color: colors.white }]}>
-                          {fav.name}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                          <Text style={[styles.optionText, { color: colors.white }]}>
+                            {fav.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
 
-                  <TouchableOpacity style={styles.modalButton} onPress={closeModal}>
+                  <TouchableOpacity
+                    style={styles.modalButton}
+                    onPress={closeModal}
+                    accessibilityRole="button"
+                    accessibilityLabel="Close dialog"
+                  >
                     <Text style={styles.modalButtonText}>Close</Text>
                   </TouchableOpacity>
                 </>
@@ -1195,55 +1469,66 @@ export default function PreferencesScreen() {
 
               {modalType === "buildingSpecific" && (
                 <>
-                  <Text style={styles.modalTitle}>Select Buildings</Text>
+                  <Text style={styles.modalTitle} accessibilityRole="header">
+                    Select Buildings
+                  </Text>
 
-                  <View style={styles.greenBox}>
-                    {["ARC", "Alden Library", "Stocker"].map((bld) => (
-                      <TouchableOpacity
-                        key={bld}
-                        style={styles.optionRow}
-                        onPress={() => {
-                          const selected = customInputs.buildingSpecific
-                            .split(",")
-                            .map((x) => x.trim())
-                            .filter(Boolean);
+                  <View style={styles.greenBox} accessibilityLabel="Buildings list">
+                    {["ARC", "Alden Library", "Stocker"].map((bld) => {
+                      const checked = customInputs.buildingSpecific.includes(bld);
+                      return (
+                        <TouchableOpacity
+                          key={bld}
+                          style={styles.optionRow}
+                          onPress={() => {
+                            const selected = customInputs.buildingSpecific
+                              .split(",")
+                              .map((x) => x.trim())
+                              .filter(Boolean);
 
-                          const exists = selected.includes(bld);
-                          const newList = exists
-                            ? selected.filter((x) => x !== bld)
-                            : [...selected, bld];
+                            const exists = selected.includes(bld);
+                            const newList = exists
+                              ? selected.filter((x) => x !== bld)
+                              : [...selected, bld];
 
-                          setCustomInputs({
-                            ...customInputs,
-                            buildingSpecific: newList.join(", "),
-                          });
-                        }}
-                      >
-                        <View
-                          style={[
-                            styles.checkbox,
-                            customInputs.buildingSpecific.includes(bld) && {
-                              backgroundColor: colors.white,
-                            },
-                          ]}
+                            setCustomInputs({
+                              ...customInputs,
+                              buildingSpecific: newList.join(", "),
+                            });
+                          }}
+                          accessibilityRole="checkbox"
+                          accessibilityLabel={bld}
+                          accessibilityState={{ checked }}
                         >
-                          {customInputs.buildingSpecific.includes(bld) && (
-                            <Ionicons
-                              name="checkmark"
-                              size={16}
-                              color={colors.primary}
-                            />
-                          )}
-                        </View>
+                          <View
+                            style={[
+                              styles.checkbox,
+                              checked && { backgroundColor: colors.white },
+                            ]}
+                          >
+                            {checked && (
+                              <Ionicons
+                                name="checkmark"
+                                size={16}
+                                color={colors.primary}
+                              />
+                            )}
+                          </View>
 
-                        <Text style={[styles.optionText, { color: colors.white }]}>
-                          {bld}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
+                          <Text style={[styles.optionText, { color: colors.white }]}>
+                            {bld}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
 
-                  <TouchableOpacity style={styles.modalButton} onPress={closeModal}>
+                  <TouchableOpacity
+                    style={styles.modalButton}
+                    onPress={closeModal}
+                    accessibilityRole="button"
+                    accessibilityLabel="Close dialog"
+                  >
                     <Text style={styles.modalButtonText}>Close</Text>
                   </TouchableOpacity>
                 </>
@@ -1251,7 +1536,9 @@ export default function PreferencesScreen() {
 
               {modalType === "customSchedule" && (
                 <>
-                  <Text style={styles.modalTitle}>Custom Schedule</Text>
+                  <Text style={styles.modalTitle} accessibilityRole="header">
+                    Custom Schedule
+                  </Text>
 
                   <TextInput
                     style={styles.modalInput}
@@ -1259,15 +1546,22 @@ export default function PreferencesScreen() {
                     placeholderTextColor={colors.gray400}
                     value={tempText}
                     onChangeText={setTempText}
+                    accessibilityLabel="Custom schedule"
+                    accessibilityHint="Enter a time range"
                   />
 
                   <View style={styles.modalActionsRow}>
                     <TouchableOpacity
                       style={[styles.modalButtonSmall, styles.modalCancel]}
                       onPress={closeModal}
+                      accessibilityRole="button"
+                      accessibilityLabel="Cancel"
                     >
                       <Text
-                        style={[styles.modalButtonText, { color: colors.primary }]}
+                        style={[
+                          styles.modalButtonText,
+                          { color: colors.primary },
+                        ]}
                       >
                         Cancel
                       </Text>
@@ -1283,9 +1577,14 @@ export default function PreferencesScreen() {
                         setModalVisible(false);
                         setTempText("");
                       }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Save custom schedule"
                     >
                       <Text
-                        style={[styles.modalButtonText, { color: colors.white }]}
+                        style={[
+                          styles.modalButtonText,
+                          { color: colors.white },
+                        ]}
                       >
                         Save
                       </Text>
@@ -1299,9 +1598,15 @@ export default function PreferencesScreen() {
 
         {/* Logout Confirmation Modal */}
         {logoutModalVisible && (
-          <View style={styles.logoutOverlay}>
+          <View
+            style={styles.logoutOverlay}
+            accessibilityViewIsModal
+            accessibilityLabel="Log out confirmation"
+          >
             <View style={styles.logoutBox}>
-              <Text style={styles.logoutModalTitle}>Log Out</Text>
+              <Text style={styles.logoutModalTitle} accessibilityRole="header">
+                Log Out
+              </Text>
               <Text style={styles.logoutModalMessage}>
                 Are you sure you want to log out?
               </Text>
@@ -1310,6 +1615,8 @@ export default function PreferencesScreen() {
                 <TouchableOpacity
                   style={[styles.logoutModalButton, styles.cancelButton]}
                   onPress={() => setLogoutModalVisible(false)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel log out"
                 >
                   <Text style={styles.cancelText}>Cancel</Text>
                 </TouchableOpacity>
@@ -1324,6 +1631,8 @@ export default function PreferencesScreen() {
                       routes: [{ name: "Login" }],
                     });
                   }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Confirm log out"
                 >
                   <Text style={styles.confirmLogoutText}>Log out</Text>
                 </TouchableOpacity>
@@ -1454,7 +1763,7 @@ function createStyles(c: ThemeColors) {
   //  center header + reduce top whitespace on web
   headerWeb: {
     justifyContent: "center",
-    marginTop: 35, 
+    marginTop: 35,
   },
 
   backButton: {
@@ -1819,5 +2128,4 @@ function createStyles(c: ThemeColors) {
     fontFamily: "BebasNeue-Regular",
     fontSize: 22,
   },
-  });
-}
+});

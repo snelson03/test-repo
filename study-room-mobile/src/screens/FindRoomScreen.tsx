@@ -213,7 +213,10 @@ export default function FindARoomScreen() {
   };
 
   const oldUI = (
-    <View style={[styles.mainContent, isWeb && styles.webContent]}>
+    <View
+      style={[styles.mainContent, isWeb && styles.webContent]}
+      accessibilityLabel="Find a room screen"
+    >
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{
@@ -221,6 +224,8 @@ export default function FindARoomScreen() {
           paddingBottom: 40,
           paddingHorizontal: pagePad,
         }}
+        keyboardShouldPersistTaps="handled"
+        accessibilityLabel="Find a room content"
       >
         <View style={{ width: "100%" }}>
           {/* Header */}
@@ -233,6 +238,7 @@ export default function FindARoomScreen() {
                 }}
                 accessibilityRole="button"
                 accessibilityLabel="Go back"
+                accessibilityHint="Returns to the previous screen"
               >
                 <Ionicons name="arrow-back" size={28} color={colors.primary} />
               </TouchableOpacity>
@@ -257,6 +263,7 @@ export default function FindARoomScreen() {
                 accessibilityLabel={`Select building. Currently ${
                   selectedBuilding?.name ?? "none"
                 }`}
+                accessibilityHint="Opens the building list"
                 accessibilityState={{ expanded: dropdownOpen }}
               >
                 <Ionicons
@@ -271,7 +278,10 @@ export default function FindARoomScreen() {
             </View>
 
             {dropdownOpen && (
-              <View style={[styles.dropdownMenu, { width: "100%" }]}>
+              <View
+                style={[styles.dropdownMenu, { width: "100%" }]}
+                accessibilityLabel="Building options"
+              >
                 {buildings.map((building) => (
                   <TouchableOpacity
                     key={building.id}
@@ -320,6 +330,7 @@ export default function FindARoomScreen() {
                     ? "Show floor plan"
                     : "Show room grid"
                 }
+                accessibilityHint="Toggles between floor plan and room grid"
               >
                 <Text style={styles.toggleBtnText}>
                   {viewMode === "rooms" ? "VIEW FLOOR PLAN" : "VIEW ROOM GRID"}
@@ -342,10 +353,16 @@ export default function FindARoomScreen() {
                   style={styles.floorPlanImage}
                   resizeMode="contain"
                   accessibilityRole="image"
-                  accessibilityLabel={`Floor plan for ${selectedBuilding?.name ?? "building"}`}
+                  accessibilityLabel={`Floor plan for ${
+                    selectedBuilding?.name ?? "building"
+                  }`}
+                  accessibilityIgnoresInvertColors
                 />
               ) : (
-                <View style={styles.noFloorPlanBox}>
+                <View
+                  style={styles.noFloorPlanBox}
+                  accessibilityLabel="No floor plan available"
+                >
                   <Text style={styles.noFloorPlanText}>
                     No floor plan available for this building yet.
                   </Text>
@@ -363,12 +380,14 @@ export default function FindARoomScreen() {
                     paddingHorizontal: gridSidePad,
                   },
                 ]}
+                accessibilityLabel="Room grid"
               >
                 {loading ? (
                   <ActivityIndicator
                     size="large"
                     color={colors.white}
                     style={{ marginVertical: 40 }}
+                    accessibilityLabel="Loading rooms"
                   />
                 ) : roomItems.length === 0 ? (
                   <Text
@@ -377,6 +396,7 @@ export default function FindARoomScreen() {
                       textAlign: "center",
                       marginVertical: 40,
                     }}
+                    accessibilityLabel="No rooms found"
                   >
                     No rooms found
                   </Text>
@@ -400,7 +420,8 @@ export default function FindARoomScreen() {
 
                             navigation.navigate("RoomDetails", {
                               building:
-                                selectedBuilding?.name === "Academic Research Center"
+                                selectedBuilding?.name ===
+                                "Academic Research Center"
                                   ? "Academic & Research Center"
                                   : selectedBuilding?.name || "Unknown",
                               roomId: item.id,
@@ -456,6 +477,7 @@ export default function FindARoomScreen() {
                                   ? `Remove room ${item.id} from favorites`
                                   : `Add room ${item.id} to favorites`
                               }
+                              accessibilityHint="Toggles favorite"
                               accessibilityState={{ selected: favorite }}
                             >
                               <Ionicons
@@ -481,7 +503,10 @@ export default function FindARoomScreen() {
               </View>
 
               {/* Legend */}
-              <View style={[styles.legendContainer, { width: "100%" }]}>
+              <View
+                style={[styles.legendContainer, { width: "100%" }]}
+                accessibilityLabel="Legend"
+              >
                 <View style={styles.legendRow}>
                   <LinearGradient
                     colors={[colors.available, colors.available + "CC"]}
@@ -522,20 +547,23 @@ export default function FindARoomScreen() {
   // WEB VERSION (adds the same top bar + sidebar as Home Screen)
   if (isWeb) {
     return (
-      <View style={styles.webPage}>
+      <View style={styles.webPage} accessibilityLabel="Find a room screen">
         {/* top bar */}
-        <View style={styles.webTopBar}>
+        <View style={styles.webTopBar} accessibilityLabel="Top bar">
           <Image
             source={require("@/assets/images/bf_logo.png")}
             style={styles.webTopBarLogo}
             resizeMode="contain"
+            accessibilityRole="image"
+            accessibilityLabel="Bobcat Finder logo"
+            accessibilityIgnoresInvertColors
           />
         </View>
 
         {/* sidebar + main */}
         <View style={styles.webBody}>
           {/* Left Sidebar */}
-          <View style={styles.webSidebar}>
+          <View style={styles.webSidebar} accessibilityLabel="Navigation sidebar">
             <View style={styles.webSidebarLinks}>
               {menuItems.map((item) => {
                 const selected = item.route === "FindRoom";
@@ -547,6 +575,9 @@ export default function FindARoomScreen() {
                       selected && styles.webNavItemSelected,
                     ]}
                     onPress={() => navigation.navigate(item.route as any)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Go to ${item.name}`}
+                    accessibilityState={{ selected }}
                   >
                     <Text
                       style={[
@@ -572,6 +603,7 @@ export default function FindARoomScreen() {
                 paddingHorizontal: 0,
               }}
               keyboardShouldPersistTaps="handled"
+              accessibilityLabel="Find a room content"
             >
               <View style={[styles.webContentWrap, { width: contentWidthWeb }]}>
                 {/* page content (same as before, only wrapped for the web frame) */}
@@ -765,7 +797,7 @@ function createStyles(c: ThemeColors) {
     width: "100%",
     justifyContent: "center",
     paddingLeft: 20,
-    // shadow 
+    // shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
