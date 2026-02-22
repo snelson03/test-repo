@@ -289,3 +289,4 @@ function createStyles(c: ThemeColors) {
     textAlign: 'center',
   },
 });
+}

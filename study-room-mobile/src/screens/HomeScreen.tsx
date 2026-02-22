@@ -1146,3 +1146,4 @@ function createStyles(c: ThemeColors) {
     color: c.primary,
   },
 });
+}

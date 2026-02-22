@@ -307,3 +307,4 @@ function createStyles(c: ThemeColors) {
     fontSize: 16,
   },
 });
+}

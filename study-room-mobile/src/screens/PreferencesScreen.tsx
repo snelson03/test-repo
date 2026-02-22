@@ -2129,3 +2129,4 @@ function createStyles(c: ThemeColors) {
     fontSize: 22,
   },
 });
+}
