@@ -2,7 +2,7 @@
 // This screen shows the campus map that includes zoom and pins at the three selected buildings
 // implements auto zoom when a pin is pressed and pulsing animation on selected pin
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,7 +17,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import colors from "@/constants/colors";
+import type { ThemeColors } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
 
 type BuildingWithPin = {
@@ -32,6 +33,8 @@ type BuildingWithPin = {
 export default function CampusMapScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const scrollViewMainRef = useRef<ScrollView | null>(null);
   const mapScrollRef = useRef<ScrollView | null>(null);
@@ -391,17 +394,18 @@ export default function CampusMapScreen() {
 const WEB_SIDEBAR_WIDTH = 300;
 const WEB_TOPBAR_HEIGHT = 170;
 
-const styles = StyleSheet.create({
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
   // Web styles
   webPage: {
     flex: 1,
     flexDirection: "column",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   webTopBar: {
     height: WEB_TOPBAR_HEIGHT,
-    backgroundColor: colors.darkAccent,
+    backgroundColor: c.darkAccent,
     width: "100%",
     justifyContent: "center",
     paddingLeft: 20,
@@ -423,12 +427,12 @@ const styles = StyleSheet.create({
   webBody: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   webSidebar: {
     width: WEB_SIDEBAR_WIDTH,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingTop: 0,
     paddingHorizontal: 14,
     shadowColor: "#000",
@@ -452,7 +456,7 @@ const styles = StyleSheet.create({
   webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
 
   webNavText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: "BebasNeue-Regular",
     fontSize: 28,
     letterSpacing: 0.8,
@@ -461,20 +465,20 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
 
-  webNavTextSelected: { color: colors.white },
+  webNavTextSelected: { color: c.white },
 
-  webMain: { flex: 1, backgroundColor: colors.white },
+  webMain: { flex: 1, backgroundColor: c.gray100 },
 
   // Existing styles (kept as-is)
   page: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
   },
 
   container: {
     flex: 1,
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
   },
 
   header: {
@@ -489,7 +493,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 55,
     fontSize: 38,
     fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
+    color: c.primary,
   },
 
   mainRow: {
@@ -512,7 +516,7 @@ const styles = StyleSheet.create({
   },
 
   mapFrame: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
@@ -535,7 +539,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 28,
     backgroundColor: "rgba(5, 71, 42, 0.75)",
-    color: colors.white,
+    color: c.white,
     paddingHorizontal: 2,
     paddingVertical: 2,
     borderRadius: 0,
@@ -559,7 +563,7 @@ const styles = StyleSheet.create({
   },
 
   buildingsContainer: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     alignItems: "center",
     paddingVertical: 25,
     shadowColor: "#000",
@@ -571,8 +575,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 30,
     fontFamily: "BebasNeue-Regular",
-    color: colors.white,
-    backgroundColor: colors.primary,
+    color: c.white,
+    backgroundColor: c.primary,
     paddingVertical: 15,
     textAlign: "center",
     width: "100%",
@@ -588,18 +592,18 @@ const styles = StyleSheet.create({
   buildingName: {
     fontSize: 24,
     marginLeft: 30,
-    color: colors.primary,
+    color: c.primary,
     marginBottom: 4,
     fontFamily: "BebasNeue-Regular",
   },
 
-  address: { fontSize: 14, color: colors.primary, marginBottom: 10 },
+  address: { fontSize: 14, color: c.primary, marginBottom: 10 },
 
   buildingImage: {
     width: "85%",
     height: 200,
     borderWidth: 2.5,
-    borderColor: colors.primary,
+    borderColor: c.primary,
   },
 
   webSidebarHeader: {
@@ -612,4 +616,5 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 80,
   },
-});
+  });
+}

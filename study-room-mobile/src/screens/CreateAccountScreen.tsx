@@ -3,7 +3,7 @@
 // Account credentials can then be used on login screen to enter the app
 // authentication not implemented yet, email does not have to be valid
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -19,13 +19,16 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import colors from "@/constants/colors";
+import type { ThemeColors } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { authAPI } from "@/utils/api";
 import { useUser } from "@/context/UserContext";
 
 export default function CreateAccountScreen() {
   const navigation = useNavigation();
   const { setUserForLogin } = useUser();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // used for web sizing so the form doesn't stretch across the whole screen
@@ -195,7 +198,8 @@ export default function CreateAccountScreen() {
 }
 
 // styles section
-const styles = StyleSheet.create({
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
   // used so ScrollView can center things on web without breaking mobile layout
   scrollContent: {
     flexGrow: 1,
@@ -234,11 +238,11 @@ const styles = StyleSheet.create({
   header: {
     fontFamily: "BebasNeue-Regular",
     fontSize: 35,
-    color: colors.white,
+    color: c.white,
     marginBottom: 5,
   },
   formBox: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     borderRadius: 0,
     paddingVertical: 25,
     paddingHorizontal: 20,
@@ -246,18 +250,19 @@ const styles = StyleSheet.create({
   },
   label: {
     fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
+    color: c.primary,
     fontSize: 20,
     marginBottom: 6,
   },
   input: {
-    backgroundColor: "#D9D9D9",
+    backgroundColor: c.gray300,
     borderRadius: 3,
     padding: 10,
     marginBottom: 22,
+    color: c.primary,
   },
   createButton: {
-    backgroundColor: "#D9D9D9",
+    backgroundColor: c.gray300,
     paddingVertical: 14,
     borderRadius: 3,
     width: "50%",
@@ -265,13 +270,13 @@ const styles = StyleSheet.create({
     marginBottom: 50,
   },
   createButtonText: {
-    color: colors.primary,
+    color: c.primary,
     fontFamily: "BebasNeue-Regular",
     fontSize: 26,
     textAlign: "center",
   },
   returnText: {
-    color: colors.white,
+    color: c.white,
     textDecorationLine: "underline",
     fontFamily: "Poppins",
     fontSize: 15,
@@ -283,4 +288,5 @@ const styles = StyleSheet.create({
   returnTextWeb: {
     fontFamily: undefined,
   },
-});
+  });
+}
