@@ -2,14 +2,15 @@
 // Displays detailed info about a selected room such as location, restrictions, and status.
 // Includes navigation back button and link to open the campus map screen.
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/AppNavigator';
-import colors from '@/constants/colors';
+import type { ThemeColors } from '@/constants/theme';
+import { useTheme } from '@/context/ThemeContext';
 
 // typed props for screen
 type RoomDetailsScreenRouteProp = {
@@ -21,10 +22,11 @@ type RoomDetailsScreenRouteProp = {
 };
 
 export default function RoomDetailsScreen() {
-  // navigation setup
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute() as unknown as RoomDetailsScreenRouteProp;
   const { building, roomId, status } = route.params;
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // helper to determine floor number based on room ID’s first digit
   const getFloorFromRoom = (id: string): string => {
@@ -203,8 +205,9 @@ export default function RoomDetailsScreen() {
 }
 
 // Style section - implements styles for each section
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.gray100, paddingHorizontal: 20, paddingTop: 60 },
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: c.gray100, paddingHorizontal: 20, paddingTop: 60 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -216,7 +219,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 34,
     fontFamily: 'BebasNeue-Regular',
-    color: colors.primary,
+    color: c.primary,
     marginRight: 28,
   },
   topBox: {
@@ -231,7 +234,7 @@ const styles = StyleSheet.create({
   buildingName: {
     fontFamily: 'BebasNeue-Regular',
     fontSize: 28,
-    color: colors.white,
+    color: c.white,
   },
   statusDotRow: {
     flexDirection: 'row',
@@ -242,10 +245,10 @@ const styles = StyleSheet.create({
   roomNumber: {
     fontFamily: 'BebasNeue-Regular',
     fontSize: 28,
-    color: colors.white,
+    color: c.white,
   },
   infoBox: {
-    backgroundColor: '#D9D9D9',
+    backgroundColor: c.gray300,
     paddingVertical: 16,
     paddingHorizontal: 18,
     borderRadius: 6,
@@ -254,16 +257,16 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: 'BebasNeue-Regular',
     fontSize: 28,
-    color: colors.primary,
+    color: c.primary,
     marginBottom: 8,
   },
   boldText: {
     fontWeight: '700',
-    color: colors.primary,
+    color: c.primary,
     fontSize: 16,
   },
   subText: {
-    color: colors.primary,
+    color: c.primary,
     fontSize: 15,
     lineHeight: 25,
   },

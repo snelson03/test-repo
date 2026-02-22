@@ -2,7 +2,7 @@
 // user must enter correct username and password saved locally to enter the app,
 // account can be created by clicking create account
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -21,7 +21,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-import colors from "@/constants/colors";
+import type { ThemeColors } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { RootStackParamList } from "@/navigation/AppNavigator";
 import { authAPI } from "@/utils/api";
@@ -30,6 +31,8 @@ import { authAPI } from "@/utils/api";
 export default function LoginScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // used for the fade in on the logo
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -225,11 +228,12 @@ export default function LoginScreen() {
 }
 
 // Styles section
-const styles = StyleSheet.create({
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
   // main container (same look on iOS), but using flexGrow so ScrollView works correctly
   container: {
     flexGrow: 1, // changed from flex: 1 so the ScrollView can size + center properly
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingHorizontal: 30,
     paddingTop: 120,
   },
@@ -258,17 +262,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 18,
     fontFamily: "BebasNeue-Regular",
-    color: colors.white,
+    color: c.white,
     marginBottom: 4,
   },
   input: {
-    backgroundColor: "#D9D9D9",
+    backgroundColor: c.gray300,
     borderRadius: 3,
     padding: 10,
     marginBottom: 20,
+    color: c.primary,
   },
   resetText: {
-    color: colors.white,
+    color: c.white,
     textDecorationLine: "underline",
     fontFamily: Platform.OS === "web" ? undefined : "Poppins",
     marginBottom: 30,
@@ -290,12 +295,12 @@ const styles = StyleSheet.create({
     marginBottom: 240,
   },
   loginText: {
-    color: colors.primary,
+    color: c.primary,
     fontFamily: "BebasNeue-Regular",
     fontSize: 25,
   },
   createAccountText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: Platform.OS === "web" ? undefined : "Poppins",
     textDecorationLine: "underline",
     textAlign: "center",

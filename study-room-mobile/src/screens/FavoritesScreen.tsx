@@ -1,6 +1,6 @@
 // Favorites Screen File
 // Formatting for IOS and web
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,8 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import colors from "@/constants/colors";
+import type { ThemeColors } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { useFavorites } from "@/context/FavoritesContext"; // shared favorites context
 
 import { useNavigation } from "@react-navigation/native";
@@ -40,12 +41,13 @@ export default function FavoritesScreen() {
   // Navigation setup
   type FavoritesNavProp = NativeStackNavigationProp<RootStackParamList, "Favorites">;
   const navigation = useNavigation<FavoritesNavProp>();
-
+  const { colors } = useTheme();
   const { favorites, removeFavorite } = useFavorites(); // shared list and remove function
   const [editMode, setEditMode] = useState(false); // keeps track of edit mode state
 
   // checks if on web
   const isWeb = Platform.OS === "web";
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // used to size the web content area like Home Screen
   const { width } = useWindowDimensions();
@@ -407,18 +409,19 @@ export default function FavoritesScreen() {
 }
 
 // applies styles and sets up page
-const styles = StyleSheet.create({
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
   page: {
     // wrapper for web layout (sidebar + page content)
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   container: {
     // background container
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
     paddingTop: 80,
     paddingHorizontal: 16,
   },
@@ -434,12 +437,12 @@ const styles = StyleSheet.create({
   webPage: {
     flex: 1,
     flexDirection: "column",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   webTopBar: {
     height: WEB_TOPBAR_HEIGHT,
-    backgroundColor: colors.darkAccent,
+    backgroundColor: c.darkAccent,
     width: "100%",
     justifyContent: "center",
     paddingLeft: 20,
@@ -461,13 +464,13 @@ const styles = StyleSheet.create({
   webBody: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   // left sidebar styles (web only)
   webSidebar: {
     width: WEB_SIDEBAR_WIDTH,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingTop: 0,
     paddingHorizontal: 14,
     shadowColor: "#000",
@@ -506,7 +509,7 @@ const styles = StyleSheet.create({
   },
 
   webNavText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: "BebasNeue-Regular",
     fontSize: 28,
     letterSpacing: 0.8,
@@ -516,10 +519,10 @@ const styles = StyleSheet.create({
   },
 
   webNavTextSelected: {
-    color: colors.white,
+    color: c.white,
   },
 
-  webMain: { flex: 1, backgroundColor: colors.white },
+  webMain: { flex: 1, backgroundColor: c.gray100 },
 
   webContentWrap: {
     // keeps the page content centered with the same max width rules as Home Screen
@@ -548,7 +551,7 @@ const styles = StyleSheet.create({
     fontSize: 38,
     fontFamily: "BebasNeue-Regular",
     fontWeight: "500",
-    color: colors.primary,
+    color: c.primary,
   },
 
   listContainer: {
@@ -558,7 +561,7 @@ const styles = StyleSheet.create({
   card: {
     // room card container
     flexDirection: "row",
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 0,
     padding: 25,
     marginBottom: 7,
@@ -569,7 +572,7 @@ const styles = StyleSheet.create({
 
   roomText: {
     // room name text inside each block
-    color: colors.white,
+    color: c.white,
     fontSize: 25,
     fontFamily: "BebasNeue-Regular",
   },
@@ -588,7 +591,8 @@ const styles = StyleSheet.create({
   },
 
   statusText: {
-    color: colors.white,
+    color: c.white,
     fontSize: 16,
   },
-});
+  });
+}

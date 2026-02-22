@@ -15,7 +15,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import colors from "@/constants/colors";
+import type { ThemeColors } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -60,8 +61,9 @@ type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences"
 export default function FindARoomScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
+  const { colors } = useTheme();
   const { width } = useWindowDimensions();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const pagePad = width < 480 ? 12 : width < 900 ? 18 : width < 1400 ? 28 : 40;
   const usableWidth = Math.max(320, width - pagePad * 2);
@@ -620,16 +622,17 @@ export default function FindARoomScreen() {
 
 const SIDEBAR_WIDTH = 275;
 
-const styles = StyleSheet.create({
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
   page: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   mainContent: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
     paddingTop: 80,
     paddingHorizontal: 16,
   },
@@ -652,7 +655,7 @@ const styles = StyleSheet.create({
     fontSize: 38,
     fontFamily: "BebasNeue-Regular",
     fontWeight: "500",
-    color: colors.primary,
+    color: c.primary,
     textTransform: "uppercase",
     textAlign: "center",
   },
@@ -672,10 +675,10 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 4,
   },
-  subHeaderText: { fontSize: 18, color: colors.primary },
+  subHeaderText: { fontSize: 18, color: c.primary },
 
   dropdownMenu: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     borderRadius: 4,
     marginBottom: 20,
     shadowColor: "#000",
@@ -685,14 +688,14 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   dropdownItem: { padding: 10 },
-  dropdownText: { fontSize: 16, fontFamily: "Poppins", color: colors.primary },
-  dropdownSelected: { backgroundColor: colors.primary },
-  dropdownTextSelected: { color: colors.white },
+  dropdownText: { fontSize: 16, fontFamily: "Poppins", color: c.primary },
+  dropdownSelected: { backgroundColor: c.primary },
+  dropdownTextSelected: { color: c.white },
 
   toggleBtn: {
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: c.primary,
     borderRadius: 6,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -703,12 +706,12 @@ const styles = StyleSheet.create({
   toggleBtnText: {
     fontFamily: "BebasNeue-Regular",
     fontSize: 20,
-    color: colors.primary,
+    color: c.primary,
     letterSpacing: 0.5,
   },
 
   gridContainer: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 0,
     paddingVertical: 40,
     justifyContent: "center",
@@ -756,14 +759,14 @@ const styles = StyleSheet.create({
   },
 
   noFloorPlanBox: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingVertical: 18,
     paddingHorizontal: 16,
     borderRadius: 6,
     alignItems: "center",
   },
   noFloorPlanText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: "Poppins",
     textAlign: "center",
   },
@@ -778,19 +781,19 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 24,
     fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
+    color: c.primary,
   },
 
   // Web styles (same top bar + sidebar as Home Screen)
   webPage: {
     flex: 1,
     flexDirection: "column",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   webTopBar: {
     height: WEB_TOPBAR_HEIGHT,
-    backgroundColor: colors.darkAccent,
+    backgroundColor: c.darkAccent,
     width: "100%",
     justifyContent: "center",
     paddingLeft: 20,
@@ -812,13 +815,13 @@ const styles = StyleSheet.create({
   webBody: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   // sidebar styles (web only)
   webSidebar: {
     width: WEB_SIDEBAR_WIDTH,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingTop: 0,
     paddingHorizontal: 14,
     shadowColor: "#000",
@@ -854,7 +857,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.18)",
   },
   webNavText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: "BebasNeue-Regular",
     fontSize: 28,
     letterSpacing: 0.8,
@@ -862,9 +865,10 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 8,
   },
-  webNavTextSelected: { color: colors.white },
+  webNavTextSelected: { color: c.white },
 
-  webMain: { flex: 1, backgroundColor: colors.white },
+  webMain: { flex: 1, backgroundColor: c.gray100 },
 
   webContentWrap: { paddingTop: 22, paddingBottom: 24 },
-});
+  });
+}

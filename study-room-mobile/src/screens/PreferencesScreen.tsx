@@ -3,7 +3,7 @@
 // includes dropdown navigation, saving user name globally, and persistent storage using AsyncStorage.
 // Includes web and mobile formatting
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -18,7 +18,9 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import colors from "@/constants/colors";
+import type { ThemeColors } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
+import type { ThemeMode } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/AppNavigator";
@@ -38,6 +40,7 @@ export default function PreferencesScreen() {
     "Preferences"
   >;
   const navigation = useNavigation<PreferencesNavProp>();
+  const { colors, mode, setMode } = useTheme();
 
   // check if running on web
   const isWeb = Platform.OS === "web";
@@ -51,9 +54,9 @@ export default function PreferencesScreen() {
     { name: "Preferences", route: "Preferences" as const },
   ];
 
-  // keeps track of which category (Notifications, Account, or Groups) is being viewed
+  // keeps track of which category is being viewed
   const [activeCategory, setActiveCategory] = useState<
-    "Notifications" | "Account" | "Groups"
+    "Notifications" | "Account" | "Groups" | "Appearance"
   >("Notifications");
 
   // handles the dropdown open or closed state
@@ -200,11 +203,14 @@ export default function PreferencesScreen() {
     savePreferences();
   }, [notificationTypes, methods, schedule, customInputs, selectedFavorites]);
 
-  const categories: Array<"Notifications" | "Account" | "Groups"> = [
+  const categories: Array<"Notifications" | "Account" | "Groups" | "Appearance"> = [
     "Notifications",
     "Account",
     "Groups",
+    "Appearance",
   ];
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // WEB ONLY: use the same top bar + sidebar layout as HomeScreen
   if (isWeb) {
@@ -627,6 +633,40 @@ export default function PreferencesScreen() {
                         />
                       </TouchableOpacity>
                     </View>
+                  </View>
+                )}
+
+                {/* Appearance Section (Dark mode) */}
+                {activeCategory === "Appearance" && (
+                  <View style={[styles.section, styles.sectionWeb]}>
+                    <Text style={styles.sectionTitle}>APPEARANCE</Text>
+                    <Text style={styles.categoryTitle}>THEME</Text>
+                    {(["light", "dark", "system"] as ThemeMode[]).map((themeOption) => (
+                      <View key={themeOption} style={styles.optionRow}>
+                        <TouchableOpacity
+                          style={[
+                            styles.checkbox,
+                            mode === themeOption && styles.checkboxChecked,
+                          ]}
+                          onPress={() => setMode(themeOption)}
+                        >
+                          {mode === themeOption && (
+                            <Ionicons
+                              name="checkmark"
+                              size={16}
+                              color={colors.primary}
+                            />
+                          )}
+                        </TouchableOpacity>
+                        <Text style={styles.optionText}>
+                          {themeOption === "system"
+                            ? "System (follow device)"
+                            : themeOption === "light"
+                            ? "Light"
+                            : "Dark"}
+                        </Text>
+                      </View>
+                    ))}
                   </View>
                 )}
               </ScrollView>
@@ -1316,6 +1356,40 @@ export default function PreferencesScreen() {
               </View>
             </View>
           )}
+
+          {/* Appearance Section (Dark mode) */}
+          {activeCategory === "Appearance" && (
+            <View style={[styles.section, isWeb && styles.sectionWeb]}>
+              <Text style={styles.sectionTitle}>APPEARANCE</Text>
+              <Text style={styles.categoryTitle}>THEME</Text>
+              {(["light", "dark", "system"] as ThemeMode[]).map((themeOption) => (
+                <View key={themeOption} style={styles.optionRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.checkbox,
+                      mode === themeOption && styles.checkboxChecked,
+                    ]}
+                    onPress={() => setMode(themeOption)}
+                  >
+                    {mode === themeOption && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={colors.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  <Text style={styles.optionText}>
+                    {themeOption === "system"
+                      ? "System (follow device)"
+                      : themeOption === "light"
+                      ? "Light"
+                      : "Dark"}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
         </ScrollView>
 
         {/* Modal for custom preferences */}
@@ -1574,17 +1648,18 @@ export default function PreferencesScreen() {
 const WEB_SIDEBAR_WIDTH = 300;
 const WEB_TOPBAR_HEIGHT = 170;
 
-const styles = StyleSheet.create({
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
   // Web styles
   webPage: {
     flex: 1,
     flexDirection: "column",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   webTopBar: {
     height: WEB_TOPBAR_HEIGHT,
-    backgroundColor: colors.darkAccent,
+    backgroundColor: c.darkAccent,
     width: "100%",
     justifyContent: "center",
     paddingLeft: 20,
@@ -1606,12 +1681,12 @@ const styles = StyleSheet.create({
   webBody: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   webSidebar: {
     width: WEB_SIDEBAR_WIDTH,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingTop: 0,
     paddingHorizontal: 14,
     shadowColor: "#000",
@@ -1635,7 +1710,7 @@ const styles = StyleSheet.create({
   webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
 
   webNavText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: "BebasNeue-Regular",
     fontSize: 28,
     letterSpacing: 0.8,
@@ -1644,19 +1719,19 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
 
-  webNavTextSelected: { color: colors.white },
+  webNavTextSelected: { color: c.white },
 
-  webMain: { flex: 1, backgroundColor: colors.white },
+  webMain: { flex: 1, backgroundColor: c.gray100 },
 
   page: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
   },
 
   container: {
     flex: 1,
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
     paddingHorizontal: 16,
   },
 
@@ -1701,7 +1776,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 38,
     fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
+    color: c.primary,
     textAlign: "center",
   },
 
@@ -1727,13 +1802,13 @@ const styles = StyleSheet.create({
 
   subHeaderText: {
     fontSize: 16,
-    color: colors.primary,
+    color: c.primary,
     marginLeft: 8,
     fontFamily: "Poppins-Regular",
   },
 
   dropdownMenu: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     borderRadius: 6,
     marginTop: 6,
     paddingVertical: 6,
@@ -1752,20 +1827,20 @@ const styles = StyleSheet.create({
 
   dropdownText: {
     fontSize: 16,
-    color: colors.primary,
+    color: c.primary,
     fontFamily: "Poppins-Regular",
   },
 
   dropdownSelected: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
 
   dropdownTextSelected: {
-    color: colors.white,
+    color: c.white,
   },
 
   section: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 0,
     paddingVertical: 20,
     paddingHorizontal: 20,
@@ -1784,14 +1859,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 30,
     fontFamily: "BebasNeue-Regular",
-    color: colors.white,
+    color: c.white,
     marginBottom: 14,
   },
 
   categoryTitle: {
     fontSize: 22,
     fontFamily: "BebasNeue-Regular",
-    color: colors.white,
+    color: c.white,
     marginTop: 12,
     marginBottom: 8,
   },
@@ -1806,25 +1881,25 @@ const styles = StyleSheet.create({
     width: 18,
     height: 18,
     borderRadius: 3,
-    backgroundColor: colors.gray300,
+    backgroundColor: c.gray300,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 10,
   },
 
   checkboxChecked: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
   },
 
   optionText: {
-    color: colors.white,
+    color: c.white,
     fontSize: 14,
     flex: 1,
     fontFamily: "Poppins-Regular",
   },
 
   editText: {
-    color: colors.offWhite,
+    color: c.offWhite,
     fontSize: 13,
     textDecorationLine: "underline",
     fontFamily: "Poppins-Regular",
@@ -1833,21 +1908,21 @@ const styles = StyleSheet.create({
   inputRow: { marginBottom: 16 },
 
   inputLabel: {
-    color: colors.white,
+    color: c.white,
     fontSize: 16,
     marginBottom: 4,
     fontFamily: "BebasNeue-Regular",
   },
 
   inputBox: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     borderRadius: 6,
     padding: 8,
-    color: colors.primary,
+    color: c.primary,
     fontFamily: "Poppins-Regular",
   },
 
-  groupItem: { color: colors.white, fontSize: 18 },
+  groupItem: { color: c.white, fontSize: 18 },
 
   groupRow: {
     flexDirection: "row",
@@ -1859,7 +1934,7 @@ const styles = StyleSheet.create({
   addGroupRow: { flexDirection: "row", alignItems: "center", marginTop: 10 },
 
   addButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 50,
     padding: 6,
     marginLeft: 8,
@@ -1885,7 +1960,7 @@ const styles = StyleSheet.create({
   },
 
   modalContainer: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     borderRadius: 12,
     padding: 20,
     width: "85%",
@@ -1896,7 +1971,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 22,
     fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
+    color: c.primary,
     marginBottom: 16,
     textAlign: "center",
   },
@@ -1906,7 +1981,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     marginTop: 18,
   },
 
@@ -1921,15 +1996,15 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontSize: 18,
     fontFamily: "BebasNeue-Regular",
-    color: colors.white,
+    color: c.white,
   },
 
   modalInput: {
     borderWidth: 1,
-    borderColor: colors.gray300,
+    borderColor: c.gray300,
     borderRadius: 8,
     padding: 10,
-    color: colors.primary,
+    color: c.primary,
     fontFamily: "Poppins-Regular",
   },
 
@@ -1940,17 +2015,17 @@ const styles = StyleSheet.create({
   },
 
   modalCancel: {
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: c.primary,
   },
 
   modalSave: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
 
   greenBox: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 14,
@@ -1969,7 +2044,7 @@ const styles = StyleSheet.create({
   },
 
   logoutText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: "BebasNeue-Regular",
     fontSize: 25,
   },
@@ -1987,7 +2062,7 @@ const styles = StyleSheet.create({
   },
 
   logoutBox: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     width: "100%",
     maxWidth: 700,
     paddingVertical: 28,
@@ -2004,13 +2079,13 @@ const styles = StyleSheet.create({
   logoutModalTitle: {
     fontFamily: "BebasNeue-Regular",
     fontSize: 30,
-    color: colors.primary,
+    color: c.primary,
     marginBottom: 10,
   },
 
   logoutModalMessage: {
     fontSize: 16,
-    color: colors.primary,
+    color: c.primary,
     textAlign: "center",
     marginBottom: 25,
     fontFamily: "Poppins-Regular",
@@ -2033,23 +2108,23 @@ const styles = StyleSheet.create({
   },
 
   cancelButton: {
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: c.primary,
   },
 
   cancelText: {
-    color: colors.primary,
+    color: c.primary,
     fontFamily: "BebasNeue-Regular",
     fontSize: 22,
   },
 
   confirmLogoutButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
   },
 
   confirmLogoutText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: "BebasNeue-Regular",
     fontSize: 22,
   },
