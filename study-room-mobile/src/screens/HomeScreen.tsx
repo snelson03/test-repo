@@ -1,6 +1,6 @@
 // Home Screen layout file
 // formattingfor IOS and web
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -14,7 +14,8 @@ import {
   Platform,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import colors from "@/constants/colors";
+import type { ThemeColors } from "@/constants/theme";
+import { useTheme } from "@/context/ThemeContext";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useUser } from "@/context/UserContext";
 import { LinearGradient } from "expo-linear-gradient";
@@ -45,9 +46,11 @@ type MenuRoute =
 export default function HomeScreen() {
   const navigation = useNavigation();
   const { user } = useUser();
+  const { colors } = useTheme();
   const name = (user as any)?.name ?? "User";
 
   const isWeb = Platform.OS === "web";
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const { width, height } = useWindowDimensions();
   const pagePad = width < 480 ? 12 : 0;
@@ -400,7 +403,7 @@ export default function HomeScreen() {
   // Mobile version
   return (
     <View
-      style={{ flex: 1, alignItems: "center", backgroundColor: colors.white }}
+      style={{ flex: 1, alignItems: "center", backgroundColor: colors.gray100 }}
     >
       <ScrollView
         style={{ width: "100%" }}
@@ -627,17 +630,18 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
   // Web styles
   webPage: {
     flex: 1,
     flexDirection: "column",
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
   },
 
   webTopBar: {
     height: WEB_TOPBAR_HEIGHT,
-    backgroundColor: colors.darkAccent,
+    backgroundColor: c.darkAccent,
     width: "100%",
     justifyContent: "center",
     paddingLeft: 20,
@@ -659,12 +663,12 @@ const styles = StyleSheet.create({
   webBody: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
   },
 
   webSidebar: {
     width: WEB_SIDEBAR_WIDTH,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingTop: 0,
     paddingHorizontal: 14,
     shadowColor: "#000",
@@ -686,7 +690,7 @@ const styles = StyleSheet.create({
   },
   webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
   webNavText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: "BebasNeue-Regular",
     fontSize: 28,
     letterSpacing: 0.8,
@@ -694,9 +698,9 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 8,
   },
-  webNavTextSelected: { color: colors.white },
+  webNavTextSelected: { color: c.white },
 
-  webMain: { flex: 1, backgroundColor: colors.gray100 },
+  webMain: { flex: 1, backgroundColor: c.gray100 },
 
   webContentWrap: { paddingTop: 22, paddingBottom: 24 },
 
@@ -705,7 +709,7 @@ const styles = StyleSheet.create({
     fontSize: 46,
     fontWeight: "500",
     fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
+    color: c.primary,
   },
 
   // Two-column web rows
@@ -733,7 +737,7 @@ const styles = StyleSheet.create({
     fontSize: 44,
     fontFamily: "BebasNeue-Regular",
     fontWeight: "500",
-    color: colors.white,
+    color: c.white,
     textShadowColor: "rgba(0, 0, 0, 200)",
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 15,
@@ -753,7 +757,7 @@ const styles = StyleSheet.create({
     fontSize: 44,
     fontFamily: "BebasNeue-Regular",
     fontWeight: "500",
-    color: colors.white,
+    color: c.white,
     textShadowColor: "rgba(0, 0, 0, 200)",
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 10,
@@ -762,11 +766,11 @@ const styles = StyleSheet.create({
   cardsContainerWeb: { marginVertical: 16, paddingHorizontal: 0 },
 
   // Mobile styles (unchanged)
-  container: { flex: 1, backgroundColor: colors.gray100 },
+  container: { flex: 1, backgroundColor: c.gray100 },
 
   header: {
     flexDirection: "row",
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     padding: 30,
     paddingTop: 60,
     alignItems: "center",
@@ -780,7 +784,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "500",
     fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
+    color: c.primary,
     position: "relative",
     paddingHorizontal: 12,
   },
@@ -801,7 +805,7 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontFamily: "BebasNeue-Regular",
     fontWeight: "500",
-    color: colors.gray100,
+    color: c.gray100,
     textShadowColor: "rgba(0, 0, 0, 200)",
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 15,
@@ -831,7 +835,7 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontFamily: "BebasNeue-Regular",
     fontWeight: "500",
-    color: colors.white,
+    color: c.white,
     textShadowColor: "rgba(0, 0, 0, 200)",
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 10,
@@ -844,7 +848,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 0,
     marginBottom: 7,
     shadowColor: "#000",
@@ -856,7 +860,7 @@ const styles = StyleSheet.create({
   roomCardTextLeft: {
     fontSize: 27,
     fontFamily: "BebasNeue-Regular",
-    color: colors.white,
+    color: c.white,
   },
 
   availableNowCard: {
@@ -877,7 +881,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   availableTitle: {
-    color: colors.primary,
+    color: c.primary,
     fontFamily: "BebasNeue-Regular",
     fontSize: 27,
     letterSpacing: 0.5,
@@ -887,23 +891,23 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     borderRadius: 0,
     padding: 18,
     marginBottom: 6,
   },
 
   availableItemText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: "BebasNeue-Regular",
     fontSize: 20,
   },
   availableRight: { flexDirection: "row", alignItems: "center", gap: 12 },
   availableStatusDot: { width: 11, height: 11, borderRadius: 5.5 },
-  availableSubtitle: { color: colors.white, fontSize: 14 },
+  availableSubtitle: { color: c.white, fontSize: 14 },
 
   favoritesCard: {
-    backgroundColor: colors.marigold,
+    backgroundColor: c.marigold,
     padding: 20,
     borderRadius: 0,
     marginTop: 0,
@@ -923,11 +927,11 @@ const styles = StyleSheet.create({
   favoritesTitle: {
     fontSize: 27,
     fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
+    color: c.primary,
   },
 
   emptyText: {
-    color: colors.primary,
+    color: c.primary,
     fontSize: 16,
     textAlign: "center",
     marginVertical: 10,
@@ -935,7 +939,7 @@ const styles = StyleSheet.create({
 
   // no rooms available text
   noAvailableText: {
-    color: colors.primary,
+    color: c.primary,
     fontSize: 18,
     textAlign: "center",
     marginVertical: 10,
@@ -943,7 +947,7 @@ const styles = StyleSheet.create({
   },
 
   favItem: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -952,13 +956,13 @@ const styles = StyleSheet.create({
     marginVertical: 3,
   },
   favItemText: {
-    color: colors.white,
+    color: c.white,
     fontFamily: "BebasNeue-Regular",
     fontSize: 20,
   },
   favRight: { flexDirection: "row", alignItems: "center", gap: 12 },
   favstatusDot: { width: 11, height: 11, borderRadius: 5.5 },
-  favNumber: { color: colors.white, fontSize: 14 },
+  favNumber: { color: c.white, fontSize: 14 },
 
   preferencesLeft: {
     marginTop: 0,
@@ -980,7 +984,7 @@ const styles = StyleSheet.create({
   },
 
   loadingText: {
-    color: colors.white,
+    color: c.white,
     textAlign: "center",
     marginVertical: 10,
   },
@@ -994,7 +998,7 @@ const styles = StyleSheet.create({
     pointerEvents: "box-none",
   },
   menuButton: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     padding: 12,
     borderRadius: 30,
     elevation: 5,
@@ -1022,7 +1026,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.3)",
   },
   menuContent: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     borderRadius: 8,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -1036,6 +1040,7 @@ const styles = StyleSheet.create({
   menuItemText: {
     fontSize: 22,
     fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
+    color: c.primary,
   },
-});
+  });
+}
