@@ -3,7 +3,7 @@
 // Account credentials can then be used on login screen to enter the app
 // authentication not implemented yet, email does not have to be valid
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   View,
   Text,
@@ -19,13 +19,36 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import colors from "@/constants/colors";
+import type { ThemeColors } from "@/constants/theme";
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_BODY,
+  FONT_SIZE_BUTTON,
+  FONT_SIZE_TITLE_LARGE,
+  BUTTON_PADDING_V,
+  BUTTON_PADDING_H,
+  BUTTON_BORDER_RADIUS,
+  CONTAINER_PADDING_TOP_MOBILE,
+  CONTAINER_PADDING_TOP_WEB,
+  INPUT_PADDING,
+  INPUT_BORDER_RADIUS,
+  INPUT_MARGIN_BOTTOM,
+  LABEL_MARGIN_BOTTOM,
+  CARD_PADDING,
+  CARD_BORDER_RADIUS,
+  SPACE_LG,
+  SPACE_SM,
+} from "@/constants/typography";
+import { useTheme } from "@/context/ThemeContext";
 import { authAPI } from "@/utils/api";
 import { useUser } from "@/context/UserContext";
 
 export default function CreateAccountScreen() {
   const navigation = useNavigation();
   const { setUserForLogin } = useUser();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   // used for web sizing so the form doesn't stretch across the whole screen
@@ -40,6 +63,13 @@ export default function CreateAccountScreen() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // refs for better screen reader + keyboard flow (minimal, no UI changes)
+  const nameRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
+  const confirmRef = useRef<TextInput>(null);
+  const phoneRef = useRef<TextInput>(null);
+
   // fade logo in
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -52,10 +82,7 @@ export default function CreateAccountScreen() {
   // checks that all fields are filled out and passwords match
   const handleCreate = async () => {
     if (!name.trim() || !email.trim() || !password.trim() || !confirm.trim()) {
-      Alert.alert(
-        "Missing Information",
-        "Please fill out all required fields."
-      );
+      Alert.alert("Missing Information", "Please fill out all required fields.");
       return;
     }
 
@@ -87,10 +114,7 @@ export default function CreateAccountScreen() {
       ]);
     } catch (err: any) {
       setLoading(false);
-      Alert.alert(
-        "Error",
-        err.message || "Account creation failed. Please try again."
-      );
+      Alert.alert("Error", err.message || "Account creation failed. Please try again.");
     }
   };
 
@@ -107,65 +131,110 @@ export default function CreateAccountScreen() {
       ]}
       style={{ flex: 1, backgroundColor: colors.primary }}
       keyboardShouldPersistTaps="handled"
+      accessibilityLabel="Create account screen"
     >
       {/* on web, wrap the content in a fixed-width container so it doesn’t stretch */}
       <View style={isWeb ? { width: webCardWidth } : undefined}>
-        <View style={[styles.container, isWeb && styles.containerWeb]}>
+        <View
+          style={[styles.container, isWeb && styles.containerWeb]}
+          accessibilityLabel="Create account form"
+        >
           {/* Logo */}
           <Animated.View style={{ opacity: fadeAnim }}>
             <Image
               source={require("@/assets/images/bf_logo.png")}
-              style={styles.logo}// only adjust logo sizing on web
+              style={styles.logo} // only adjust logo sizing on web
               resizeMode="contain"
+              accessibilityRole="image"
+              accessibilityLabel="Bobcat Finder logo"
+              accessibilityIgnoresInvertColors
             />
           </Animated.View>
 
           {/* Header */}
-          <Text style={styles.header}>CREATE ACCOUNT</Text>
+          <Text style={styles.header} accessibilityRole="header">
+            CREATE ACCOUNT
+          </Text>
 
-          <View style={styles.formBox}>
+          <View style={styles.formBox} accessibilityLabel="Account details">
             {/* Name */}
             <Text style={styles.label}>FIRST NAME</Text>
             <TextInput
+              ref={nameRef}
               style={styles.input}
               value={name}
               onChangeText={setName}
+              autoComplete="name"
+              textContentType="givenName"
+              returnKeyType="next"
+              onSubmitEditing={() => emailRef.current?.focus()}
+              accessibilityLabel="First name"
+              accessibilityHint="Enter your first name"
             />
 
             {/* Email */}
             <Text style={styles.label}>EMAIL</Text>
             <TextInput
+              ref={emailRef}
               style={styles.input}
               autoCapitalize="none"
               value={email}
               onChangeText={setEmail}
+              keyboardType="email-address"
+              autoComplete="email"
+              textContentType="emailAddress"
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              accessibilityLabel="Email"
+              accessibilityHint="Enter your Ohio University email ending in at ohio dot edu"
             />
 
             {/* Password */}
             <Text style={styles.label}>PASSWORD</Text>
             <TextInput
+              ref={passwordRef}
               style={styles.input}
               secureTextEntry
               value={password}
               onChangeText={setPassword}
+              autoComplete="password-new"
+              textContentType="newPassword"
+              returnKeyType="next"
+              onSubmitEditing={() => confirmRef.current?.focus()}
+              accessibilityLabel="Password"
+              accessibilityHint="Enter a password"
             />
 
             {/* Confirm Password */}
             <Text style={styles.label}>RE-ENTER PASSWORD</Text>
             <TextInput
+              ref={confirmRef}
               style={styles.input}
               secureTextEntry
               value={confirm}
               onChangeText={setConfirm}
+              autoComplete="password-new"
+              textContentType="newPassword"
+              returnKeyType="next"
+              onSubmitEditing={() => phoneRef.current?.focus()}
+              accessibilityLabel="Re-enter password"
+              accessibilityHint="Re-enter your password to confirm"
             />
 
             {/* Phone */}
             <Text style={styles.label}>PHONE NUMBER</Text>
             <TextInput
+              ref={phoneRef}
               style={styles.input}
               keyboardType="phone-pad"
               value={phone}
               onChangeText={setPhone}
+              autoComplete="tel"
+              textContentType="telephoneNumber"
+              returnKeyType="done"
+              onSubmitEditing={handleCreate}
+              accessibilityLabel="Phone number"
+              accessibilityHint="Enter your phone number"
             />
           </View>
 
@@ -174,15 +243,22 @@ export default function CreateAccountScreen() {
             style={styles.createButton}
             onPress={handleCreate}
             disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel={loading ? "Creating account" : "Create account"}
+            accessibilityHint="Creates your account and signs you in"
+            accessibilityState={{ disabled: loading, busy: loading }}
           >
             <Text style={styles.createButtonText}>
               {loading ? "CREATING..." : "CREATE"}
             </Text>
           </TouchableOpacity>
 
-          {/* return to login*/}
+          {/* return to login */}
           <TouchableOpacity
             onPress={() => navigation.navigate("Login" as never)}
+            accessibilityRole="button"
+            accessibilityLabel="Return to login"
+            accessibilityHint="Goes back to the login screen"
           >
             <Text style={[styles.returnText, isWeb && styles.returnTextWeb]}>
               Return to Login
@@ -195,7 +271,8 @@ export default function CreateAccountScreen() {
 }
 
 // styles section
-const styles = StyleSheet.create({
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
   // used so ScrollView can center things on web without breaking mobile layout
   scrollContent: {
     flexGrow: 1,
@@ -210,13 +287,13 @@ const styles = StyleSheet.create({
   },
 
   container: {
-    paddingTop: 80,
-    paddingHorizontal: 24,
+    paddingTop: CONTAINER_PADDING_TOP_MOBILE,
+    paddingHorizontal: SPACE_LG,
   },
 
   // only used on web so the top spacing isn't huge on desktop screens
   containerWeb: {
-    paddingTop: 40,
+    paddingTop: CONTAINER_PADDING_TOP_WEB,
   },
 
   logo: {
@@ -226,61 +303,61 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
 
-  // web-only logo tweak so it scales down nicely instead of overflowing
   logoWeb: {
     width: "100%",
   },
 
   header: {
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 35,
-    color: colors.white,
-    marginBottom: 5,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_TITLE_LARGE - 3,
+    color: c.white,
+    marginBottom: SPACE_SM,
   },
   formBox: {
-    backgroundColor: colors.white,
-    borderRadius: 0,
-    paddingVertical: 25,
-    paddingHorizontal: 20,
+    backgroundColor: c.white,
+    borderRadius: CARD_BORDER_RADIUS,
+    paddingVertical: CARD_PADDING + 5,
+    paddingHorizontal: CARD_PADDING,
     marginBottom: 40,
   },
   label: {
-    fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
-    fontSize: 20,
-    marginBottom: 6,
+    fontFamily: FONT_HEADING,
+    color: c.primary,
+    fontSize: FONT_SIZE_CARD_TITLE,
+    marginBottom: LABEL_MARGIN_BOTTOM,
   },
   input: {
-    backgroundColor: "#D9D9D9",
-    borderRadius: 3,
-    padding: 10,
-    marginBottom: 22,
+    backgroundColor: c.gray300,
+    borderRadius: INPUT_BORDER_RADIUS,
+    padding: INPUT_PADDING,
+    marginBottom: INPUT_MARGIN_BOTTOM,
+    color: c.primary,
+    fontFamily: FONT_BODY,
   },
   createButton: {
-    backgroundColor: "#D9D9D9",
-    paddingVertical: 14,
-    borderRadius: 3,
+    backgroundColor: c.gray300,
+    paddingVertical: BUTTON_PADDING_V,
+    paddingHorizontal: BUTTON_PADDING_H,
+    borderRadius: BUTTON_BORDER_RADIUS,
     width: "50%",
     alignSelf: "center",
     marginBottom: 50,
   },
   createButtonText: {
-    color: colors.primary,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 26,
+    color: c.primary,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_BUTTON,
     textAlign: "center",
   },
   returnText: {
-    color: colors.white,
+    color: c.white,
     textDecorationLine: "underline",
-    fontFamily: "Poppins",
-    fontSize: 15,
+    fontFamily: FONT_BODY,
+    fontSize: FONT_SIZE_BODY - 1,
     textAlign: "center",
-    marginTop: 10,
+    marginTop: SPACE_SM,
   },
 
-  // web-only: remove the custom font so it uses the browser default
-  returnTextWeb: {
-    fontFamily: undefined,
-  },
-});
+  returnTextWeb: {},
+  });
+}

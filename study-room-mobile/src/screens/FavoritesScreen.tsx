@@ -1,6 +1,6 @@
 // Favorites Screen File
 // Formatting for IOS and web
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -13,7 +13,32 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import colors from "@/constants/colors";
+import type { ThemeColors } from "@/constants/theme";
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_TITLE,
+  FONT_SIZE_SECTION,
+  FONT_SIZE_BODY,
+  FONT_SIZE_CARD_TITLE,
+  FONT_SIZE_NAV,
+  WEB_SIDEBAR_WIDTH,
+  WEB_TOPBAR_HEIGHT,
+  WEB_NAV_ITEM_PADDING_V,
+  WEB_NAV_ITEM_PADDING_H,
+  WEB_NAV_ITEM_MARGIN_BOTTOM,
+  WEB_CONTENT_PADDING_TOP,
+  WEB_CONTENT_PADDING_BOTTOM,
+  CARD_PADDING,
+  CARD_MARGIN_BOTTOM,
+  CONTAINER_PADDING_TOP_MOBILE,
+  CONTAINER_PADDING_TOP_WEB,
+  HEADER_MARGIN_BOTTOM,
+  SCROLL_PADDING_BOTTOM,
+  SPACE_MD,
+  SPACE_LG,
+} from "@/constants/typography";
+import { useTheme } from "@/context/ThemeContext";
 import { useFavorites } from "@/context/FavoritesContext"; // shared favorites context
 
 import { useNavigation } from "@react-navigation/native";
@@ -30,25 +55,19 @@ interface FavoriteRoom {
 // Maximum width for large screens
 const MAX_SCREEN_WIDTH = 1400;
 
-// Web sizing (matches Home Screen)
-const WEB_SIDEBAR_WIDTH = 300;
-const WEB_TOPBAR_HEIGHT = 170;
-
 type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
 
 export default function FavoritesScreen() {
-  // Navigation setup 
-  type FavoritesNavProp = NativeStackNavigationProp<
-    RootStackParamList,
-    "Favorites"
-  >;
+  // Navigation setup
+  type FavoritesNavProp = NativeStackNavigationProp<RootStackParamList, "Favorites">;
   const navigation = useNavigation<FavoritesNavProp>();
-
+  const { colors } = useTheme();
   const { favorites, removeFavorite } = useFavorites(); // shared list and remove function
   const [editMode, setEditMode] = useState(false); // keeps track of edit mode state
 
   // checks if on web
   const isWeb = Platform.OS === "web";
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // used to size the web content area like Home Screen
   const { width } = useWindowDimensions();
@@ -71,20 +90,23 @@ export default function FavoritesScreen() {
   // WEB VERSION (adds the same top bar + sidebar as Home Screen)
   if (isWeb) {
     return (
-      <View style={styles.webPage}>
+      <View style={styles.webPage} accessibilityLabel="Favorites screen">
         {/* top bar */}
-        <View style={styles.webTopBar}>
+        <View style={styles.webTopBar} accessibilityLabel="Top bar">
           <Image
             source={require("@/assets/images/bf_logo.png")}
             style={styles.webTopBarLogo}
             resizeMode="contain"
+            accessibilityRole="image"
+            accessibilityLabel="Bobcat Finder logo"
+            accessibilityIgnoresInvertColors
           />
         </View>
 
         {/* sidebar + main */}
         <View style={styles.webBody}>
           {/* Left Sidebar */}
-          <View style={styles.webSidebar}>
+          <View style={styles.webSidebar} accessibilityLabel="Navigation sidebar">
             <View style={styles.webSidebarLinks}>
               {menuItems.map((item) => {
                 // highlights the current page
@@ -92,18 +114,13 @@ export default function FavoritesScreen() {
                 return (
                   <TouchableOpacity
                     key={item.route}
-                    style={[
-                      styles.webNavItem,
-                      selected && styles.webNavItemSelected,
-                    ]}
+                    style={[styles.webNavItem, selected && styles.webNavItemSelected]}
                     onPress={() => navigation.navigate(item.route)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Go to ${item.name}`}
+                    accessibilityState={{ selected }}
                   >
-                    <Text
-                      style={[
-                        styles.webNavText,
-                        selected && styles.webNavTextSelected,
-                      ]}
-                    >
+                    <Text style={[styles.webNavText, selected && styles.webNavTextSelected]}>
                       {item.name.toUpperCase()}
                     </Text>
                   </TouchableOpacity>
@@ -122,6 +139,7 @@ export default function FavoritesScreen() {
                 paddingHorizontal: 0,
               }}
               keyboardShouldPersistTaps="handled"
+              accessibilityLabel="Favorites content"
             >
               <View style={[styles.webContentWrap, { width: contentWidthWeb }]}>
                 {/* main page container (same iOS layout, just placed inside the web frame) */}
@@ -137,18 +155,30 @@ export default function FavoritesScreen() {
                         }
                       }}
                       style={styles.backButton}
+                      accessibilityRole="button"
+                      accessibilityLabel="Go back"
+                      accessibilityHint="Returns to the previous screen"
                     >
-                      <Ionicons
-                        name="arrow-back"
-                        size={35}
-                        color={colors.primary}
-                      />
+                      <Ionicons name="arrow-back" size={35} color={colors.primary} />
                     </Pressable>
 
-                    <Text style={styles.title}>FAVORITES</Text>
+                    <Text style={styles.title} accessibilityRole="header">
+                      FAVORITES
+                    </Text>
 
                     {/* edit button (pencil icon turns into checkmark when editing) */}
-                    <Pressable onPress={toggleEdit} style={styles.backButton}>
+                    <Pressable
+                      onPress={toggleEdit}
+                      style={styles.backButton}
+                      accessibilityRole="button"
+                      accessibilityLabel={editMode ? "Done editing favorites" : "Edit favorites"}
+                      accessibilityHint={
+                        editMode
+                          ? "Exits edit mode"
+                          : "Enables edit mode to remove favorites"
+                      }
+                      accessibilityState={{ selected: editMode }}
+                    >
                       <Ionicons
                         name={editMode ? "checkmark" : "create-outline"}
                         size={30}
@@ -158,50 +188,75 @@ export default function FavoritesScreen() {
                   </View>
 
                   {/* Favorite Rooms List */}
-                  <ScrollView contentContainerStyle={styles.listContainer}>
-                    {favorites.length === 0 ? (
-                      <View style={{ alignItems: "center", marginTop: 50 }}>
-                        <Text style={{ color: colors.primary, fontSize: 18 }}>
-                          No favorites added yet.
-                        </Text>
-                      </View>
-                    ) : (
-                      favorites.map((item: FavoriteRoom) => (
-                        <View key={item.name} style={styles.card}>
-                          <Text style={styles.roomText}>{item.name}</Text>
+                  <ScrollView
+                    contentContainerStyle={styles.listContainer}
+                    accessibilityLabel="Favorites list"
+                  >
+          {favorites.length === 0 ? (
+            <View
+              style={{ alignItems: "center", marginTop: 50 }}
+              accessibilityLabel="No favorites message"
+            >
+              <Text style={styles.emptyMessage}>
+                No favorites added yet.
+              </Text>
+            </View>
+          ) : (
+            favorites.map((item: FavoriteRoom) => {
+                        const statusLabel =
+                          item.status === "available"
+                            ? "available"
+                            : item.status === "occupied"
+                            ? "occupied"
+                            : "offline";
 
-                          <View style={styles.rightSection}>
-                            <View
-                              style={[
-                                styles.statusDot, // status dot color coded by available, occupied, offline
-                                {
-                                  backgroundColor:
-                                    item.status === "available"
-                                      ? colors.available
-                                      : item.status === "occupied"
-                                      ? colors.occupied
-                                      : colors.offline,
-                                },
-                              ]}
-                            />
-                            <Text style={styles.statusText}>{item.tstatus}</Text>
+                        return (
+                          <View
+                            key={item.name}
+                            style={styles.card}
+                            accessibilityLabel={`Favorite room ${item.name}`}
+                          >
+                            <Text style={styles.roomText}>{item.name}</Text>
 
-                            {/*  trash button only shows when in edit mode */}
-                            {editMode && (
-                              <TouchableOpacity
-                                onPress={() => removeFavorite(item.name)}
-                                style={{ marginLeft: 12 }}
+                            <View style={styles.rightSection}>
+                              <View
+                                style={[
+                                  styles.statusDot, // status dot color coded by available, occupied, offline
+                                  {
+                                    backgroundColor:
+                                      item.status === "available"
+                                        ? colors.available
+                                        : item.status === "occupied"
+                                        ? colors.occupied
+                                        : colors.offline,
+                                  },
+                                ]}
+                                accessibilityRole="image"
+                                accessibilityLabel={`Status indicator: ${statusLabel}`}
+                              />
+                              <Text
+                                style={styles.statusText}
+                                accessibilityLabel={`Status ${item.tstatus ?? statusLabel}`}
                               >
-                                <Ionicons
-                                  name="trash"
-                                  size={22}
-                                  color={colors.white}
-                                />
-                              </TouchableOpacity>
-                            )}
+                                {item.tstatus}
+                              </Text>
+
+                              {/* trash button only shows when in edit mode */}
+                              {editMode && (
+                                <TouchableOpacity
+                                  onPress={() => removeFavorite(item.name)}
+                                  style={{ marginLeft: 12 }}
+                                  accessibilityRole="button"
+                                  accessibilityLabel={`Remove ${item.name} from favorites`}
+                                  accessibilityHint="Deletes this room from your favorites list"
+                                >
+                                  <Ionicons name="trash" size={22} color={colors.white} />
+                                </TouchableOpacity>
+                              )}
+                            </View>
                           </View>
-                        </View>
-                      ))
+                        );
+                      })
                     )}
                   </ScrollView>
                 </View>
@@ -215,17 +270,20 @@ export default function FavoritesScreen() {
 
   // Mobile version (unchanged)
   return (
-    // wrapper holds sidebar + main content on web 
-    <View style={styles.page}>
+    // wrapper holds sidebar + main content on web
+    <View style={styles.page} accessibilityLabel="Favorites screen">
       {/* WEB LEFT SIDEBAR (only shows on web) */}
       {isWeb && (
-        <View style={styles.webSidebar}>
+        <View style={styles.webSidebar} accessibilityLabel="Navigation sidebar">
           {/* top logo/header area */}
           <View style={styles.webSidebarHeader}>
             <Image
               source={require("@/assets/images/bf_logo.png")}
               style={styles.webSidebarLogo}
               resizeMode="contain"
+              accessibilityRole="image"
+              accessibilityLabel="Bobcat Finder logo"
+              accessibilityIgnoresInvertColors
             />
           </View>
 
@@ -237,18 +295,13 @@ export default function FavoritesScreen() {
               return (
                 <TouchableOpacity
                   key={item.route}
-                  style={[
-                    styles.webNavItem,
-                    selected && styles.webNavItemSelected,
-                  ]}
+                  style={[styles.webNavItem, selected && styles.webNavItemSelected]}
                   onPress={() => navigation.navigate(item.route)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Go to ${item.name}`}
+                  accessibilityState={{ selected }}
                 >
-                  <Text
-                    style={[
-                      styles.webNavText,
-                      selected && styles.webNavTextSelected,
-                    ]}
-                  >
+                  <Text style={[styles.webNavText, selected && styles.webNavTextSelected]}>
                     {item.name.toUpperCase()}
                   </Text>
                 </TouchableOpacity>
@@ -271,14 +324,28 @@ export default function FavoritesScreen() {
               }
             }}
             style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            accessibilityHint="Returns to the previous screen"
           >
             <Ionicons name="arrow-back" size={35} color={colors.primary} />
           </Pressable>
 
-          <Text style={styles.title}>FAVORITES</Text>
+          <Text style={styles.title} accessibilityRole="header">
+            FAVORITES
+          </Text>
 
           {/* edit button (pencil icon turns into checkmark when editing) */}
-          <Pressable onPress={toggleEdit} style={styles.backButton}>
+          <Pressable
+            onPress={toggleEdit}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel={editMode ? "Done editing favorites" : "Edit favorites"}
+            accessibilityHint={
+              editMode ? "Exits edit mode" : "Enables edit mode to remove favorites"
+            }
+            accessibilityState={{ selected: editMode }}
+          >
             <Ionicons
               name={editMode ? "checkmark" : "create-outline"}
               size={30}
@@ -288,46 +355,71 @@ export default function FavoritesScreen() {
         </View>
 
         {/* Favorite Rooms List */}
-        <ScrollView contentContainerStyle={styles.listContainer}>
+        <ScrollView contentContainerStyle={styles.listContainer} accessibilityLabel="Favorites list">
           {favorites.length === 0 ? (
-            <View style={{ alignItems: "center", marginTop: 50 }}>
-              <Text style={{ color: colors.primary, fontSize: 18 }}>
+            <View
+              style={{ alignItems: "center", marginTop: 50 }}
+              accessibilityLabel="No favorites message"
+            >
+              <Text style={styles.emptyMessage}>
                 No favorites added yet.
               </Text>
             </View>
           ) : (
-            favorites.map((item: FavoriteRoom) => (
-              <View key={item.name} style={styles.card}>
-                <Text style={styles.roomText}>{item.name}</Text>
+            favorites.map((item: FavoriteRoom) => {
+              const statusLabel =
+                item.status === "available"
+                  ? "available"
+                  : item.status === "occupied"
+                  ? "occupied"
+                  : "offline";
 
-                <View style={styles.rightSection}>
-                  <View
-                    style={[
-                      styles.statusDot, // status dot color coded by available, occupied, offline
-                      {
-                        backgroundColor:
-                          item.status === "available"
-                            ? colors.available
-                            : item.status === "occupied"
-                            ? colors.occupied
-                            : colors.offline,
-                      },
-                    ]}
-                  />
-                  <Text style={styles.statusText}>{item.tstatus}</Text>
+              return (
+                <View
+                  key={item.name}
+                  style={styles.card}
+                  accessibilityLabel={`Favorite room ${item.name}`}
+                >
+                  <Text style={styles.roomText}>{item.name}</Text>
 
-                  {/*  trash button only shows when in edit mode */}
-                  {editMode && (
-                    <TouchableOpacity
-                      onPress={() => removeFavorite(item.name)}
-                      style={{ marginLeft: 12 }}
+                  <View style={styles.rightSection}>
+                    <View
+                      style={[
+                        styles.statusDot,
+                        {
+                          backgroundColor:
+                            item.status === "available"
+                              ? colors.available
+                              : item.status === "occupied"
+                              ? colors.occupied
+                              : colors.offline,
+                        },
+                      ]}
+                      accessibilityRole="image"
+                      accessibilityLabel={`Status indicator: ${statusLabel}`}
+                    />
+                    <Text
+                      style={styles.statusText}
+                      accessibilityLabel={`Status ${item.tstatus ?? statusLabel}`}
                     >
-                      <Ionicons name="trash" size={22} color={colors.white} />
-                    </TouchableOpacity>
-                  )}
+                      {item.tstatus}
+                    </Text>
+
+                    {editMode && (
+                      <TouchableOpacity
+                        onPress={() => removeFavorite(item.name)}
+                        style={{ marginLeft: 12 }}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Remove ${item.name} from favorites`}
+                        accessibilityHint="Deletes this room from your favorites list"
+                      >
+                        <Ionicons name="trash" size={22} color={colors.white} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
-              </View>
-            ))
+              );
+            })
           )}
         </ScrollView>
       </View>
@@ -336,25 +428,24 @@ export default function FavoritesScreen() {
 }
 
 // applies styles and sets up page
-const styles = StyleSheet.create({
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
   page: {
     // wrapper for web layout (sidebar + page content)
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   container: {
-    // background container
     flex: 1,
-    backgroundColor: colors.white,
-    paddingTop: 80,
-    paddingHorizontal: 16,
+    backgroundColor: c.gray100,
+    paddingTop: CONTAINER_PADDING_TOP_MOBILE,
+    paddingHorizontal: SPACE_MD,
   },
 
   webContent: {
-    // web version spacing so the content lines up nicely next to the sidebar
-    paddingTop: 50,
+    paddingTop: CONTAINER_PADDING_TOP_WEB + 26,
     paddingLeft: 36,
     paddingRight: 36,
   },
@@ -363,16 +454,16 @@ const styles = StyleSheet.create({
   webPage: {
     flex: 1,
     flexDirection: "column",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   webTopBar: {
     height: WEB_TOPBAR_HEIGHT,
-    backgroundColor: colors.darkAccent,
+    backgroundColor: c.darkAccent,
     width: "100%",
     justifyContent: "center",
     paddingLeft: 20,
-    // shadow 
+    // shadow
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.25,
@@ -390,13 +481,13 @@ const styles = StyleSheet.create({
   webBody: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   // left sidebar styles (web only)
   webSidebar: {
     width: WEB_SIDEBAR_WIDTH,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingTop: 0,
     paddingHorizontal: 14,
     shadowColor: "#000",
@@ -423,21 +514,20 @@ const styles = StyleSheet.create({
   webSidebarLinks: { marginTop: 6 },
 
   webNavItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingVertical: WEB_NAV_ITEM_PADDING_V,
+    paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
     borderRadius: 2,
-    marginBottom: 8,
+    marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
   },
 
   webNavItemSelected: {
-    // highlights current page
     backgroundColor: "rgba(255,255,255,0.18)",
   },
 
   webNavText: {
-    color: colors.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 28,
+    color: c.white,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_NAV,
     letterSpacing: 0.8,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 2, height: 2 },
@@ -445,62 +535,55 @@ const styles = StyleSheet.create({
   },
 
   webNavTextSelected: {
-    color: colors.white,
+    color: c.white,
   },
 
-  webMain: { flex: 1, backgroundColor: colors.white },
+  webMain: { flex: 1, backgroundColor: c.gray100 },
 
   webContentWrap: {
-    // keeps the page content centered with the same max width rules as Home Screen
-    paddingTop: 22,
-    paddingBottom: 24,
+    paddingTop: WEB_CONTENT_PADDING_TOP,
+    paddingBottom: WEB_CONTENT_PADDING_BOTTOM,
   },
 
   header: {
-    // header container
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // centers title between two equal sides
-    marginBottom: 24,
+    justifyContent: "space-between",
+    marginBottom: HEADER_MARGIN_BOTTOM,
   },
 
   backButton: {
-    // back button
-    width: 40, // keeps both sides equal width
+    width: 40,
     alignItems: "center",
   },
 
   title: {
-    // sets up title for each room
     flex: 1,
     textAlign: "center",
-    fontSize: 38,
-    fontFamily: "BebasNeue-Regular",
-    fontWeight: "500",
-    color: colors.primary,
+    fontSize: FONT_SIZE_TITLE + 6,
+    fontFamily: FONT_HEADING,
+    color: c.primary,
   },
 
   listContainer: {
-    paddingBottom: 20,
+    paddingBottom: SPACE_LG,
   },
 
   card: {
-    // room card container
     flexDirection: "row",
-    backgroundColor: colors.primary,
-    borderRadius: 0,
-    padding: 25,
-    marginBottom: 7,
+    backgroundColor: c.primary,
+    borderRadius: 6,
+    padding: CARD_PADDING + 5,
+    marginBottom: CARD_MARGIN_BOTTOM - 5,
     marginHorizontal: 10,
     justifyContent: "space-between",
     alignItems: "center",
   },
 
   roomText: {
-    // room name text inside each block
-    color: colors.white,
-    fontSize: 25,
-    fontFamily: "BebasNeue-Regular",
+    color: c.white,
+    fontSize: FONT_SIZE_SECTION - 2,
+    fontFamily: FONT_HEADING,
   },
 
   rightSection: {
@@ -517,7 +600,15 @@ const styles = StyleSheet.create({
   },
 
   statusText: {
-    color: colors.white,
-    fontSize: 16,
+    color: c.white,
+    fontSize: FONT_SIZE_BODY,
+    fontFamily: FONT_BODY,
   },
-});
+
+  emptyMessage: {
+    color: c.primary,
+    fontSize: FONT_SIZE_BODY + 2,
+    fontFamily: FONT_BODY,
+  },
+  });
+}

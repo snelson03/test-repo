@@ -2,7 +2,7 @@
 // implements auto zoom when a pin is pressed and pulsing animation on selected pin
 // added color coded buildings and  key inside map 
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -17,8 +17,28 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import colors from "@/constants/colors";
+import type { ThemeColors } from "@/constants/theme";
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_TITLE,
+  FONT_SIZE_SECTION,
+  FONT_SIZE_CARD_TITLE,
+  FONT_SIZE_BODY,
+  FONT_SIZE_CAPTION,
+  FONT_SIZE_NAV,
+  WEB_SIDEBAR_WIDTH,
+  WEB_TOPBAR_HEIGHT,
+  WEB_NAV_ITEM_PADDING_V,
+  WEB_NAV_ITEM_PADDING_H,
+  WEB_NAV_ITEM_MARGIN_BOTTOM,
+  CARD_BORDER_RADIUS,
+  SPACE_MD,
+} from "@/constants/typography";
+import { useTheme } from "@/context/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList, MapBuildingId } from "@/navigation/AppNavigator";
 
 type BuildingWithPin = {
   id: string;
@@ -33,6 +53,8 @@ type BuildingWithPin = {
 export default function CampusMapScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const scrollViewMainRef = useRef<ScrollView | null>(null);
 
@@ -149,37 +171,49 @@ export default function CampusMapScreen() {
 
   const zoomToBuilding = (buildingId: string) => {
     const pin = pinPositions[buildingId];
-    const scrollX: any = mapScrollXRef.current;
-    const scrollY: any = mapScrollYRef.current;
-    if (!pin || !scrollX || !scrollY || baseWidth <= 0 || baseHeight <= 0)
-      return;
+    const scrollView: any = mapScrollRef.current;
+    if (!pin || !scrollView) return;
 
-    // Center the pin in the viewport
-    const viewportW = baseWidth;
-    const viewportH = mapHeight;
-
-    const targetX = clamp(
-      pin.x - viewportW / 2,
-      0,
-      Math.max(0, contentWidth - viewportW)
-    );
-    const targetY = clamp(
-      pin.y - viewportH / 2,
-      0,
-      Math.max(0, contentHeight - viewportH)
-    );
-
-    // Address the error that comes from clicking a pin:
-    try {
-      scrollX.scrollTo({ x: targetX, animated: true });
-      scrollY.scrollTo({ y: targetY, animated: true });
-    } catch (e) {
-      // prevents platform-specific scroll responder issues from crashing
-    }
-
+    // Scroll main view so the map is visible (mobile)
     if (!isWide) {
       scrollViewMainRef.current?.scrollTo({ y: 0, animated: true });
     }
+
+    // scrollResponderZoomTo is iOS-only; on web it can exist but throw (e.g. "Second argument must be a string")
+    if (Platform.OS !== "ios") return;
+    const zoomTo = scrollView.scrollResponderZoomTo;
+    if (typeof zoomTo !== "function") return;
+    const zoomRect = {
+      x: pin.x - mapSize.width * 0.25,
+      y: pin.y - mapSize.height * 0.25,
+      width: mapSize.width * 0.5,
+      height: mapSize.height * 0.5,
+    };
+    try {
+      zoomTo.call(scrollView, zoomRect, true);
+    } catch (_) {
+      // Ignore if zoom fails
+    }
+  };
+
+  // Double-tap: first tap selects/zooms, second tap within 400ms navigates to Find a Room
+  const lastTapRef = useRef<{ buildingId: string; at: number } | null>(null);
+  const DOUBLE_TAP_MS = 400;
+
+  const handlePinPress = (buildingId: string) => {
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last?.buildingId === buildingId && now - last.at < DOUBLE_TAP_MS) {
+      lastTapRef.current = null;
+      (navigation as NativeStackNavigationProp<RootStackParamList, "CampusMap">).navigate("FindRoom", {
+        buildingIdFromMap: buildingId as MapBuildingId,
+      });
+      return;
+    }
+    lastTapRef.current = { buildingId, at: now };
+    setSelectedBuildingId(buildingId);
+    startPulse();
+    zoomToBuilding(buildingId);
   };
 
   const handleSelectBuilding = (buildingId: string) => {
@@ -418,40 +452,55 @@ export default function CampusMapScreen() {
                   </ScrollView>
                 </ScrollView>
 
-                {/* Legend (pins + ping effect) */}
-                {showLegend && (
-                  <View style={styles.legend}>
-                    {buildings.map((b) => {
-                      const isSelected = selectedBuildingId === b.id;
+                    {/* PINS */}
+                    {mapSize.width > 0 &&
+                      buildings.map((b) => {
+                        const pin = pinPositions[b.id];
+                        if (!pin) return null;
 
-                      const pulseScale = pulseAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.7, 1.6],
-                      });
+                        const isSelected = selectedBuildingId === b.id;
 
-                      const pulseOpacity = pulseAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [0.75, 0],
-                      });
+                        const pulseScale = pulseAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.7, 1.6],
+                        });
 
-                      return (
-                        <TouchableOpacity
-                          key={b.id}
-                          style={styles.legendItem}
-                          onPress={() => handleSelectBuilding(b.id)}
-                          activeOpacity={0.9}
-                        >
-                          <View style={styles.legendIconWrap}>
-                            {isSelected && (
-                              <Animated.View
-                                style={[
-                                  styles.legendPulse,
-                                  {
-                                    backgroundColor: b.pinColor,
-                                    transform: [{ scale: pulseScale }],
-                                    opacity: pulseOpacity,
-                                  },
-                                ]}
+                        const pulseOpacity = pulseAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0.8, 0],
+                        });
+
+                        return (
+                          <TouchableOpacity
+                            key={b.id}
+                            style={[
+                              styles.pin,
+                              { left: pin.x - 11, top: pin.y - 22 },
+                            ]}
+                            onPress={() => handlePinPress(b.id)}
+                            activeOpacity={0.9}
+                          >
+                            <View style={styles.pinContainer}>
+                              {isSelected && (
+                                <Text style={styles.pinLabel}>{b.name}</Text>
+                              )}
+
+                              {isSelected && (
+                                <Animated.View
+                                  style={[
+                                    styles.pulseRing,
+                                    {
+                                      transform: [{ scale: pulseScale }],
+                                      opacity: pulseOpacity,
+                                    },
+                                  ]}
+                                />
+                              )}
+
+                              <Ionicons
+                                name="location-sharp"
+                                size={22}
+                                color="red"
                               />
                             )}
                             <Ionicons
@@ -558,20 +607,18 @@ export default function CampusMapScreen() {
   );
 }
 
-const WEB_SIDEBAR_WIDTH = 300;
-const WEB_TOPBAR_HEIGHT = 170;
-
-const styles = StyleSheet.create({
+function createStyles(c: ThemeColors) {
+  return StyleSheet.create({
   // Web styles
   webPage: {
     flex: 1,
     flexDirection: "column",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   webTopBar: {
     height: WEB_TOPBAR_HEIGHT,
-    backgroundColor: colors.darkAccent,
+    backgroundColor: c.darkAccent,
     width: "100%",
     justifyContent: "center",
     paddingLeft: 20,
@@ -593,12 +640,12 @@ const styles = StyleSheet.create({
   webBody: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.white,
+    backgroundColor: c.gray100,
   },
 
   webSidebar: {
     width: WEB_SIDEBAR_WIDTH,
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     paddingTop: 0,
     paddingHorizontal: 14,
     shadowColor: "#000",
@@ -613,38 +660,38 @@ const styles = StyleSheet.create({
   webSidebarLinks: { marginTop: 6 },
 
   webNavItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingVertical: WEB_NAV_ITEM_PADDING_V,
+    paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
     borderRadius: 2,
-    marginBottom: 8,
+    marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
   },
 
   webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
 
   webNavText: {
-    color: colors.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 28,
+    color: c.white,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_NAV,
     letterSpacing: 0.8,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 8,
   },
 
-  webNavTextSelected: { color: colors.white },
+  webNavTextSelected: { color: c.white },
 
-  webMain: { flex: 1, backgroundColor: colors.white },
+  webMain: { flex: 1, backgroundColor: c.gray100 },
 
   //
   page: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
   },
 
   container: {
     flex: 1,
-    backgroundColor: colors.gray100,
+    backgroundColor: c.gray100,
   },
 
   header: {
@@ -663,9 +710,9 @@ const styles = StyleSheet.create({
   
   title: {
     paddingHorizontal: 55,
-    fontSize: 38,
-    fontFamily: "BebasNeue-Regular",
-    color: colors.primary,
+    fontSize: FONT_SIZE_TITLE + 6,
+    fontFamily: FONT_HEADING,
+    color: c.primary,
   },
 
   mainRow: {
@@ -688,7 +735,7 @@ const styles = StyleSheet.create({
   },
 
   mapFrame: {
-    backgroundColor: colors.primary,
+    backgroundColor: c.primary,
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
@@ -720,16 +767,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 28,
     backgroundColor: "rgba(5, 71, 42, 0.75)",
-    color: colors.white,
+    color: c.white,
     paddingHorizontal: 2,
     paddingVertical: 2,
     borderRadius: 0,
-    fontSize: 13,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_BODY - 3,
+    fontFamily: FONT_HEADING,
     textAlign: "center",
     maxWidth: 80,
     minWidth: 80,
-    fontWeight: "500",
     textShadowColor: "rgba(0, 0, 0, 0.4)",
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 3,
@@ -815,7 +861,7 @@ const styles = StyleSheet.create({
   },
 
   buildingsContainer: {
-    backgroundColor: colors.white,
+    backgroundColor: c.white,
     alignItems: "center",
     paddingVertical: 25,
     shadowColor: "#000",
@@ -825,10 +871,10 @@ const styles = StyleSheet.create({
   },
 
   sectionTitle: {
-    fontSize: 30,
-    fontFamily: "BebasNeue-Regular",
-    color: colors.white,
-    backgroundColor: colors.primary,
+    fontSize: FONT_SIZE_TITLE - 2,
+    fontFamily: FONT_HEADING,
+    color: c.white,
+    backgroundColor: c.primary,
     paddingVertical: 15,
     textAlign: "center",
     width: "100%",
@@ -842,20 +888,20 @@ const styles = StyleSheet.create({
   buildingPinButton: { padding: 0, marginLeft: 5, marginBottom: 6 },
 
   buildingName: {
-    fontSize: 24,
+    fontSize: FONT_SIZE_CARD_TITLE + 2,
     marginLeft: 30,
-    color: colors.primary,
+    color: c.primary,
     marginBottom: 4,
-    fontFamily: "BebasNeue-Regular",
+    fontFamily: FONT_HEADING,
   },
 
-  address: { fontSize: 14, color: colors.primary, marginBottom: 10 },
+  address: { fontSize: FONT_SIZE_CAPTION, color: c.primary, marginBottom: 10, fontFamily: FONT_BODY },
 
   buildingImage: {
     width: "85%",
     height: 200,
     borderWidth: 2.5,
-    borderColor: colors.primary,
+    borderColor: c.primary,
   },
 
   webSidebarHeader: {
@@ -868,4 +914,5 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 80,
   },
-});
+  });
+}

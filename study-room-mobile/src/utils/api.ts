@@ -59,7 +59,7 @@ async function removeAuthToken(): Promise<void> {
 // Make authenticated API request
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const token = await getAuthToken();
   const headers: HeadersInit = {
@@ -95,7 +95,7 @@ export const authAPI = {
   async signup(
     email: string,
     password: string,
-    fullName: string
+    fullName: string,
   ): Promise<User> {
     const response = await fetch(`${API_BASE_URL}/auth/signup`, {
       method: "POST",
@@ -121,7 +121,7 @@ export const authAPI = {
     const response = await fetch(`${API_BASE_URL}/auth/signin`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: formData,
+      body: formData.toString(),
     });
 
     if (!response.ok) {
