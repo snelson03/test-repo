@@ -19,6 +19,29 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { ThemeColors } from "@/constants/theme";
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_TITLE,
+  FONT_SIZE_SECTION,
+  FONT_SIZE_BODY,
+  FONT_SIZE_CARD_TITLE,
+  FONT_SIZE_NAV,
+  WEB_SIDEBAR_WIDTH,
+  WEB_TOPBAR_HEIGHT,
+  WEB_NAV_ITEM_PADDING_V,
+  WEB_NAV_ITEM_PADDING_H,
+  WEB_NAV_ITEM_MARGIN_BOTTOM,
+  CARD_PADDING,
+  CARD_BORDER_RADIUS,
+  BUTTON_BORDER_RADIUS,
+  INPUT_PADDING,
+  INPUT_MARGIN_BOTTOM,
+  LABEL_MARGIN_BOTTOM,
+  HEADER_MARGIN_BOTTOM,
+  SPACE_MD,
+  SPACE_LG,
+} from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import type { ThemeMode } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
@@ -1645,8 +1668,6 @@ export default function PreferencesScreen() {
   );
 }
 
-const WEB_SIDEBAR_WIDTH = 300;
-const WEB_TOPBAR_HEIGHT = 170;
 
 function createStyles(c: ThemeColors) {
   return StyleSheet.create({
@@ -1701,18 +1722,18 @@ function createStyles(c: ThemeColors) {
   webSidebarLinks: { marginTop: 6 },
 
   webNavItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingVertical: WEB_NAV_ITEM_PADDING_V,
+    paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
     borderRadius: 2,
-    marginBottom: 8,
+    marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
   },
 
   webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
 
   webNavText: {
     color: c.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 28,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_NAV,
     letterSpacing: 0.8,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 2, height: 2 },
@@ -1732,7 +1753,7 @@ function createStyles(c: ThemeColors) {
   container: {
     flex: 1,
     backgroundColor: c.gray100,
-    paddingHorizontal: 16,
+    paddingHorizontal: SPACE_MD,
   },
 
   //  reduced top whitespace on web
@@ -1774,8 +1795,8 @@ function createStyles(c: ThemeColors) {
 
   title: {
     flex: 1,
-    fontSize: 38,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_TITLE + 6,
+    fontFamily: FONT_HEADING,
     color: c.primary,
     textAlign: "center",
   },
@@ -1801,15 +1822,15 @@ function createStyles(c: ThemeColors) {
   },
 
   subHeaderText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE_BODY,
     color: c.primary,
-    marginLeft: 8,
-    fontFamily: "Poppins-Regular",
+    marginLeft: SPACE_MD,
+    fontFamily: FONT_BODY,
   },
 
   dropdownMenu: {
     backgroundColor: c.white,
-    borderRadius: 6,
+    borderRadius: CARD_BORDER_RADIUS,
     marginTop: 6,
     paddingVertical: 6,
     elevation: 6,
@@ -1826,9 +1847,9 @@ function createStyles(c: ThemeColors) {
   },
 
   dropdownText: {
-    fontSize: 16,
+    fontSize: FONT_SIZE_BODY,
     color: c.primary,
-    fontFamily: "Poppins-Regular",
+    fontFamily: FONT_BODY,
   },
 
   dropdownSelected: {
@@ -1841,9 +1862,9 @@ function createStyles(c: ThemeColors) {
 
   section: {
     backgroundColor: c.primary,
-    borderRadius: 0,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    borderRadius: CARD_BORDER_RADIUS,
+    paddingVertical: CARD_PADDING,
+    paddingHorizontal: CARD_PADDING,
     marginTop: 10,
     marginBottom: 40,
     width: "100%",
@@ -1857,18 +1878,18 @@ function createStyles(c: ThemeColors) {
   },
 
   sectionTitle: {
-    fontSize: 30,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_TITLE - 2,
+    fontFamily: FONT_HEADING,
     color: c.white,
     marginBottom: 14,
   },
 
   categoryTitle: {
-    fontSize: 22,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_CARD_TITLE,
+    fontFamily: FONT_HEADING,
     color: c.white,
     marginTop: 12,
-    marginBottom: 8,
+    marginBottom: SPACE_MD,
   },
 
   optionRow: {
@@ -1893,33 +1914,33 @@ function createStyles(c: ThemeColors) {
 
   optionText: {
     color: c.white,
-    fontSize: 14,
+    fontSize: FONT_SIZE_BODY - 2,
     flex: 1,
-    fontFamily: "Poppins-Regular",
+    fontFamily: FONT_BODY,
   },
 
   editText: {
     color: c.offWhite,
     fontSize: 13,
     textDecorationLine: "underline",
-    fontFamily: "Poppins-Regular",
+    fontFamily: FONT_BODY,
   },
 
-  inputRow: { marginBottom: 16 },
+  inputRow: { marginBottom: INPUT_MARGIN_BOTTOM },
 
   inputLabel: {
     color: c.white,
-    fontSize: 16,
-    marginBottom: 4,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_BODY,
+    marginBottom: LABEL_MARGIN_BOTTOM,
+    fontFamily: FONT_HEADING,
   },
 
   inputBox: {
     backgroundColor: c.white,
-    borderRadius: 6,
-    padding: 8,
+    borderRadius: CARD_BORDER_RADIUS,
+    padding: INPUT_PADDING,
     color: c.primary,
-    fontFamily: "Poppins-Regular",
+    fontFamily: FONT_BODY,
   },
 
   groupItem: { color: c.white, fontSize: 18 },
@@ -1969,18 +1990,18 @@ function createStyles(c: ThemeColors) {
   },
 
   modalTitle: {
-    fontSize: 22,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_CARD_TITLE,
+    fontFamily: FONT_HEADING,
     color: c.primary,
-    marginBottom: 16,
+    marginBottom: SPACE_MD,
     textAlign: "center",
   },
 
   modalButton: {
     alignSelf: "center",
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingHorizontal: CARD_PADDING,
+    borderRadius: BUTTON_BORDER_RADIUS,
     backgroundColor: c.primary,
     marginTop: 18,
   },
@@ -1994,18 +2015,18 @@ function createStyles(c: ThemeColors) {
   },
 
   modalButtonText: {
-    fontSize: 18,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_BODY + 2,
+    fontFamily: FONT_HEADING,
     color: c.white,
   },
 
   modalInput: {
     borderWidth: 1,
     borderColor: c.gray300,
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: BUTTON_BORDER_RADIUS,
+    padding: INPUT_PADDING,
     color: c.primary,
-    fontFamily: "Poppins-Regular",
+    fontFamily: FONT_BODY,
   },
 
   modalActionsRow: {
@@ -2026,7 +2047,7 @@ function createStyles(c: ThemeColors) {
 
   greenBox: {
     backgroundColor: c.primary,
-    borderRadius: 8,
+    borderRadius: BUTTON_BORDER_RADIUS,
     paddingVertical: 10,
     paddingHorizontal: 14,
     marginTop: 10,
@@ -2036,7 +2057,7 @@ function createStyles(c: ThemeColors) {
   logoutButton: {
     backgroundColor: "#D9534F",
     paddingVertical: 10,
-    borderRadius: 6,
+    borderRadius: CARD_BORDER_RADIUS,
     alignItems: "center",
     marginTop: 30,
     width: "40%",
@@ -2045,8 +2066,8 @@ function createStyles(c: ThemeColors) {
 
   logoutText: {
     color: c.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 25,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_SECTION,
   },
 
   logoutOverlay: {
@@ -2077,18 +2098,18 @@ function createStyles(c: ThemeColors) {
   },
 
   logoutModalTitle: {
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 30,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_TITLE - 2,
     color: c.primary,
     marginBottom: 10,
   },
 
   logoutModalMessage: {
-    fontSize: 16,
+    fontSize: FONT_SIZE_BODY,
     color: c.primary,
     textAlign: "center",
     marginBottom: 25,
-    fontFamily: "Poppins-Regular",
+    fontFamily: FONT_BODY,
   },
 
   logoutButtonsRow: {
@@ -2115,8 +2136,8 @@ function createStyles(c: ThemeColors) {
 
   cancelText: {
     color: c.primary,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 22,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_CARD_TITLE,
   },
 
   confirmLogoutButton: {
@@ -2125,8 +2146,8 @@ function createStyles(c: ThemeColors) {
 
   confirmLogoutText: {
     color: c.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 22,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_CARD_TITLE,
   },
 });
 }

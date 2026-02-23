@@ -22,6 +22,24 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import type { ThemeColors } from "@/constants/theme";
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_BODY,
+  FONT_SIZE_BUTTON,
+  FONT_SIZE_SMALL,
+  BUTTON_PADDING_V,
+  BUTTON_BORDER_RADIUS,
+  CONTAINER_PADDING_H,
+  CONTAINER_PADDING_TOP_MOBILE,
+  CONTAINER_PADDING_TOP_WEB,
+  INPUT_PADDING,
+  INPUT_BORDER_RADIUS,
+  INPUT_MARGIN_BOTTOM,
+  LABEL_MARGIN_BOTTOM,
+  SPACE_LG,
+  SPACE_SM,
+} from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { RootStackParamList } from "@/navigation/AppNavigator";
@@ -232,24 +250,24 @@ function createStyles(c: ThemeColors) {
   return StyleSheet.create({
   // main container (same look on iOS), but using flexGrow so ScrollView works correctly
   container: {
-    flexGrow: 1, // changed from flex: 1 so the ScrollView can size + center properly
+    flexGrow: 1,
     backgroundColor: c.primary,
-    paddingHorizontal: 30,
-    paddingTop: 120,
+    paddingHorizontal: CONTAINER_PADDING_H,
+    paddingTop: CONTAINER_PADDING_TOP_MOBILE + 40,
   },
 
   // only used on web to center the login form and reduce the huge top padding
   containerWeb: {
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 40,
-    paddingBottom: 40,
+    paddingTop: CONTAINER_PADDING_TOP_WEB,
+    paddingBottom: CONTAINER_PADDING_TOP_WEB,
   },
 
   logo: {
     width: 370,
     height: 130,
-    marginBottom: 20,
+    marginBottom: SPACE_LG,
     marginLeft: -10,
   },
 
@@ -260,51 +278,53 @@ function createStyles(c: ThemeColors) {
   },
 
   label: {
-    fontSize: 18,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_BODY + 2,
+    fontFamily: FONT_HEADING,
     color: c.white,
-    marginBottom: 4,
+    marginBottom: LABEL_MARGIN_BOTTOM,
   },
   input: {
     backgroundColor: c.gray300,
-    borderRadius: 3,
-    padding: 10,
-    marginBottom: 20,
+    borderRadius: INPUT_BORDER_RADIUS,
+    padding: INPUT_PADDING,
+    marginBottom: INPUT_MARGIN_BOTTOM,
     color: c.primary,
+    fontFamily: FONT_BODY,
   },
   resetText: {
     color: c.white,
     textDecorationLine: "underline",
-    fontFamily: Platform.OS === "web" ? undefined : "Poppins",
+    fontFamily: FONT_BODY,
     marginBottom: 30,
-    fontSize: 13,
+    fontSize: FONT_SIZE_SMALL,
   },
   errorText: {
     color: "#FFB3B3",
-    marginBottom: 10,
-    fontSize: 15,
+    marginBottom: SPACE_SM,
+    fontSize: FONT_SIZE_BODY - 1,
+    fontFamily: FONT_BODY,
   },
   loginButton: {
     backgroundColor: "#D9D9D9",
-    paddingVertical: 14,
-    borderRadius: 3,
+    paddingVertical: BUTTON_PADDING_V,
+    borderRadius: BUTTON_BORDER_RADIUS,
     alignItems: "center",
     width: "55%",
     alignSelf: "center",
-    marginTop: 10,
+    marginTop: SPACE_SM,
     marginBottom: 240,
   },
   loginText: {
     color: c.primary,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 25,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_BUTTON,
   },
   createAccountText: {
     color: c.white,
-    fontFamily: Platform.OS === "web" ? undefined : "Poppins",
+    fontFamily: FONT_BODY,
     textDecorationLine: "underline",
     textAlign: "center",
-    fontSize: 16,
+    fontSize: FONT_SIZE_BODY,
   },
 });
 }

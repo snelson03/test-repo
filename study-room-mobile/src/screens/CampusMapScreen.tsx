@@ -18,6 +18,23 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import type { ThemeColors } from "@/constants/theme";
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_TITLE,
+  FONT_SIZE_SECTION,
+  FONT_SIZE_CARD_TITLE,
+  FONT_SIZE_BODY,
+  FONT_SIZE_CAPTION,
+  FONT_SIZE_NAV,
+  WEB_SIDEBAR_WIDTH,
+  WEB_TOPBAR_HEIGHT,
+  WEB_NAV_ITEM_PADDING_V,
+  WEB_NAV_ITEM_PADDING_H,
+  WEB_NAV_ITEM_MARGIN_BOTTOM,
+  CARD_BORDER_RADIUS,
+  SPACE_MD,
+} from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
 
@@ -391,9 +408,6 @@ export default function CampusMapScreen() {
   );
 }
 
-const WEB_SIDEBAR_WIDTH = 300;
-const WEB_TOPBAR_HEIGHT = 170;
-
 function createStyles(c: ThemeColors) {
   return StyleSheet.create({
   // Web styles
@@ -447,18 +461,18 @@ function createStyles(c: ThemeColors) {
   webSidebarLinks: { marginTop: 6 },
 
   webNavItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingVertical: WEB_NAV_ITEM_PADDING_V,
+    paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
     borderRadius: 2,
-    marginBottom: 8,
+    marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
   },
 
   webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
 
   webNavText: {
     color: c.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 28,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_NAV,
     letterSpacing: 0.8,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 2, height: 2 },
@@ -491,8 +505,8 @@ function createStyles(c: ThemeColors) {
 
   title: {
     paddingHorizontal: 55,
-    fontSize: 38,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_TITLE + 6,
+    fontFamily: FONT_HEADING,
     color: c.primary,
   },
 
@@ -543,12 +557,11 @@ function createStyles(c: ThemeColors) {
     paddingHorizontal: 2,
     paddingVertical: 2,
     borderRadius: 0,
-    fontSize: 13,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_BODY - 3,
+    fontFamily: FONT_HEADING,
     textAlign: "center",
     maxWidth: 80,
     minWidth: 80,
-    fontWeight: "500",
     textShadowColor: "rgba(0, 0, 0, 0.4)",
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 3,
@@ -573,8 +586,8 @@ function createStyles(c: ThemeColors) {
   },
 
   sectionTitle: {
-    fontSize: 30,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_TITLE - 2,
+    fontFamily: FONT_HEADING,
     color: c.white,
     backgroundColor: c.primary,
     paddingVertical: 15,
@@ -590,14 +603,14 @@ function createStyles(c: ThemeColors) {
   buildingPinButton: { padding: 0, marginLeft: 5, marginBottom: 6 },
 
   buildingName: {
-    fontSize: 24,
+    fontSize: FONT_SIZE_CARD_TITLE + 2,
     marginLeft: 30,
     color: c.primary,
     marginBottom: 4,
-    fontFamily: "BebasNeue-Regular",
+    fontFamily: FONT_HEADING,
   },
 
-  address: { fontSize: 14, color: c.primary, marginBottom: 10 },
+  address: { fontSize: FONT_SIZE_CAPTION, color: c.primary, marginBottom: 10, fontFamily: FONT_BODY },
 
   buildingImage: {
     width: "85%",

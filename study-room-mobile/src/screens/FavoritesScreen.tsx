@@ -14,6 +14,30 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { ThemeColors } from "@/constants/theme";
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_TITLE,
+  FONT_SIZE_SECTION,
+  FONT_SIZE_BODY,
+  FONT_SIZE_CARD_TITLE,
+  FONT_SIZE_NAV,
+  WEB_SIDEBAR_WIDTH,
+  WEB_TOPBAR_HEIGHT,
+  WEB_NAV_ITEM_PADDING_V,
+  WEB_NAV_ITEM_PADDING_H,
+  WEB_NAV_ITEM_MARGIN_BOTTOM,
+  WEB_CONTENT_PADDING_TOP,
+  WEB_CONTENT_PADDING_BOTTOM,
+  CARD_PADDING,
+  CARD_MARGIN_BOTTOM,
+  CONTAINER_PADDING_TOP_MOBILE,
+  CONTAINER_PADDING_TOP_WEB,
+  HEADER_MARGIN_BOTTOM,
+  SCROLL_PADDING_BOTTOM,
+  SPACE_MD,
+  SPACE_LG,
+} from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { useFavorites } from "@/context/FavoritesContext"; // shared favorites context
 
@@ -30,10 +54,6 @@ interface FavoriteRoom {
 
 // Maximum width for large screens
 const MAX_SCREEN_WIDTH = 1400;
-
-// Web sizing (matches Home Screen)
-const WEB_SIDEBAR_WIDTH = 300;
-const WEB_TOPBAR_HEIGHT = 170;
 
 type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
 
@@ -172,17 +192,17 @@ export default function FavoritesScreen() {
                     contentContainerStyle={styles.listContainer}
                     accessibilityLabel="Favorites list"
                   >
-                    {favorites.length === 0 ? (
-                      <View
-                        style={{ alignItems: "center", marginTop: 50 }}
-                        accessibilityLabel="No favorites message"
-                      >
-                        <Text style={{ color: colors.primary, fontSize: 18 }}>
-                          No favorites added yet.
-                        </Text>
-                      </View>
-                    ) : (
-                      favorites.map((item: FavoriteRoom) => {
+          {favorites.length === 0 ? (
+            <View
+              style={{ alignItems: "center", marginTop: 50 }}
+              accessibilityLabel="No favorites message"
+            >
+              <Text style={styles.emptyMessage}>
+                No favorites added yet.
+              </Text>
+            </View>
+          ) : (
+            favorites.map((item: FavoriteRoom) => {
                         const statusLabel =
                           item.status === "available"
                             ? "available"
@@ -341,7 +361,7 @@ export default function FavoritesScreen() {
               style={{ alignItems: "center", marginTop: 50 }}
               accessibilityLabel="No favorites message"
             >
-              <Text style={{ color: colors.primary, fontSize: 18 }}>
+              <Text style={styles.emptyMessage}>
                 No favorites added yet.
               </Text>
             </View>
@@ -365,7 +385,7 @@ export default function FavoritesScreen() {
                   <View style={styles.rightSection}>
                     <View
                       style={[
-                        styles.statusDot, // status dot color coded by available, occupied, offline
+                        styles.statusDot,
                         {
                           backgroundColor:
                             item.status === "available"
@@ -385,7 +405,6 @@ export default function FavoritesScreen() {
                       {item.tstatus}
                     </Text>
 
-                    {/* trash button only shows when in edit mode */}
                     {editMode && (
                       <TouchableOpacity
                         onPress={() => removeFavorite(item.name)}
@@ -419,16 +438,14 @@ function createStyles(c: ThemeColors) {
   },
 
   container: {
-    // background container
     flex: 1,
     backgroundColor: c.gray100,
-    paddingTop: 80,
-    paddingHorizontal: 16,
+    paddingTop: CONTAINER_PADDING_TOP_MOBILE,
+    paddingHorizontal: SPACE_MD,
   },
 
   webContent: {
-    // web version spacing so the content lines up nicely next to the sidebar
-    paddingTop: 50,
+    paddingTop: CONTAINER_PADDING_TOP_WEB + 26,
     paddingLeft: 36,
     paddingRight: 36,
   },
@@ -497,21 +514,20 @@ function createStyles(c: ThemeColors) {
   webSidebarLinks: { marginTop: 6 },
 
   webNavItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingVertical: WEB_NAV_ITEM_PADDING_V,
+    paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
     borderRadius: 2,
-    marginBottom: 8,
+    marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
   },
 
   webNavItemSelected: {
-    // highlights current page
     backgroundColor: "rgba(255,255,255,0.18)",
   },
 
   webNavText: {
     color: c.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 28,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_NAV,
     letterSpacing: 0.8,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 2, height: 2 },
@@ -525,56 +541,49 @@ function createStyles(c: ThemeColors) {
   webMain: { flex: 1, backgroundColor: c.gray100 },
 
   webContentWrap: {
-    // keeps the page content centered with the same max width rules as Home Screen
-    paddingTop: 22,
-    paddingBottom: 24,
+    paddingTop: WEB_CONTENT_PADDING_TOP,
+    paddingBottom: WEB_CONTENT_PADDING_BOTTOM,
   },
 
   header: {
-    // header container
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // centers title between two equal sides
-    marginBottom: 24,
+    justifyContent: "space-between",
+    marginBottom: HEADER_MARGIN_BOTTOM,
   },
 
   backButton: {
-    // back button
-    width: 40, // keeps both sides equal width
+    width: 40,
     alignItems: "center",
   },
 
   title: {
-    // sets up title for each room
     flex: 1,
     textAlign: "center",
-    fontSize: 38,
-    fontFamily: "BebasNeue-Regular",
-    fontWeight: "500",
+    fontSize: FONT_SIZE_TITLE + 6,
+    fontFamily: FONT_HEADING,
     color: c.primary,
   },
 
   listContainer: {
-    paddingBottom: 20,
+    paddingBottom: SPACE_LG,
   },
 
   card: {
-    // room card container
     flexDirection: "row",
     backgroundColor: c.primary,
-    borderRadius: 0,
-    padding: 25,
-    marginBottom: 7,
+    borderRadius: 6,
+    padding: CARD_PADDING + 5,
+    marginBottom: CARD_MARGIN_BOTTOM - 5,
     marginHorizontal: 10,
     justifyContent: "space-between",
     alignItems: "center",
   },
 
   roomText: {
-    // room name text inside each block
     color: c.white,
-    fontSize: 25,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_SECTION - 2,
+    fontFamily: FONT_HEADING,
   },
 
   rightSection: {
@@ -592,7 +601,14 @@ function createStyles(c: ThemeColors) {
 
   statusText: {
     color: c.white,
-    fontSize: 16,
+    fontSize: FONT_SIZE_BODY,
+    fontFamily: FONT_BODY,
+  },
+
+  emptyMessage: {
+    color: c.primary,
+    fontSize: FONT_SIZE_BODY + 2,
+    fontFamily: FONT_BODY,
   },
   });
 }
