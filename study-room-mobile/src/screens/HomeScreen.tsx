@@ -34,11 +34,9 @@ import {
   CARD_PADDING,
   CARD_MARGIN_BOTTOM,
   CARD_BORDER_RADIUS,
-  HEADER_BACK_ICON_SIZE,
   SCROLL_PADDING_BOTTOM,
   SPACE_MD,
   SPACE_LG,
-  SPACE_XL,
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { Feather, Ionicons } from "@expo/vector-icons";
@@ -89,16 +87,15 @@ export default function HomeScreen() {
     removeFavorite: (name: string) => void;
   };
 
-  const [roomStatuses, setRoomStatuses] = useState<Record<string, string>>({});
-
   // Mobile Menu
   const [menuOpen, setMenuOpen] = useState(false);
   const menuAnim = useRef(new Animated.Value(0)).current;
 
   const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
+    const next = !menuOpen;
+    setMenuOpen(next);
     Animated.timing(menuAnim, {
-      toValue: menuOpen ? 0 : 1,
+      toValue: next ? 1 : 0,
       duration: 250,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
@@ -117,7 +114,7 @@ export default function HomeScreen() {
 
   // only used for the "No rooms available" message
   const availableRooms = rooms.filter(
-    (room) => room.status === "available" || room.status === "almost_filled",
+    (room) => room.status === "available" || room.status === "almost_filled"
   );
 
   // menu items
@@ -156,7 +153,7 @@ export default function HomeScreen() {
           buildings.map(async (building: any) => {
             const buildingRooms = await buildingsAPI.getRooms(building.id);
             const availableCount = buildingRooms.filter(
-              (r: any) => r.is_available,
+              (r: any) => r.is_available
             ).length;
 
             let status = "busy";
@@ -170,7 +167,7 @@ export default function HomeScreen() {
             }
 
             return { name: building.name, status, subtitle };
-          }),
+          })
         );
         setRooms(buildingSummaries);
       } catch (error) {
@@ -238,7 +235,7 @@ export default function HomeScreen() {
               style={{ flex: 1 }}
               contentContainerStyle={{
                 alignItems: "center",
-                paddingBottom: 8,
+                paddingBottom: 16,
                 paddingHorizontal: 0,
               }}
               keyboardShouldPersistTaps="handled"
@@ -252,10 +249,7 @@ export default function HomeScreen() {
                 </View>
 
                 {/* WEB: Find a Room + Campus Map side-by-side */}
-                <View
-                  style={styles.webTwoColRow}
-                  accessibilityLabel="Quick actions"
-                >
+                <View style={styles.webTwoColRow} accessibilityLabel="Quick actions">
                   <TouchableOpacity
                     style={styles.webTwoColItem}
                     onPress={() => navigation.navigate("FindRoom" as never)}
@@ -279,7 +273,8 @@ export default function HomeScreen() {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    onPress={() => navigation.navigate("Favorites" as never)}
+                    style={styles.webTwoColItem}
+                    onPress={() => navigation.navigate("CampusMap" as never)}
                     activeOpacity={0.9}
                     accessibilityRole="button"
                     accessibilityLabel="Campus map"
@@ -300,14 +295,18 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* Cards */}
-                <View style={styles.cardsContainerWeb} accessibilityLabel="Cards">
-                  {/* Available Now + Favorites side-by-side for web */}
-                  <View style={styles.webTwoColRow}>
-                    <View
-                      style={[styles.webTwoColItem, styles.cardShadow]}
-                      accessibilityLabel="Available now"
-                    >
+                {/* WEB: Favorites + Available Now side-by-side */}
+                <View style={styles.webTwoColRow} accessibilityLabel="Cards row">
+                  {/* Favorites */}
+                  <TouchableOpacity
+                    style={styles.webTwoColItem}
+                    onPress={() => navigation.navigate("Favorites" as never)}
+                    activeOpacity={0.9}
+                    accessibilityRole="button"
+                    accessibilityLabel="My favorites"
+                    accessibilityHint="Opens the Favorites screen"
+                  >
+                    <View style={styles.cardShadow}>
                       <LinearGradient
                         colors={["#F4F4F4", "#A1B5A8"]}
                         style={styles.favoritesCard}
@@ -323,202 +322,184 @@ export default function HomeScreen() {
                           />
                         </View>
 
-                        {loading ? (
-                          <Text style={styles.loadingText} accessibilityLabel="Loading available rooms">
-                            Loading...
-                          </Text>
-                        ) : availableRooms.length === 0 ? (
-                          <Text style={styles.noAvailableText}>
-                            No rooms available right now
-                          </Text>
+                        {favorites.length === 0 ? (
+                          <Text style={styles.emptyText}>No favorites added yet</Text>
                         ) : (
-                          availableRooms.map((room) => (
-                            <View
-                              key={room.name}
-                              style={styles.availableItem}
-                              accessibilityLabel={`${room.name}, ${room.subtitle}`}
-                            >
-                              <Text style={styles.availableItemText}>
-                                {room.name}
-                              </Text>
-                              <View style={styles.availableRight}>
+                          favorites.map((fav) => (
+                            <View key={fav.name} style={styles.favItem}>
+                              <Text style={styles.favItemText}>{fav.name}</Text>
+                              <View style={styles.favRight}>
                                 <View
                                   style={[
-                                    styles.availableStatusDot,
-                                    {
-                                      backgroundColor:
-                                        room.status === "available"
-                                          ? colors.available
-                                          : colors.occupied,
-                                    },
+                                    styles.favstatusDot,
+                                    { backgroundColor: colors.available },
                                   ]}
-                                  accessibilityLabel={`Status ${
-                                    room.status === "available"
-                                      ? "available"
-                                      : "occupied"
-                                  }`}
                                 />
-                                <Text style={styles.availableSubtitle}>
-                                  {room.subtitle}
-                                </Text>
-                                <View style={styles.favRight}>
-                                  <View
-                                    style={[
-                                      styles.favstatusDot,
-                                      {
-                                        backgroundColor:
-                                          status === "available"
-                                            ? colors.available
-                                            : status === "occupied"
-                                            ? colors.occupied
-                                            : colors.offline,
-                                      },
-                                    ]}
-                                  />
-                                  <Text style={styles.favNumber}>
-                                    {status.charAt(0).toUpperCase() +
-                                      status.slice(1)}
-                                  </Text>
-                                </View>
+                                <Text style={styles.favNumber}>Saved</Text>
                               </View>
-                            );
-                          })
+                            </View>
+                          ))
                         )}
                       </LinearGradient>
                     </View>
                   </TouchableOpacity>
 
-                  {/* WEB: Find a Room + Campus Map side-by-side */}
-                  <View style={styles.webTwoColRow}>
-                    <TouchableOpacity
-                      style={styles.webTwoColItem}
-                      onPress={() => navigation.navigate("FindRoom" as never)}
-                      activeOpacity={0.9}
-                      accessibilityRole="button"
-                      accessibilityLabel="My favorites"
-                      accessibilityHint="Opens the Favorites screen"
+                  {/* Available Now */}
+                  <View style={[styles.webTwoColItem, styles.cardShadow]} accessibilityLabel="Available now">
+                    <LinearGradient
+                      colors={["#F4F4F4", "#A1B5A8"]}
+                      style={styles.availableNowCard}
                     >
-                      <View style={styles.bannerContainerWeb}>
-                        <View style={styles.imageShadow}>
-                          <Image
-                            source={require("@/assets/images/library.jpg")}
-                            style={styles.bannerImageWeb}
-                          />
-                        </View>
-                        <Text style={styles.bannerTextWeb}>FIND A ROOM</Text>
+                      <View style={styles.availableHeader}>
+                        <Text style={styles.availableTitle}>AVAILABLE NOW</Text>
+                        <Ionicons
+                          name="location-sharp"
+                          size={22}
+                          color={colors.primary}
+                          accessibilityElementsHidden
+                          importantForAccessibility="no"
+                        />
                       </View>
-                    </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={styles.webTwoColItem}
-                      onPress={() => navigation.navigate("CampusMap" as never)}
-                      activeOpacity={0.9}
-                    >
-                      <View style={styles.mapContainerWeb}>
-                        <View style={styles.imageShadow}>
-                          <Image
-                            source={require("@/assets/images/map.jpeg")}
-                            style={styles.mapImageWeb}
-                          />
-                        </View>
-                        <Text style={styles.mapTextWeb}>CAMPUS MAP</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* WEB ONLY: Available Now + Manage side-by-side */}
-                  <View style={styles.webBottomTwoColRow}>
-                    {/* Available Now (left) */}
-                    <View style={styles.webBottomTwoColItem}>
-                      <View style={styles.cardShadow}>
-                        <LinearGradient
-                          colors={["#F4F4F4", "#A1B5A8"]}
-                          style={[styles.availableNowCard, styles.availableNowCardWeb]}
-                        >
-                          <View style={styles.availableHeader}>
-                            <Text style={styles.availableTitle}>
-                              AVAILABLE NOW
-                            </Text>
-                            <Ionicons
-                              name="location-sharp"
-                              size={22}
-                              color={colors.primary}
-                              accessibilityElementsHidden
-                              importantForAccessibility="no"
-                            />
+                      {loading ? (
+                        <Text style={styles.loadingText}>Loading...</Text>
+                      ) : availableRooms.length === 0 ? (
+                        <Text style={styles.noAvailableText}>
+                          No rooms available right now
+                        </Text>
+                      ) : (
+                        availableRooms.map((room) => (
+                          <View
+                            key={room.name}
+                            style={styles.availableItem}
+                            accessibilityLabel={`${room.name}, ${room.subtitle}`}
+                          >
+                            <Text style={styles.availableItemText}>{room.name}</Text>
+                            <View style={styles.availableRight}>
+                              <View
+                                style={[
+                                  styles.availableStatusDot,
+                                  {
+                                    backgroundColor:
+                                      room.status === "available"
+                                        ? colors.available
+                                        : colors.occupied,
+                                  },
+                                ]}
+                              />
+                              <Text style={styles.availableSubtitle}>{room.subtitle}</Text>
+                            </View>
                           </View>
+                        ))
+                      )}
+                    </LinearGradient>
+                  </View>
+                </View>
 
-                          {loading ? (
-                            <Text style={styles.loadingText}>Loading...</Text>
-                          ) : availableRooms.length === 0 ? (
-                            <Text style={styles.noAvailableText}>
-                              No rooms available right now
-                            </Text>
-                          ) : (
-                            favorites.map((fav: FavoriteItem) => {
-                              const status =
-                                roomStatuses[fav.name] ||
-                                fav.status ||
-                                "available";
-                              return (
-                                <View
-                                  key={fav.name}
-                                  style={styles.favItem}
-                                  accessibilityLabel={`${fav.name}, ${status}`}
-                                >
-                                  <Text style={styles.favItemText}>
-                                    {fav.name}
-                                  </Text>
-                                  <View style={styles.favRight}>
-                                    <View
-                                      style={[
-                                        styles.favstatusDot,
-                                        {
-                                          backgroundColor:
-                                            status === "available"
-                                              ? colors.available
-                                              : status === "occupied"
-                                                ? colors.occupied
-                                                : colors.offline,
-                                        },
-                                      ]}
-                                      accessibilityLabel={`Status ${status}`}
-                                    />
-                                    <Text style={styles.favNumber}>
-                                      {status.charAt(0).toUpperCase() +
-                                        status.slice(1)}
-                                    </Text>
-                                  </View>
-                                </View>
-                              </View>
-                            ))
-                          )}
-                        </LinearGradient>
-                      </View>
-                    </View>
-
-                  {/* Preferences (full width) */}
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate("Preferences" as never)}
-                    accessibilityRole="button"
-                    accessibilityLabel="Preferences"
-                    accessibilityHint="Opens the Preferences screen"
-                  >
-                    <View style={styles.roomCardContainer}>
-                      <View style={styles.preferencesLeft}>
-                        <Text style={styles.roomCardTextLeft}>PREFERENCES</Text>
-                      </View>
+                {/* WEB: Manage row */}
+                <View style={styles.cardShadow}>
+                  <View style={[styles.manageCard, { backgroundColor: colors.primary }]}>
+                    <View style={styles.manageHeader}>
+                      <Text style={styles.manageTitle}>MANAGE</Text>
                       <Feather
                         name="menu"
-                        size={25}
+                        size={22}
                         color={colors.white}
-                        style={styles.prefIcon}
                         accessibilityElementsHidden
                         importantForAccessibility="no"
                       />
                     </View>
+
+                    <View style={styles.manageRowWeb}>
+                      <TouchableOpacity
+                        style={styles.manageBtnWrap}
+                        onPress={() => goToPreferencesSection("Account")}
+                        activeOpacity={0.9}
+                      >
+                        <LinearGradient
+                          colors={["#F4F4F4", "#A1B5A8"]}
+                          style={styles.manageBtn}
+                        >
+                          <Text style={styles.manageBtnText} numberOfLines={1}>
+                            ACCOUNT
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.manageBtnWrap}
+                        onPress={() => goToPreferencesSection("Groups")}
+                        activeOpacity={0.9}
+                      >
+                        <LinearGradient
+                          colors={["#F4F4F4", "#A1B5A8"]}
+                          style={styles.manageBtn}
+                        >
+                          <Text style={styles.manageBtnText} numberOfLines={1}>
+                            GROUPS
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.manageBtnWrap}
+                        onPress={() => goToPreferencesSection("Notifications")}
+                        activeOpacity={0.9}
+                      >
+                        <LinearGradient
+                          colors={["#F4F4F4", "#A1B5A8"]}
+                          style={styles.manageBtn}
+                        >
+                          <Text style={styles.manageBtnText} numberOfLines={1}>
+                            NOTIFS
+                          </Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.manageBtnWrap}
+                        onPress={handleLogout}
+                        activeOpacity={0.9}
+                      >
+                        <View style={styles.logoutBtn}>
+                          <Text style={styles.logoutBtnText} numberOfLines={1}>
+                            LOG OUT
+                          </Text>
+                          <Feather
+                            name="log-out"
+                            size={20}
+                            color={colors.white}
+                            accessibilityElementsHidden
+                            importantForAccessibility="no"
+                          />
+                        </View>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
+
+                {/* Preferences (optional full width quick link) */}
+                <TouchableOpacity
+                  onPress={() => navigation.navigate("Preferences" as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Preferences"
+                  accessibilityHint="Opens the Preferences screen"
+                  activeOpacity={0.9}
+                >
+                  <View style={styles.roomCardContainer}>
+                    <View style={styles.preferencesLeft}>
+                      <Text style={styles.roomCardTextLeft}>PREFERENCES</Text>
+                    </View>
+                    <Feather
+                      name="menu"
+                      size={25}
+                      color={colors.white}
+                      style={styles.prefIcon}
+                      accessibilityElementsHidden
+                      importantForAccessibility="no"
+                    />
+                  </View>
+                </TouchableOpacity>
               </View>
             </ScrollView>
           </View>
@@ -544,7 +525,12 @@ export default function HomeScreen() {
         keyboardShouldPersistTaps="handled"
         accessibilityLabel="Home content"
       >
-        <View style={[styles.container, { width: contentWidthMobile, alignSelf: "center" }]}>
+        <View
+          style={[
+            styles.container,
+            { width: contentWidthMobile, alignSelf: "center" },
+          ]}
+        >
           {/* Header style setup */}
           <View style={styles.header} accessibilityLabel="Header">
             <Image
@@ -566,11 +552,16 @@ export default function HomeScreen() {
           {/* Favorites moved to the top but aligned with the rest of the cards */}
           <View style={styles.favoritesTopContainer}>
             <TouchableOpacity
-              onPress={() => !menuOpen && navigation.navigate("Favorites" as never)}
+              onPress={() =>
+                !menuOpen && navigation.navigate("Favorites" as never)
+              }
               activeOpacity={0.9}
             >
               <View style={styles.cardShadow}>
-                <LinearGradient colors={["#F4F4F4", "#A1B5A8"]} style={styles.favoritesCard}>
+                <LinearGradient
+                  colors={["#F4F4F4", "#A1B5A8"]}
+                  style={styles.favoritesCard}
+                >
                   {/* Header with title and heart icon */}
                   <View style={styles.favoritesHeader}>
                     <Text style={styles.favoritesTitle}>MY FAVORITES</Text>
@@ -580,32 +571,20 @@ export default function HomeScreen() {
                   {favorites.length === 0 ? (
                     <Text style={styles.emptyText}>No favorites added yet</Text>
                   ) : (
-                    favorites.map((fav: FavoriteItem) => {
-                      const status = roomStatuses[fav.name] || fav.status || "available";
-                      return (
-                        <View key={fav.name} style={styles.favItem}>
-                          <Text style={styles.favItemText}>{fav.name}</Text>
-                          <View style={styles.favRight}>
-                            <View
-                              style={[
-                                styles.favstatusDot,
-                                {
-                                  backgroundColor:
-                                    status === "available"
-                                      ? colors.available
-                                      : status === "occupied"
-                                      ? colors.occupied
-                                      : colors.offline,
-                                },
-                              ]}
-                            />
-                            <Text style={styles.favNumber}>
-                              {status.charAt(0).toUpperCase() + status.slice(1)}
-                            </Text>
-                          </View>
+                    favorites.map((fav) => (
+                      <View key={fav.name} style={styles.favItem}>
+                        <Text style={styles.favItemText}>{fav.name}</Text>
+                        <View style={styles.favRight}>
+                          <View
+                            style={[
+                              styles.favstatusDot,
+                              { backgroundColor: colors.available },
+                            ]}
+                          />
+                          <Text style={styles.favNumber}>Saved</Text>
                         </View>
-                      );
-                    })
+                      </View>
+                    ))
                   )}
                 </LinearGradient>
               </View>
@@ -614,9 +593,7 @@ export default function HomeScreen() {
 
           {/* Find a Room Banner style setup */}
           <TouchableOpacity
-            onPress={() =>
-              !menuOpen && navigation.navigate("FindRoom" as never)
-            }
+            onPress={() => !menuOpen && navigation.navigate("FindRoom" as never)}
             accessibilityRole="button"
             accessibilityLabel="Find a room"
             accessibilityHint="Opens the Find a Room screen"
@@ -637,9 +614,7 @@ export default function HomeScreen() {
 
           {/* Campus Map style setup*/}
           <TouchableOpacity
-            onPress={() =>
-              !menuOpen && navigation.navigate("CampusMap" as never)
-            }
+            onPress={() => !menuOpen && navigation.navigate("CampusMap" as never)}
             accessibilityRole="button"
             accessibilityLabel="Campus map"
             accessibilityHint="Opens the Campus Map screen"
@@ -682,7 +657,9 @@ export default function HomeScreen() {
                     Loading...
                   </Text>
                 ) : availableRooms.length === 0 ? (
-                  <Text style={styles.noAvailableText}>No rooms available right now</Text>
+                  <Text style={styles.noAvailableText}>
+                    No rooms available right now
+                  </Text>
                 ) : (
                   availableRooms.map((room) => (
                     <View
@@ -697,12 +674,11 @@ export default function HomeScreen() {
                             styles.availableStatusDot,
                             {
                               backgroundColor:
-                                room.status === "available" ? colors.available : colors.occupied,
+                                room.status === "available"
+                                  ? colors.available
+                                  : colors.occupied,
                             },
                           ]}
-                          accessibilityLabel={`Status ${
-                            room.status === "available" ? "available" : "occupied"
-                          }`}
                         />
                         <Text style={styles.availableSubtitle}>{room.subtitle}</Text>
                       </View>
@@ -712,79 +688,78 @@ export default function HomeScreen() {
               </LinearGradient>
             </View>
 
-            <TouchableOpacity
-              onPress={() =>
-                !menuOpen && navigation.navigate("Favorites" as never)
-              }
-              activeOpacity={0.9}
-              accessibilityRole="button"
-              accessibilityLabel="My favorites"
-              accessibilityHint="Opens the Favorites screen"
-            >
-              <View style={styles.cardShadow}>
-                <LinearGradient
-                  colors={["#F4F4F4", "#A1B5A8"]}
-                  style={styles.favoritesCard}
-                >
-                  {/* Header with title and heart icon */}
-                  <View style={styles.favoritesHeader}>
-                    <Text style={styles.favoritesTitle}>MY FAVORITES</Text>
-                    <Feather
-                      name="heart"
-                      size={22}
-                      color={colors.primary}
-                      accessibilityElementsHidden
-                      importantForAccessibility="no"
-                    />
-                  </View>
+            {/* Manage quick buttons (mobile) */}
+            <View style={styles.cardShadow}>
+              <View style={[styles.manageCard, { backgroundColor: colors.primary }]}>
+                <View style={styles.manageHeader}>
+                  <Text style={styles.manageTitle}>MANAGE</Text>
+                  <Feather name="menu" size={22} color={colors.white} />
+                </View>
 
-                  {favorites.length === 0 ? (
-                    <Text style={styles.emptyText}>No favorites added yet</Text>
-                  ) : (
-                    favorites.map((fav: FavoriteItem) => {
-                      const status =
-                        roomStatuses[fav.name] || fav.status || "available";
-                      return (
-                        <View
-                          key={fav.name}
-                          style={styles.favItem}
-                          accessibilityLabel={`${fav.name}, ${status}`}
-                        >
-                          <Text style={styles.favItemText}>{fav.name}</Text>
-                          <View style={styles.favRight}>
-                            <View
-                              style={[
-                                styles.favstatusDot,
-                                {
-                                  backgroundColor:
-                                    status === "available"
-                                      ? colors.available
-                                      : status === "occupied"
-                                        ? colors.occupied
-                                        : colors.offline,
-                                },
-                              ]}
-                              accessibilityLabel={`Status ${status}`}
-                            />
-                            <Text style={styles.favNumber}>
-                              {status.charAt(0).toUpperCase() + status.slice(1)}
-                            </Text>
-                          </View>
-                        </View>
-                      );
-                    })
-                  )}
-                </LinearGradient>
+                {/* Row 1: ACCOUNT + GROUPS */}
+                <View style={styles.manageRowMobile}>
+                  <TouchableOpacity
+                    style={styles.manageBtnWrap}
+                    onPress={() => !menuOpen && goToPreferencesSection("Account")}
+                    activeOpacity={0.9}
+                  >
+                    <LinearGradient colors={["#F4F4F4", "#A1B5A8"]} style={styles.manageBtn}>
+                      <Text style={styles.manageBtnText} numberOfLines={1}>
+                        ACCOUNT
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.manageBtnWrap}
+                    onPress={() => !menuOpen && goToPreferencesSection("Groups")}
+                    activeOpacity={0.9}
+                  >
+                    <LinearGradient colors={["#F4F4F4", "#A1B5A8"]} style={styles.manageBtn}>
+                      <Text style={styles.manageBtnText} numberOfLines={1}>
+                        GROUPS
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Row 2: NOTIFICATIONS + LOG OUT */}
+                <View style={styles.manageRowMobile}>
+                  <TouchableOpacity
+                    style={styles.manageBtnWrap}
+                    onPress={() => !menuOpen && goToPreferencesSection("Notifications")}
+                    activeOpacity={0.9}
+                  >
+                    <LinearGradient colors={["#F4F4F4", "#A1B5A8"]} style={styles.manageBtn}>
+                      <Text style={styles.manageBtnText} numberOfLines={1}>
+                        NOTIFS
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.manageBtnWrap}
+                    onPress={() => !menuOpen && handleLogout()}
+                    activeOpacity={0.9}
+                  >
+                    <View style={styles.logoutBtn}>
+                      <Text style={styles.logoutBtnText} numberOfLines={1}>
+                        LOG OUT
+                      </Text>
+                      <Feather name="log-out" size={20} color={colors.white} />
+                    </View>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </TouchableOpacity>
+            </View>
 
+            {/* Preferences quick link */}
             <TouchableOpacity
-              onPress={() =>
-                !menuOpen && navigation.navigate("Preferences" as never)
-              }
+              onPress={() => !menuOpen && navigation.navigate("Preferences" as never)}
               accessibilityRole="button"
               accessibilityLabel="Preferences"
               accessibilityHint="Opens the Preferences screen"
+              activeOpacity={0.9}
             >
               <View style={styles.roomCardContainer}>
                 <View style={styles.preferencesLeft}>
@@ -799,7 +774,7 @@ export default function HomeScreen() {
                   importantForAccessibility="no"
                 />
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -864,532 +839,488 @@ export default function HomeScreen() {
 
 function createStyles(c: ThemeColors) {
   return StyleSheet.create({
-  // Web styles
-  webPage: {
-    flex: 1,
-    flexDirection: "column",
-    backgroundColor: c.gray100,
-  },
+    // Web styles
+    webPage: {
+      flex: 1,
+      flexDirection: "column",
+      backgroundColor: c.gray100,
+    },
 
-  webTopBar: {
-    height: WEB_TOPBAR_HEIGHT,
-    backgroundColor: c.darkAccent,
-    width: "100%",
-    justifyContent: "center",
-    paddingLeft: 20,
-    // shadow
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    // android
-    elevation: 10,
-    zIndex: 10,
-  },
+    webTopBar: {
+      height: WEB_TOPBAR_HEIGHT,
+      backgroundColor: c.darkAccent,
+      width: "100%",
+      justifyContent: "center",
+      paddingLeft: 20,
+      // shadow
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      // android
+      elevation: 10,
+      zIndex: 10,
+    },
 
-  webTopBarLogo: {
-    height: 130,
-    width: 400,
-  },
+    webTopBarLogo: {
+      height: 130,
+      width: 400,
+    },
 
-  webBody: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: c.gray100,
-  },
+    webBody: {
+      flex: 1,
+      flexDirection: "row",
+      backgroundColor: c.gray100,
+    },
 
-  webSidebar: {
-    width: WEB_SIDEBAR_WIDTH,
-    backgroundColor: c.primary,
-    paddingTop: 0,
-    paddingHorizontal: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 6, height: 0 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    // android
-    elevation: 8,
-    zIndex: 5,
-  },
+    webSidebar: {
+      width: WEB_SIDEBAR_WIDTH,
+      backgroundColor: c.primary,
+      paddingTop: 0,
+      paddingHorizontal: 14,
+      shadowColor: "#000",
+      shadowOffset: { width: 6, height: 0 },
+      shadowOpacity: 0.22,
+      shadowRadius: 10,
+      // android
+      elevation: 8,
+      zIndex: 5,
+    },
 
-  webSidebarLinks: { marginTop: 6 },
+    webSidebarLinks: { marginTop: 6 },
 
-  webNavItem: {
-    paddingVertical: WEB_NAV_ITEM_PADDING_V,
-    paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
-    borderRadius: 2,
-    marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
-  },
-  webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
-  webNavText: {
-    color: c.white,
-    fontFamily: FONT_HEADING,
-    fontSize: FONT_SIZE_NAV,
-    letterSpacing: 0.8,
-    textShadowColor: "rgba(0, 0, 0, 0.1)",
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 8,
-  },
-  webNavTextSelected: { color: c.white },
+    webNavItem: {
+      paddingVertical: WEB_NAV_ITEM_PADDING_V,
+      paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
+      borderRadius: 2,
+      marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
+    },
+    webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
+    webNavText: {
+      color: c.white,
+      fontFamily: FONT_HEADING,
+      fontSize: FONT_SIZE_NAV,
+      letterSpacing: 0.8,
+      textShadowColor: "rgba(0, 0, 0, 0.1)",
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 8,
+    },
+    webNavTextSelected: { color: c.white },
 
-  webMain: { flex: 1, backgroundColor: c.gray100 },
+    webMain: { flex: 1, backgroundColor: c.gray100, },
 
-  webContentWrap: { paddingTop: WEB_CONTENT_PADDING_TOP, paddingBottom: WEB_CONTENT_PADDING_BOTTOM },
+    webContentWrap: {
+      paddingTop: WEB_CONTENT_PADDING_TOP,
+      paddingBottom: WEB_CONTENT_PADDING_BOTTOM,
+    },
 
-  webWelcomeWrap: { paddingHorizontal: SPACE_LG, marginBottom: 14, marginTop: 15 },
-  webWelcomeText: {
-    fontSize: FONT_SIZE_TITLE_LARGE + 8,
-    fontFamily: FONT_HEADING,
-    color: c.primary,
-  },
+    webWelcomeWrap: {
+      paddingHorizontal: SPACE_LG,
+      marginBottom: 14,
+      marginTop: 15,
+    },
+    webWelcomeText: {
+      fontSize: FONT_SIZE_TITLE_LARGE + 8,
+      fontFamily: FONT_HEADING,
+      color: c.primary,
+    },
 
-  // Two-column web rows
-  webTwoColRow: {
-    flexDirection: "row",
-    gap: 20,
-    paddingHorizontal: 12,
-    marginBottom: 16,
-    alignItems: "flex-start",
-  },
-  webTwoColItem: { flex: 1 },
+    // Two-column web rows
+    webTwoColRow: {
+      flexDirection: "row",
+      gap: 20,
+      paddingHorizontal: 12,
+      marginBottom: 16,
+      alignItems: "flex-start",
+    },
+    webTwoColItem: { flex: 1 },
 
-  // NEW: bottom row (Available Now + Manage) side-by-side
-  webBottomTwoColRow: {
-    flexDirection: "row",
-    gap: 20,
-    paddingHorizontal: 12,
-    marginBottom: 0,
-    alignItems: "stretch",
-  },
-  webBottomTwoColItem: {
-    flex: 1,
-    minWidth: 0,
-  },
+    // Web image blocks
+    bannerContainerWeb: {
+      marginVertical: 12,
+      paddingHorizontal: 0,
+      position: "relative",
+    },
+    bannerImageWeb: { width: "100%", height: 230, borderRadius: 0 },
+    bannerTextWeb: {
+      position: "absolute",
+      paddingHorizontal: SPACE_LG,
+      bottom: 14,
+      left: 12,
+      fontSize: FONT_SIZE_TITLE_LARGE + 6,
+      fontFamily: FONT_HEADING,
+      color: c.white,
+      textShadowColor: "rgba(0, 0, 0, 200)",
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 15,
+    },
 
-  // Web image blocks
-  bannerContainerWeb: {
-    marginVertical: 12,
-    paddingHorizontal: 0,
-    position: "relative",
-  },
-  bannerImageWeb: { width: "100%", height: 230, borderRadius: 0 },
-  bannerTextWeb: {
-    position: "absolute",
-    paddingHorizontal: SPACE_LG,
-    bottom: 14,
-    left: 12,
-    fontSize: FONT_SIZE_TITLE_LARGE + 6,
-    fontFamily: FONT_HEADING,
-    color: c.white,
-    textShadowColor: "rgba(0, 0, 0, 200)",
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 15,
-  },
+    mapContainerWeb: {
+      marginVertical: 12,
+      paddingHorizontal: 0,
+      position: "relative",
+    },
+    mapImageWeb: { width: "100%", height: 230, borderRadius: 0 },
+    mapTextWeb: {
+      position: "absolute",
+      paddingHorizontal: SPACE_LG,
+      bottom: 14,
+      left: 12,
+      fontSize: FONT_SIZE_TITLE_LARGE + 6,
+      fontFamily: FONT_HEADING,
+      color: c.white,
+      textShadowColor: "rgba(0, 0, 0, 200)",
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 10,
+    },
 
-  mapContainerWeb: {
-    marginVertical: 12,
-    paddingHorizontal: 0,
-    position: "relative",
-  },
-  mapImageWeb: { width: "100%", height: 230, borderRadius: 0 },
-  mapTextWeb: {
-    position: "absolute",
-    paddingHorizontal: SPACE_LG,
-    bottom: 14,
-    left: 12,
-    fontSize: FONT_SIZE_TITLE_LARGE + 6,
-    fontFamily: FONT_HEADING,
-    color: c.white,
-    textShadowColor: "rgba(0, 0, 0, 200)",
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 10,
-  },
+    // Mobile styles
+    container: { flex: 1, backgroundColor: c.gray100 },
 
-  cardsContainerWeb: { marginVertical: 16, paddingHorizontal: 0 },
+    header: {
+      flexDirection: "row",
+      backgroundColor: c.primary,
+      padding: 30,
+      paddingTop: 60,
+      alignItems: "center",
+      justifyContent: "flex-start",
+      width: "100%",
+    },
+    logo: { width: 300, height: 80, marginRight: 20 },
 
-  // Mobile styles (unchanged)
-  container: { flex: 1, backgroundColor: c.gray100 },
+    welcome: {
+      top: 15,
+      fontSize: FONT_SIZE_TITLE_LARGE - 8,
+      fontFamily: FONT_HEADING,
+      color: c.primary,
+      position: "relative",
+      paddingHorizontal: SPACE_MD,
+    },
 
-  header: {
-    flexDirection: "row",
-    backgroundColor: c.primary,
-    padding: 30,
-    paddingTop: 60,
-    alignItems: "center",
-    justifyContent: "flex-start",
-    width: "100%",
-  },
-  logo: { width: 300, height: 80, marginRight: 20 },
+    favoritesTopContainer: {
+      marginVertical: 16,
+      paddingHorizontal: 20,
+      top: 50,
+    },
 
-  welcome: {
-    top: 15,
-    fontSize: FONT_SIZE_TITLE_LARGE - 8,
-    fontFamily: FONT_HEADING,
-    color: c.primary,
-    position: "relative",
-    paddingHorizontal: SPACE_MD,
-  },
+    bannerContainer: {
+      marginVertical: 12,
+      paddingHorizontal: 20,
+      top: 30,
+      bottom: 15,
+      position: "relative",
+    },
+    bannerImage: { width: "100%", height: 200, borderRadius: 0 },
+    bannerText: {
+      position: "absolute",
+      paddingHorizontal: SPACE_LG,
+      bottom: 12,
+      left: 12,
+      fontSize: FONT_SIZE_TITLE_LARGE + 2,
+      fontFamily: FONT_HEADING,
+      color: c.gray100,
+      textShadowColor: "rgba(0, 0, 0, 200)",
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 15,
+    },
 
-  favoritesTopContainer: {
-    marginVertical: 16,
-    paddingHorizontal: 20,
-    top: 40,
-  },
+    imageShadow: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.6,
+      shadowRadius: 6,
+      elevation: 8,
+      borderRadius: 10,
+    },
 
-  bannerContainer: {
-    marginVertical: 12,
-    paddingHorizontal: 20,
-    top: 40,
-    bottom: 15,
-    position: "relative",
-  },
-  bannerImage: { width: "100%", height: 200, borderRadius: 0 },
-  bannerText: {
-    position: "absolute",
-    paddingHorizontal: SPACE_LG,
-    bottom: 12,
-    left: 12,
-    fontSize: FONT_SIZE_TITLE_LARGE + 2,
-    fontFamily: FONT_HEADING,
-    color: c.gray100,
-    textShadowColor: "rgba(0, 0, 0, 200)",
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 15,
-  },
+    mapContainer: {
+      marginVertical: 16,
+      paddingHorizontal: 20,
+      top: 40,
+      position: "relative",
+    },
+    mapImage: { width: "100%", height: 200, borderRadius: 0 },
+    mapText: {
+      position: "absolute",
+      paddingHorizontal: SPACE_LG,
+      bottom: 12,
+      left: 12,
+      fontSize: FONT_SIZE_TITLE_LARGE + 2,
+      fontFamily: FONT_HEADING,
+      color: c.white,
+      textShadowColor: "rgba(0, 0, 0, 200)",
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 10,
+    },
 
-  imageShadow: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 6,
-    elevation: 8,
-    borderRadius: 10,
-  },
+    cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40 },
 
-  mapContainer: {
-    marginVertical: 16,
-    paddingHorizontal: 20,
-    top: 40,
-    position: "relative",
-  },
-  mapImage: { width: "100%", height: 200, borderRadius: 0 },
-  mapText: {
-    position: "absolute",
-    paddingHorizontal: SPACE_LG,
-    bottom: 12,
-    left: 12,
-    fontSize: FONT_SIZE_TITLE_LARGE + 2,
-    fontFamily: FONT_HEADING,
-    color: c.white,
-    textShadowColor: "rgba(0, 0, 0, 200)",
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 10,
-  },
+    roomCardContainer: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: CARD_PADDING,
+      backgroundColor: c.primary,
+      borderRadius: CARD_BORDER_RADIUS,
+      marginBottom: CARD_MARGIN_BOTTOM - 5,
+      shadowColor: "#000",
+      shadowOpacity: 0.8,
+      shadowRadius: 6,
+      elevation: 2,
+      shadowOffset: { width: 0, height: 5 },
+    },
+    roomCardTextLeft: {
+      fontSize: FONT_SIZE_SECTION,
+      fontFamily: FONT_HEADING,
+      color: c.white,
+    },
 
-  cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40 },
+    availableNowCard: {
+      borderRadius: CARD_BORDER_RADIUS,
+      padding: CARD_PADDING,
+      marginBottom: 0,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 5 },
+      shadowOpacity: 0.6,
+      shadowRadius: 12,
+      elevation: 5,
+    },
 
-  roomCardContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: CARD_PADDING,
-    backgroundColor: c.primary,
-    borderRadius: CARD_BORDER_RADIUS,
-    marginBottom: CARD_MARGIN_BOTTOM - 5,
-    shadowColor: "#000",
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
-    elevation: 2,
-    shadowOffset: { width: 0, height: 5 },
-  },
-  roomCardTextLeft: {
-    fontSize: FONT_SIZE_SECTION,
-    fontFamily: FONT_HEADING,
-    color: c.white,
-  },
+    availableHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    availableTitle: {
+      color: c.primary,
+      fontFamily: FONT_HEADING,
+      fontSize: FONT_SIZE_SECTION,
+      letterSpacing: 0.5,
+    },
 
-  availableNowCard: {
-    borderRadius: CARD_BORDER_RADIUS,
-    padding: CARD_PADDING,
-    marginBottom: 0,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.6,
-    shadowRadius: 12,
-    elevation: 5,
-  },
+    availableItem: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      backgroundColor: c.primary,
+      borderRadius: 0,
+      padding: 18,
+      marginBottom: 6,
+    },
 
-  // NEW: web override to remove the big bottom gap
-  availableNowCardWeb: {
-    marginBottom: 0,
-  },
+    availableItemText: {
+      color: c.white,
+      fontFamily: FONT_HEADING,
+      fontSize: FONT_SIZE_CARD_TITLE,
+    },
+    availableRight: { flexDirection: "row", alignItems: "center", gap: 12 },
+    availableStatusDot: { width: 11, height: 11, borderRadius: 5.5 },
+    availableSubtitle: {
+      color: c.white,
+      fontSize: FONT_SIZE_CAPTION,
+      fontFamily: FONT_BODY,
+    },
 
-  availableHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  availableTitle: {
-    color: c.primary,
-    fontFamily: FONT_HEADING,
-    fontSize: FONT_SIZE_SECTION,
-    letterSpacing: 0.5,
-  },
+    favoritesCard: {
+      backgroundColor: c.marigold,
+      padding: CARD_PADDING,
+      borderRadius: CARD_BORDER_RADIUS,
+      marginTop: 0,
+      marginBottom: 0,
+    },
+    favoritesHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    favoritesTitle: {
+      fontSize: FONT_SIZE_SECTION,
+      fontFamily: FONT_HEADING,
+      color: c.primary,
+    },
 
-  availableItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: c.primary,
-    borderRadius: 0,
-    padding: 18,
-    marginBottom: 6,
-  },
+    emptyText: {
+      color: c.primary,
+      fontSize: FONT_SIZE_BODY,
+      fontFamily: FONT_BODY,
+      textAlign: "center",
+      marginVertical: 10,
+    },
 
-  availableItemText: {
-    color: c.white,
-    fontFamily: FONT_HEADING,
-    fontSize: FONT_SIZE_CARD_TITLE,
-  },
-  availableRight: { flexDirection: "row", alignItems: "center", gap: 12 },
-  availableStatusDot: { width: 11, height: 11, borderRadius: 5.5 },
-  availableSubtitle: { color: c.white, fontSize: FONT_SIZE_CAPTION, fontFamily: FONT_BODY },
+    noAvailableText: {
+      color: c.primary,
+      fontSize: FONT_SIZE_BODY + 2,
+      fontFamily: FONT_BODY,
+      textAlign: "center",
+      marginVertical: 10,
+    },
 
-  favoritesCard: {
-    backgroundColor: c.marigold,
-    padding: CARD_PADDING,
-    borderRadius: CARD_BORDER_RADIUS,
-    marginTop: 0,
-    marginBottom: 0,
-  },
-  favoritesHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  favoritesTitle: {
-    fontSize: FONT_SIZE_SECTION,
-    fontFamily: FONT_HEADING,
-    color: c.primary,
-  },
+    favItem: {
+      backgroundColor: c.primary,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingVertical: 18,
+      paddingHorizontal: 18,
+      marginVertical: 3,
+    },
+    favItemText: {
+      color: c.white,
+      fontFamily: FONT_HEADING,
+      fontSize: FONT_SIZE_CARD_TITLE,
+    },
+    favRight: { flexDirection: "row", alignItems: "center", gap: 12 },
+    favstatusDot: { width: 11, height: 11, borderRadius: 5.5 },
+    favNumber: { color: c.white, fontSize: FONT_SIZE_CAPTION, fontFamily: FONT_BODY },
 
-  emptyText: {
-    color: c.primary,
-    fontSize: FONT_SIZE_BODY,
-    fontFamily: FONT_BODY,
-    textAlign: "center",
-    marginVertical: 10,
-  },
+    preferencesLeft: {
+      marginTop: 0,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      flex: 1,
+    },
+    prefIcon: { marginTop: 2, marginRight: 12 },
 
-  noAvailableText: {
-    color: c.primary,
-    fontSize: FONT_SIZE_BODY + 2,
-    fontFamily: FONT_BODY,
-    textAlign: "center",
-    marginVertical: 10,
-  },
+    cardShadow: {
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.8,
+      shadowRadius: 5,
+      elevation: 8,
+      borderRadius: CARD_BORDER_RADIUS,
+      marginBottom: SCROLL_PADDING_BOTTOM,
+    },
 
-  favItem: {
-    backgroundColor: c.primary,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 18,
-    paddingHorizontal: 18,
-    marginVertical: 3,
-  },
-  favItemText: {
-    color: c.white,
-    fontFamily: FONT_HEADING,
-    fontSize: FONT_SIZE_CARD_TITLE,
-  },
-  favRight: { flexDirection: "row", alignItems: "center", gap: 12 },
-  favstatusDot: { width: 11, height: 11, borderRadius: 5.5 },
-  favNumber: { color: c.white, fontSize: FONT_SIZE_CAPTION, fontFamily: FONT_BODY },
+    loadingText: {
+      color: c.primary,
+      fontFamily: FONT_BODY,
+      textAlign: "center",
+      marginVertical: 10,
+    },
 
-  preferencesLeft: {
-    marginTop: 0,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    flex: 1,
-  },
-  prefIcon: { marginTop: 2, marginRight: 12 },
+    // Manage card
+    manageCard: {
+      borderRadius: CARD_BORDER_RADIUS,
+      padding: 20,
+      marginTop: 0,
+      marginBottom: 0,
+    },
+    manageHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    manageTitle: {
+      color: c.white,
+      fontFamily: FONT_HEADING,
+      fontSize: 27,
+      letterSpacing: 0.5,
+    },
 
-  logoutCardContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: colors.primary,
-    borderRadius: 0,
-    marginTop: 10,
-    marginBottom: 7,
-    shadowColor: "#000",
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
-    elevation: 2,
-    shadowOffset: { width: 0, height: 5 },
-  },
-  logoutText: {
-    fontSize: 27,
-    fontFamily: "BebasNeue-Regular",
-    color: colors.white,
-  },
+    // WEB manage row
+    manageRowWeb: {
+      flexDirection: "row",
+      gap: 14,
+      alignItems: "stretch",
+    },
 
-  cardShadow: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.8,
-    shadowRadius: 5,
-    elevation: 8,
-    borderRadius: CARD_BORDER_RADIUS,
-    marginBottom: SCROLL_PADDING_BOTTOM,
-  },
+    // MOBILE manage rows
+    manageRowMobile: {
+      flexDirection: "row",
+      gap: 10,
+      marginBottom: 12,
+    },
 
-  loadingText: {
-    color: c.white,
-    fontFamily: FONT_BODY,
-    textAlign: "center",
-    marginVertical: 10,
-  },
+    manageBtnWrap: { flex: 1 },
 
-  preferencesQuickCard: {
-    borderRadius: 0,
-    padding: 20,
-    marginTop: 12,
-    marginBottom: 20,
-  },
+    manageBtn: {
+      width: "100%",
+      paddingVertical: 14,
+      paddingHorizontal: 14,
+      borderRadius: 6,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    manageBtnText: {
+      color: c.primary,
+      fontFamily: FONT_HEADING,
+      fontSize: 22,
+      letterSpacing: 0.4,
+    },
 
-  // NEW: web override so it lines up tight in the 2-col row
-  preferencesQuickCardWeb: {
-    marginTop: 0,
-    marginBottom: 0,
-  },
+    logoutBtn: {
+      width: "100%",
+      paddingVertical: 14,
+      paddingHorizontal: 18,
+      borderRadius: 6,
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      backgroundColor: "#D9534F",
+    },
+    logoutBtnText: {
+      color: c.white,
+      fontFamily: FONT_HEADING,
+      fontSize: 22,
+      letterSpacing: 0.4,
+    },
 
-  preferencesQuickHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  preferencesQuickTitle: {
-    color: colors.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 27,
-    letterSpacing: 0.5,
-  },
-
-  // single-row Manage buttons (WEB ONLY, used only in web render branch)
-  preferencesQuickRowWeb: {
-    flexDirection: "row",
-    gap: 14,
-    alignItems: "stretch",
-  },
-
-  // Existing mobile rows (still used ONLY by mobile JSX)
-  preferencesQuickRowTwo: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 12,
-  },
-  preferencesQuickBottomRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
-
-  preferencesQuickButtonWrap: {
-    flex: 1,
-  },
-
-  // Button is the gradient container now
-  preferencesQuickButton: {
-    width: "100%",
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  preferencesQuickButtonText: {
-    color: colors.primary,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 22,
-    letterSpacing: 0.4,
-  },
-
-  // Light red logout button (same size as others)
-  preferencesQuickLogoutLightRed: {
-    width: "100%",
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    borderRadius: 6,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#D9534F",
-  },
-  preferencesQuickLogoutText: {
-    color: colors.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 23,
-    letterSpacing: 0.4,
-  },
-
-  // MOBILE floating menu (unchanged)
-  menuButtonContainer: {
-    position: "absolute",
-    top: 100,
-    right: 20,
-    zIndex: 100,
-    pointerEvents: "box-none",
-  },
-  menuButton: {
-    backgroundColor: c.primary,
-    padding: 12,
-    borderRadius: 30,
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
-  menuOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-  },
-  overlayBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0,0,0,0.3)",
-  },
-  menuContent: {
-    backgroundColor: c.white,
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    width: "100%",
-  },
-  menuItemContainer: { paddingVertical: 12, paddingHorizontal: SPACE_MD },
-  menuItemText: {
-    fontSize: FONT_SIZE_CARD_TITLE,
-    fontFamily: FONT_HEADING,
-    color: c.primary,
-  },
-});
+    // MOBILE floating menu (unchanged)
+    menuButtonContainer: {
+      position: "absolute",
+      top: 100,
+      right: 20,
+      zIndex: 100,
+      pointerEvents: "box-none",
+    },
+    menuButton: {
+      backgroundColor: c.primary,
+      padding: 12,
+      borderRadius: 30,
+      elevation: 5,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 5,
+    },
+    menuOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 1000,
+    },
+    overlayBackground: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.3)",
+    },
+    menuContent: {
+      backgroundColor: c.white,
+      borderRadius: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      elevation: 10,
+      shadowColor: "#000",
+      shadowOpacity: 0.2,
+      shadowRadius: 10,
+      width: "100%",
+    },
+    menuItemContainer: { paddingVertical: 12, paddingHorizontal: SPACE_MD },
+    menuItemText: {
+      fontSize: FONT_SIZE_CARD_TITLE,
+      fontFamily: FONT_HEADING,
+      color: c.primary,
+    },
+  });
 }
