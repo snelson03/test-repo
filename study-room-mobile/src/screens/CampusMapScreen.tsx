@@ -1,6 +1,6 @@
-// Campus Map screen file
 // This screen shows the campus map that includes zoom and pins at the three selected buildings
 // implements auto zoom when a pin is pressed and pulsing animation on selected pin
+// added color coded buildings and  key inside map 
 
 import React, { useRef, useState, useMemo } from "react";
 import {
@@ -47,6 +47,7 @@ type BuildingWithPin = {
   image: any;
   pinX: number;
   pinY: number;
+  pinColor: string;
 };
 
 export default function CampusMapScreen() {
@@ -56,7 +57,10 @@ export default function CampusMapScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const scrollViewMainRef = useRef<ScrollView | null>(null);
-  const mapScrollRef = useRef<ScrollView | null>(null);
+
+  // nested scroll
+  const mapScrollXRef = useRef<ScrollView | null>(null);
+  const mapScrollYRef = useRef<ScrollView | null>(null);
 
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
@@ -82,6 +86,15 @@ export default function CampusMapScreen() {
     height: 0,
   });
 
+  // Measure the map viewport width for IOS
+  const [viewportWidth, setViewportWidth] = useState<number>(0);
+
+  // Cross-platform zoom state (works on web + android + ios)
+  const [zoom, setZoom] = useState<number>(1);
+
+  // Show/hide the key 
+  const [showLegend, setShowLegend] = useState<boolean>(true);
+
   const startPulse = () => {
     pulseAnim.setValue(0);
     Animated.loop(
@@ -101,6 +114,7 @@ export default function CampusMapScreen() {
       image: require("../assets/images/arc.png"),
       pinX: 0.135,
       pinY: 0.29,
+      pinColor: "#E53935", // red
     },
     {
       id: "stocker",
@@ -109,6 +123,7 @@ export default function CampusMapScreen() {
       image: require("../assets/images/stocker.png"),
       pinX: 0.087,
       pinY: 0.325,
+      pinColor: "#FB8C00", // orange
     },
     {
       id: "alden",
@@ -117,19 +132,39 @@ export default function CampusMapScreen() {
       image: require("../assets/images/alden.png"),
       pinX: 0.483,
       pinY: 0.455,
+      pinColor: "#1E88E5", // blue
     },
   ];
 
-  // web gets a taller map; mobile stays ~300
-  const mapHeight = isWide ? 930 : 300;
+  const buildingById = useMemo(() => {
+    const m: Record<string, BuildingWithPin> = {};
+    buildings.forEach((b) => (m[b.id] = b));
+    return m;
+  }, []);
+
+  // taller map for web
+  const mapHeight = isWide ? (isWeb ? 650 : 930) : 300;
+
+
+  const clamp = (v: number, min: number, max: number) =>
+    Math.max(min, Math.min(max, v));
+
+  const setZoomSafe = (next: number) => setZoom(clamp(next, 1, 3));
+
+  // Base sizing for zoom content
+  const baseWidth = viewportWidth || mapSize.width;
+  const baseHeight = mapHeight;
 
   // compute pixel locations of pins
+  const contentWidth = baseWidth * zoom;
+  const contentHeight = baseHeight * zoom;
+
   const pinPositions: Record<string, { x: number; y: number }> = {};
-  if (mapSize.width > 0 && mapSize.height > 0) {
+  if (baseWidth > 0 && baseHeight > 0) {
     buildings.forEach((b) => {
       pinPositions[b.id] = {
-        x: mapSize.width * b.pinX,
-        y: mapSize.height * b.pinY,
+        x: baseWidth * b.pinX * zoom,
+        y: baseHeight * b.pinY * zoom,
       };
     });
   }
@@ -184,6 +219,12 @@ export default function CampusMapScreen() {
   const handleSelectBuilding = (buildingId: string) => {
     setSelectedBuildingId(buildingId);
     startPulse();
+
+    // If map isn't measured yet, delay the zoom-to so pinPositions is ready
+    if (baseWidth <= 0 || baseHeight <= 0) {
+      setTimeout(() => zoomToBuilding(buildingId), 0);
+      return;
+    }
     zoomToBuilding(buildingId);
   };
 
@@ -191,6 +232,13 @@ export default function CampusMapScreen() {
     const { width: w, height: h } = e.nativeEvent.layout;
     setMapSize({ width: w, height: h });
   };
+
+  useEffect(() => {
+    // When zoom changes, keep selected building centered 
+    if (selectedBuildingId) {
+      setTimeout(() => zoomToBuilding(selectedBuildingId), 0);
+    }
+  }, [zoom]);
 
   const pagePadding = isWide ? 36 : 0;
 
@@ -201,7 +249,7 @@ export default function CampusMapScreen() {
 
   const framePad = isWide ? 10 : 18;
 
-  // two-column sizing (map bigger than list)
+  // two-column sizing 
   const leftColFlex = isWide ? 2.2 : undefined;
   const rightColFlex = isWide ? 1 : undefined;
 
@@ -232,12 +280,7 @@ export default function CampusMapScreen() {
         >
           <Ionicons name="arrow-back" size={28} color={colors.primary} />
         </TouchableOpacity>
-        <Text
-          style={[
-            styles.title,
-            isWide && { flex: 1, paddingHorizontal: 650 },
-          ]}
-        >
+        <Text style={[styles.title, isWide && styles.titleWide]}>
           CAMPUS MAP
         </Text>
       </View>
@@ -269,25 +312,145 @@ export default function CampusMapScreen() {
                     width: "100%",
                   },
                 ]}
+                onLayout={(e) => setViewportWidth(e.nativeEvent.layout.width)}
               >
-                <ScrollView
-                  ref={mapScrollRef}
-                  style={{ width: "100%" }}
-                  contentContainerStyle={styles.zoomContent}
-                  maximumZoomScale={3}
-                  minimumZoomScale={1}
-                  centerContent
-                  bounces={false}
-                >
-                  <View
-                    style={[styles.mapInner, { height: mapHeight }]}
-                    onLayout={handleMapLayout}
+                {/* Zoom controls (web + mobile) */}
+                <View style={styles.zoomControls}>
+                  <TouchableOpacity
+                    style={styles.zoomBtn}
+                    onPress={() => setZoomSafe(zoom + 0.25)}
+                    activeOpacity={0.85}
                   >
-                    <Image
-                      source={require("../assets/images/map.jpeg")}
-                      style={styles.mapImage}
-                      resizeMode="contain"
+                    <Ionicons name="add" size={18} color={colors.white} />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.zoomBtn}
+                    onPress={() => setZoomSafe(zoom - 0.25)}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="remove" size={18} color={colors.white} />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.zoomBtn}
+                    onPress={() => setZoomSafe(1)}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="refresh" size={16} color={colors.white} />
+                  </TouchableOpacity>
+
+                  {/* Key toggle */}
+                  <TouchableOpacity
+                    style={styles.zoomBtn}
+                    onPress={() => setShowLegend((prev) => !prev)}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons
+                      name={showLegend ? "eye-off-outline" : "eye-outline"}
+                      size={18}
+                      color={colors.white}
                     />
+                  </TouchableOpacity>
+                </View>
+
+                {/* PAN (both axes) via nested scrollviews */}
+                <ScrollView
+                  ref={mapScrollXRef}
+                  style={{ width: "100%" }}
+                  horizontal
+                  bounces={false}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.panOuterContent}
+                >
+                  <ScrollView
+                    ref={mapScrollYRef}
+                    style={{ width: "100%" }}
+                    bounces={false}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.panInnerContent}
+                  >
+                    <View
+                      style={[
+                        styles.mapInner,
+                        { height: mapHeight, width: "100%" },
+                      ]}
+                      onLayout={handleMapLayout}
+                    >
+                      <View
+                        style={[
+                          styles.mapScaledLayer,
+                          {
+                            width: baseWidth > 0 ? baseWidth * zoom : "100%",
+                            height: baseHeight > 0 ? baseHeight * zoom : "100%",
+                          },
+                        ]}
+                      >
+                        <Image
+                          source={require("../assets/images/map.jpeg")}
+                          style={styles.mapImage}
+                          resizeMode="contain"
+                        />
+
+                        {/* PINS */}
+                        {baseWidth > 0 &&
+                          buildings.map((b) => {
+                            const pin = pinPositions[b.id];
+                            if (!pin) return null;
+
+                            const isSelected = selectedBuildingId === b.id;
+
+                            const pulseScale = pulseAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0.7, 1.6],
+                            });
+
+                            const pulseOpacity = pulseAnim.interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [0.8, 0],
+                            });
+
+                            return (
+                              <TouchableOpacity
+                                key={b.id}
+                                style={[
+                                  styles.pin,
+                                  { left: pin.x - 11, top: pin.y - 22 },
+                                ]}
+                                onPress={() => handleSelectBuilding(b.id)}
+                                activeOpacity={0.9}
+                              >
+                                <View style={styles.pinContainer}>
+                                  {isSelected && (
+                                    <Text style={styles.pinLabel}>{b.name}</Text>
+                                  )}
+
+                                  {isSelected && (
+                                    <Animated.View
+                                      style={[
+                                        styles.pulseRing,
+                                        {
+                                          backgroundColor: b.pinColor,
+                                          transform: [{ scale: pulseScale }],
+                                          opacity: pulseOpacity,
+                                        },
+                                      ]}
+                                    />
+                                  )}
+
+                                  <Ionicons
+                                    name="location-sharp"
+                                    size={22}
+                                    color={b.pinColor}
+                                  />
+                                </View>
+                              </TouchableOpacity>
+                            );
+                          })}
+                      </View>
+                    </View>
+                  </ScrollView>
+                </ScrollView>
 
                     {/* PINS */}
                     {mapSize.width > 0 &&
@@ -339,12 +502,19 @@ export default function CampusMapScreen() {
                                 size={22}
                                 color="red"
                               />
-                            </View>
-                          </TouchableOpacity>
-                        );
-                      })}
+                            )}
+                            <Ionicons
+                              name="location-sharp"
+                              size={18}
+                              color={b.pinColor}
+                            />
+                          </View>
+                          <Text style={styles.legendText}>{b.name}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
-                </ScrollView>
+                )}
               </View>
             </View>
           </View>
@@ -371,7 +541,7 @@ export default function CampusMapScreen() {
                     <Ionicons
                       name="location-sharp"
                       size={20}
-                      color={colors.occupied}
+                      color={b.pinColor}
                     />
                   </TouchableOpacity>
                 </View>
@@ -512,7 +682,7 @@ function createStyles(c: ThemeColors) {
 
   webMain: { flex: 1, backgroundColor: c.gray100 },
 
-  // Existing styles (kept as-is)
+  //
   page: {
     flex: 1,
     flexDirection: "row",
@@ -532,6 +702,12 @@ function createStyles(c: ThemeColors) {
   },
   backButton: { padding: 5 },
 
+  titleWide: {
+    flex: 1,
+    textAlign: "center",
+    paddingHorizontal: 0,
+  },
+  
   title: {
     paddingHorizontal: 55,
     fontSize: FONT_SIZE_TITLE + 6,
@@ -568,11 +744,20 @@ function createStyles(c: ThemeColors) {
   mapViewport: {
     width: "100%",
     overflow: "hidden",
+    position: "relative",
   },
 
-  zoomContent: { alignItems: "center", justifyContent: "center" },
+  //  pan container helpers
+  panOuterContent: { alignItems: "flex-start", justifyContent: "flex-start" },
+  panInnerContent: { alignItems: "flex-start", justifyContent: "flex-start" },
 
   mapInner: { width: "100%", position: "relative" },
+
+  // zoomed content layer
+  mapScaledLayer: {
+    position: "relative",
+  },
+
   mapImage: { width: "100%", height: "100%" },
 
   pin: { position: "absolute" },
@@ -601,7 +786,78 @@ function createStyles(c: ThemeColors) {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,0,0,0.5)",
+    opacity: 0.35,
+  },
+
+  // zoom buttons (map overlay)
+  zoomControls: {
+    position: "absolute",
+    right: 12,
+    top: 12,
+    zIndex: 20,
+    gap: 8,
+  },
+
+  zoomBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: "rgba(5, 71, 42, 0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 6,
+  },
+
+  // legend with colored pins + ping effect
+  legend: {
+    position: "absolute",
+    left: 10,
+    right: 10,
+    bottom: 10,
+    zIndex: 20,
+    backgroundColor: "rgba(255,255,255,0.6)",
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+
+  legendItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 2,
+  },
+
+  legendIconWrap: {
+    width: 22,
+    height: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  legendPulse: {
+    position: "absolute",
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    opacity: 0.3,
+  },
+
+  legendText: {
+    flex: 1,
+    color: colors.primary,
+    fontSize: 14,
+    fontFamily: "BebasNeue-Regular",
+    letterSpacing: 0.4,
   },
 
   buildingsContainer: {

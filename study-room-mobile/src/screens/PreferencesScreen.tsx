@@ -85,6 +85,15 @@ export default function PreferencesScreen() {
   // handles the dropdown open or closed state
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  useEffect(() => {
+    const section = (route.params as any)?.section;
+  
+    if (section === "Notifications") setActiveCategory("Notifications");
+    if (section === "Account") setActiveCategory("Account");
+    if (section === "Groups") setActiveCategory("Groups");
+  }, [route.params]);
+  
+
   // Notification states
   const [notificationTypes, setNotificationTypes] = useState({
     allRooms: true,

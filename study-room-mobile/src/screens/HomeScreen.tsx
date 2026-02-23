@@ -45,7 +45,7 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { useUser } from "@/context/UserContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
-import { buildingsAPI } from "@/utils/api";
+import { buildingsAPI, authAPI } from "@/utils/api";
 
 // describes what each favorite looks like for type safety
 interface FavoriteItem {
@@ -77,7 +77,7 @@ export default function HomeScreen() {
   const pagePad = width < 480 ? 12 : 0;
 
   // mobile content
-  const contentWidthMobile = width - pagePad * 2;
+  const contentWidthMobile = width;
 
   // Web content width accounts for sidebar and max width
   const webAvailable = width - WEB_SIDEBAR_WIDTH - pagePad * 2;
@@ -128,6 +128,24 @@ export default function HomeScreen() {
     { name: "Favorites", route: "Favorites" },
     { name: "Preferences", route: "Preferences" },
   ];
+
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+    } finally {
+      // reset navigation back to Login so you can't go "Back" into the app
+      (navigation as any).reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+    }
+  };
+
+  const goToPreferencesSection = (
+    section: "Account" | "Groups" | "Notifications"
+  ) => {
+    (navigation as any).navigate("Preferences", { section });
+  };
 
   // Load building data
   useEffect(() => {
@@ -220,7 +238,7 @@ export default function HomeScreen() {
               style={{ flex: 1 }}
               contentContainerStyle={{
                 alignItems: "center",
-                paddingBottom: 32,
+                paddingBottom: 8,
                 paddingHorizontal: 0,
               }}
               keyboardShouldPersistTaps="handled"
@@ -261,8 +279,7 @@ export default function HomeScreen() {
                   </TouchableOpacity>
 
                   <TouchableOpacity
-                    style={styles.webTwoColItem}
-                    onPress={() => navigation.navigate("CampusMap" as never)}
+                    onPress={() => navigation.navigate("Favorites" as never)}
                     activeOpacity={0.9}
                     accessibilityRole="button"
                     accessibilityLabel="Campus map"
@@ -293,14 +310,12 @@ export default function HomeScreen() {
                     >
                       <LinearGradient
                         colors={["#F4F4F4", "#A1B5A8"]}
-                        style={styles.availableNowCard}
+                        style={styles.favoritesCard}
                       >
-                        <View style={styles.availableHeader}>
-                          <Text style={styles.availableTitle}>
-                            AVAILABLE NOW
-                          </Text>
-                          <Ionicons
-                            name="location-sharp"
+                        <View style={styles.favoritesHeader}>
+                          <Text style={styles.favoritesTitle}>MY FAVORITES</Text>
+                          <Feather
+                            name="heart"
                             size={22}
                             color={colors.primary}
                             accessibilityElementsHidden
@@ -346,32 +361,86 @@ export default function HomeScreen() {
                                 <Text style={styles.availableSubtitle}>
                                   {room.subtitle}
                                 </Text>
+                                <View style={styles.favRight}>
+                                  <View
+                                    style={[
+                                      styles.favstatusDot,
+                                      {
+                                        backgroundColor:
+                                          status === "available"
+                                            ? colors.available
+                                            : status === "occupied"
+                                            ? colors.occupied
+                                            : colors.offline,
+                                      },
+                                    ]}
+                                  />
+                                  <Text style={styles.favNumber}>
+                                    {status.charAt(0).toUpperCase() +
+                                      status.slice(1)}
+                                  </Text>
+                                </View>
                               </View>
-                            </View>
-                          ))
+                            );
+                          })
                         )}
                       </LinearGradient>
                     </View>
+                  </TouchableOpacity>
 
+                  {/* WEB: Find a Room + Campus Map side-by-side */}
+                  <View style={styles.webTwoColRow}>
                     <TouchableOpacity
                       style={styles.webTwoColItem}
-                      onPress={() => navigation.navigate("Favorites" as never)}
+                      onPress={() => navigation.navigate("FindRoom" as never)}
                       activeOpacity={0.9}
                       accessibilityRole="button"
                       accessibilityLabel="My favorites"
                       accessibilityHint="Opens the Favorites screen"
                     >
+                      <View style={styles.bannerContainerWeb}>
+                        <View style={styles.imageShadow}>
+                          <Image
+                            source={require("@/assets/images/library.jpg")}
+                            style={styles.bannerImageWeb}
+                          />
+                        </View>
+                        <Text style={styles.bannerTextWeb}>FIND A ROOM</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.webTwoColItem}
+                      onPress={() => navigation.navigate("CampusMap" as never)}
+                      activeOpacity={0.9}
+                    >
+                      <View style={styles.mapContainerWeb}>
+                        <View style={styles.imageShadow}>
+                          <Image
+                            source={require("@/assets/images/map.jpeg")}
+                            style={styles.mapImageWeb}
+                          />
+                        </View>
+                        <Text style={styles.mapTextWeb}>CAMPUS MAP</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* WEB ONLY: Available Now + Manage side-by-side */}
+                  <View style={styles.webBottomTwoColRow}>
+                    {/* Available Now (left) */}
+                    <View style={styles.webBottomTwoColItem}>
                       <View style={styles.cardShadow}>
                         <LinearGradient
                           colors={["#F4F4F4", "#A1B5A8"]}
-                          style={styles.favoritesCard}
+                          style={[styles.availableNowCard, styles.availableNowCardWeb]}
                         >
-                          <View style={styles.favoritesHeader}>
-                            <Text style={styles.favoritesTitle}>
-                              MY FAVORITES
+                          <View style={styles.availableHeader}>
+                            <Text style={styles.availableTitle}>
+                              AVAILABLE NOW
                             </Text>
-                            <Feather
-                              name="heart"
+                            <Ionicons
+                              name="location-sharp"
                               size={22}
                               color={colors.primary}
                               accessibilityElementsHidden
@@ -379,9 +448,11 @@ export default function HomeScreen() {
                             />
                           </View>
 
-                          {favorites.length === 0 ? (
-                            <Text style={styles.emptyText}>
-                              No favorites added yet
+                          {loading ? (
+                            <Text style={styles.loadingText}>Loading...</Text>
+                          ) : availableRooms.length === 0 ? (
+                            <Text style={styles.noAvailableText}>
+                              No rooms available right now
                             </Text>
                           ) : (
                             favorites.map((fav: FavoriteItem) => {
@@ -419,13 +490,12 @@ export default function HomeScreen() {
                                     </Text>
                                   </View>
                                 </View>
-                              );
-                            })
+                              </View>
+                            ))
                           )}
                         </LinearGradient>
                       </View>
-                    </TouchableOpacity>
-                  </View>
+                    </View>
 
                   {/* Preferences (full width) */}
                   <TouchableOpacity
@@ -447,7 +517,7 @@ export default function HomeScreen() {
                         importantForAccessibility="no"
                       />
                     </View>
-                  </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </ScrollView>
@@ -474,12 +544,7 @@ export default function HomeScreen() {
         keyboardShouldPersistTaps="handled"
         accessibilityLabel="Home content"
       >
-        <View
-          style={[
-            styles.container,
-            { width: contentWidthMobile, alignSelf: "center" },
-          ]}
-        >
+        <View style={[styles.container, { width: contentWidthMobile, alignSelf: "center" }]}>
           {/* Header style setup */}
           <View style={styles.header} accessibilityLabel="Header">
             <Image
@@ -496,6 +561,55 @@ export default function HomeScreen() {
             <Text style={styles.welcome} accessibilityRole="header">
               Welcome Back, {name}!
             </Text>
+          </View>
+
+          {/* Favorites moved to the top but aligned with the rest of the cards */}
+          <View style={styles.favoritesTopContainer}>
+            <TouchableOpacity
+              onPress={() => !menuOpen && navigation.navigate("Favorites" as never)}
+              activeOpacity={0.9}
+            >
+              <View style={styles.cardShadow}>
+                <LinearGradient colors={["#F4F4F4", "#A1B5A8"]} style={styles.favoritesCard}>
+                  {/* Header with title and heart icon */}
+                  <View style={styles.favoritesHeader}>
+                    <Text style={styles.favoritesTitle}>MY FAVORITES</Text>
+                    <Feather name="heart" size={22} color={colors.primary} />
+                  </View>
+
+                  {favorites.length === 0 ? (
+                    <Text style={styles.emptyText}>No favorites added yet</Text>
+                  ) : (
+                    favorites.map((fav: FavoriteItem) => {
+                      const status = roomStatuses[fav.name] || fav.status || "available";
+                      return (
+                        <View key={fav.name} style={styles.favItem}>
+                          <Text style={styles.favItemText}>{fav.name}</Text>
+                          <View style={styles.favRight}>
+                            <View
+                              style={[
+                                styles.favstatusDot,
+                                {
+                                  backgroundColor:
+                                    status === "available"
+                                      ? colors.available
+                                      : status === "occupied"
+                                      ? colors.occupied
+                                      : colors.offline,
+                                },
+                              ]}
+                            />
+                            <Text style={styles.favNumber}>
+                              {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </Text>
+                          </View>
+                        </View>
+                      );
+                    })
+                  )}
+                </LinearGradient>
+              </View>
+            </TouchableOpacity>
           </View>
 
           {/* Find a Room Banner style setup */}
@@ -568,9 +682,7 @@ export default function HomeScreen() {
                     Loading...
                   </Text>
                 ) : availableRooms.length === 0 ? (
-                  <Text style={styles.noAvailableText}>
-                    No rooms available right now
-                  </Text>
+                  <Text style={styles.noAvailableText}>No rooms available right now</Text>
                 ) : (
                   availableRooms.map((room) => (
                     <View
@@ -585,18 +697,14 @@ export default function HomeScreen() {
                             styles.availableStatusDot,
                             {
                               backgroundColor:
-                                room.status === "available"
-                                  ? colors.available
-                                  : colors.occupied,
+                                room.status === "available" ? colors.available : colors.occupied,
                             },
                           ]}
                           accessibilityLabel={`Status ${
                             room.status === "available" ? "available" : "occupied"
                           }`}
                         />
-                        <Text style={styles.availableSubtitle}>
-                          {room.subtitle}
-                        </Text>
+                        <Text style={styles.availableSubtitle}>{room.subtitle}</Text>
                       </View>
                     </View>
                   ))
@@ -691,7 +799,7 @@ export default function HomeScreen() {
                   importantForAccessibility="no"
                 />
               </View>
-            </TouchableOpacity>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -845,6 +953,19 @@ function createStyles(c: ThemeColors) {
   },
   webTwoColItem: { flex: 1 },
 
+  // NEW: bottom row (Available Now + Manage) side-by-side
+  webBottomTwoColRow: {
+    flexDirection: "row",
+    gap: 20,
+    paddingHorizontal: 12,
+    marginBottom: 0,
+    alignItems: "stretch",
+  },
+  webBottomTwoColItem: {
+    flex: 1,
+    minWidth: 0,
+  },
+
   // Web image blocks
   bannerContainerWeb: {
     marginVertical: 12,
@@ -907,6 +1028,12 @@ function createStyles(c: ThemeColors) {
     color: c.primary,
     position: "relative",
     paddingHorizontal: SPACE_MD,
+  },
+
+  favoritesTopContainer: {
+    marginVertical: 16,
+    paddingHorizontal: 20,
+    top: 40,
   },
 
   bannerContainer: {
@@ -992,6 +1119,11 @@ function createStyles(c: ThemeColors) {
     elevation: 5,
   },
 
+  // NEW: web override to remove the big bottom gap
+  availableNowCardWeb: {
+    marginBottom: 0,
+  },
+
   availableHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1030,11 +1162,6 @@ function createStyles(c: ThemeColors) {
     borderRadius: CARD_BORDER_RADIUS,
     marginTop: 0,
     marginBottom: 0,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 12,
-    elevation: 8,
   },
   favoritesHeader: {
     flexDirection: "row",
@@ -1091,6 +1218,27 @@ function createStyles(c: ThemeColors) {
   },
   prefIcon: { marginTop: 2, marginRight: 12 },
 
+  logoutCardContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: colors.primary,
+    borderRadius: 0,
+    marginTop: 10,
+    marginBottom: 7,
+    shadowColor: "#000",
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    elevation: 2,
+    shadowOffset: { width: 0, height: 5 },
+  },
+  logoutText: {
+    fontSize: 27,
+    fontFamily: "BebasNeue-Regular",
+    color: colors.white,
+  },
+
   cardShadow: {
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 6 },
@@ -1106,6 +1254,88 @@ function createStyles(c: ThemeColors) {
     fontFamily: FONT_BODY,
     textAlign: "center",
     marginVertical: 10,
+  },
+
+  preferencesQuickCard: {
+    borderRadius: 0,
+    padding: 20,
+    marginTop: 12,
+    marginBottom: 20,
+  },
+
+  // NEW: web override so it lines up tight in the 2-col row
+  preferencesQuickCardWeb: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
+
+  preferencesQuickHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  preferencesQuickTitle: {
+    color: colors.white,
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 27,
+    letterSpacing: 0.5,
+  },
+
+  // single-row Manage buttons (WEB ONLY, used only in web render branch)
+  preferencesQuickRowWeb: {
+    flexDirection: "row",
+    gap: 14,
+    alignItems: "stretch",
+  },
+
+  // Existing mobile rows (still used ONLY by mobile JSX)
+  preferencesQuickRowTwo: {
+    flexDirection: "row",
+    gap: 10,
+    marginBottom: 12,
+  },
+  preferencesQuickBottomRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  preferencesQuickButtonWrap: {
+    flex: 1,
+  },
+
+  // Button is the gradient container now
+  preferencesQuickButton: {
+    width: "100%",
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  preferencesQuickButtonText: {
+    color: colors.primary,
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 22,
+    letterSpacing: 0.4,
+  },
+
+  // Light red logout button (same size as others)
+  preferencesQuickLogoutLightRed: {
+    width: "100%",
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 6,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#D9534F",
+  },
+  preferencesQuickLogoutText: {
+    color: colors.white,
+    fontFamily: "BebasNeue-Regular",
+    fontSize: 23,
+    letterSpacing: 0.4,
   },
 
   // MOBILE floating menu (unchanged)
