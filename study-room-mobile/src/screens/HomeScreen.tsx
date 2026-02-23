@@ -15,6 +15,31 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { ThemeColors } from "@/constants/theme";
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_TITLE_LARGE,
+  FONT_SIZE_SECTION,
+  FONT_SIZE_CARD_TITLE,
+  FONT_SIZE_BODY,
+  FONT_SIZE_CAPTION,
+  FONT_SIZE_NAV,
+  WEB_SIDEBAR_WIDTH,
+  WEB_TOPBAR_HEIGHT,
+  WEB_NAV_ITEM_PADDING_V,
+  WEB_NAV_ITEM_PADDING_H,
+  WEB_NAV_ITEM_MARGIN_BOTTOM,
+  WEB_CONTENT_PADDING_TOP,
+  WEB_CONTENT_PADDING_BOTTOM,
+  CARD_PADDING,
+  CARD_MARGIN_BOTTOM,
+  CARD_BORDER_RADIUS,
+  HEADER_BACK_ICON_SIZE,
+  SCROLL_PADDING_BOTTOM,
+  SPACE_MD,
+  SPACE_LG,
+  SPACE_XL,
+} from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useUser } from "@/context/UserContext";
@@ -31,10 +56,6 @@ interface FavoriteItem {
 
 // Maximum width for large screens
 const MAX_SCREEN_WIDTH = 1400;
-
-// Web sizing
-const WEB_SIDEBAR_WIDTH = 300;
-const WEB_TOPBAR_HEIGHT = 170;
 
 type MenuRoute =
   | "Home"
@@ -786,16 +807,16 @@ function createStyles(c: ThemeColors) {
   webSidebarLinks: { marginTop: 6 },
 
   webNavItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingVertical: WEB_NAV_ITEM_PADDING_V,
+    paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
     borderRadius: 2,
-    marginBottom: 8,
+    marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
   },
   webNavItemSelected: { backgroundColor: "rgba(255,255,255,0.18)" },
   webNavText: {
     color: c.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 28,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_NAV,
     letterSpacing: 0.8,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 2, height: 2 },
@@ -805,13 +826,12 @@ function createStyles(c: ThemeColors) {
 
   webMain: { flex: 1, backgroundColor: c.gray100 },
 
-  webContentWrap: { paddingTop: 22, paddingBottom: 24 },
+  webContentWrap: { paddingTop: WEB_CONTENT_PADDING_TOP, paddingBottom: WEB_CONTENT_PADDING_BOTTOM },
 
-  webWelcomeWrap: { paddingHorizontal: 20, marginBottom: 14, marginTop: 15 },
+  webWelcomeWrap: { paddingHorizontal: SPACE_LG, marginBottom: 14, marginTop: 15 },
   webWelcomeText: {
-    fontSize: 46,
-    fontWeight: "500",
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_TITLE_LARGE + 8,
+    fontFamily: FONT_HEADING,
     color: c.primary,
   },
 
@@ -834,12 +854,11 @@ function createStyles(c: ThemeColors) {
   bannerImageWeb: { width: "100%", height: 230, borderRadius: 0 },
   bannerTextWeb: {
     position: "absolute",
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACE_LG,
     bottom: 14,
     left: 12,
-    fontSize: 44,
-    fontFamily: "BebasNeue-Regular",
-    fontWeight: "500",
+    fontSize: FONT_SIZE_TITLE_LARGE + 6,
+    fontFamily: FONT_HEADING,
     color: c.white,
     textShadowColor: "rgba(0, 0, 0, 200)",
     textShadowOffset: { width: 2, height: 2 },
@@ -854,12 +873,11 @@ function createStyles(c: ThemeColors) {
   mapImageWeb: { width: "100%", height: 230, borderRadius: 0 },
   mapTextWeb: {
     position: "absolute",
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACE_LG,
     bottom: 14,
     left: 12,
-    fontSize: 44,
-    fontFamily: "BebasNeue-Regular",
-    fontWeight: "500",
+    fontSize: FONT_SIZE_TITLE_LARGE + 6,
+    fontFamily: FONT_HEADING,
     color: c.white,
     textShadowColor: "rgba(0, 0, 0, 200)",
     textShadowOffset: { width: 2, height: 2 },
@@ -884,12 +902,11 @@ function createStyles(c: ThemeColors) {
 
   welcome: {
     top: 15,
-    fontSize: 30,
-    fontWeight: "500",
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_TITLE_LARGE - 8,
+    fontFamily: FONT_HEADING,
     color: c.primary,
     position: "relative",
-    paddingHorizontal: 12,
+    paddingHorizontal: SPACE_MD,
   },
 
   bannerContainer: {
@@ -902,12 +919,11 @@ function createStyles(c: ThemeColors) {
   bannerImage: { width: "100%", height: 200, borderRadius: 0 },
   bannerText: {
     position: "absolute",
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACE_LG,
     bottom: 12,
     left: 12,
-    fontSize: 40,
-    fontFamily: "BebasNeue-Regular",
-    fontWeight: "500",
+    fontSize: FONT_SIZE_TITLE_LARGE + 2,
+    fontFamily: FONT_HEADING,
     color: c.gray100,
     textShadowColor: "rgba(0, 0, 0, 200)",
     textShadowOffset: { width: 2, height: 2 },
@@ -932,12 +948,11 @@ function createStyles(c: ThemeColors) {
   mapImage: { width: "100%", height: 200, borderRadius: 0 },
   mapText: {
     position: "absolute",
-    paddingHorizontal: 20,
+    paddingHorizontal: SPACE_LG,
     bottom: 12,
     left: 12,
-    fontSize: 40,
-    fontFamily: "BebasNeue-Regular",
-    fontWeight: "500",
+    fontSize: FONT_SIZE_TITLE_LARGE + 2,
+    fontFamily: FONT_HEADING,
     color: c.white,
     textShadowColor: "rgba(0, 0, 0, 200)",
     textShadowOffset: { width: 2, height: 2 },
@@ -950,10 +965,10 @@ function createStyles(c: ThemeColors) {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
+    padding: CARD_PADDING,
     backgroundColor: c.primary,
-    borderRadius: 0,
-    marginBottom: 7,
+    borderRadius: CARD_BORDER_RADIUS,
+    marginBottom: CARD_MARGIN_BOTTOM - 5,
     shadowColor: "#000",
     shadowOpacity: 0.8,
     shadowRadius: 6,
@@ -961,14 +976,14 @@ function createStyles(c: ThemeColors) {
     shadowOffset: { width: 0, height: 5 },
   },
   roomCardTextLeft: {
-    fontSize: 27,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_SECTION,
+    fontFamily: FONT_HEADING,
     color: c.white,
   },
 
   availableNowCard: {
-    borderRadius: 0,
-    padding: 20,
+    borderRadius: CARD_BORDER_RADIUS,
+    padding: CARD_PADDING,
     marginBottom: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
@@ -985,8 +1000,8 @@ function createStyles(c: ThemeColors) {
   },
   availableTitle: {
     color: c.primary,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 27,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_SECTION,
     letterSpacing: 0.5,
   },
 
@@ -1002,17 +1017,17 @@ function createStyles(c: ThemeColors) {
 
   availableItemText: {
     color: c.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 20,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_CARD_TITLE,
   },
   availableRight: { flexDirection: "row", alignItems: "center", gap: 12 },
   availableStatusDot: { width: 11, height: 11, borderRadius: 5.5 },
-  availableSubtitle: { color: c.white, fontSize: 14 },
+  availableSubtitle: { color: c.white, fontSize: FONT_SIZE_CAPTION, fontFamily: FONT_BODY },
 
   favoritesCard: {
     backgroundColor: c.marigold,
-    padding: 20,
-    borderRadius: 0,
+    padding: CARD_PADDING,
+    borderRadius: CARD_BORDER_RADIUS,
     marginTop: 0,
     marginBottom: 0,
     shadowColor: "#000",
@@ -1028,25 +1043,25 @@ function createStyles(c: ThemeColors) {
     marginBottom: 12,
   },
   favoritesTitle: {
-    fontSize: 27,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_SECTION,
+    fontFamily: FONT_HEADING,
     color: c.primary,
   },
 
   emptyText: {
     color: c.primary,
-    fontSize: 16,
+    fontSize: FONT_SIZE_BODY,
+    fontFamily: FONT_BODY,
     textAlign: "center",
     marginVertical: 10,
   },
 
-  // no rooms available text
   noAvailableText: {
     color: c.primary,
-    fontSize: 18,
+    fontSize: FONT_SIZE_BODY + 2,
+    fontFamily: FONT_BODY,
     textAlign: "center",
     marginVertical: 10,
-    //fontFamily: "BebasNeue-Regular",
   },
 
   favItem: {
@@ -1060,12 +1075,12 @@ function createStyles(c: ThemeColors) {
   },
   favItemText: {
     color: c.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 20,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_CARD_TITLE,
   },
   favRight: { flexDirection: "row", alignItems: "center", gap: 12 },
   favstatusDot: { width: 11, height: 11, borderRadius: 5.5 },
-  favNumber: { color: c.white, fontSize: 14 },
+  favNumber: { color: c.white, fontSize: FONT_SIZE_CAPTION, fontFamily: FONT_BODY },
 
   preferencesLeft: {
     marginTop: 0,
@@ -1082,12 +1097,13 @@ function createStyles(c: ThemeColors) {
     shadowOpacity: 0.8,
     shadowRadius: 5,
     elevation: 8,
-    borderRadius: 0,
-    marginBottom: 32,
+    borderRadius: CARD_BORDER_RADIUS,
+    marginBottom: SCROLL_PADDING_BOTTOM,
   },
 
   loadingText: {
     color: c.white,
+    fontFamily: FONT_BODY,
     textAlign: "center",
     marginVertical: 10,
   },
@@ -1139,10 +1155,10 @@ function createStyles(c: ThemeColors) {
     shadowRadius: 10,
     width: "100%",
   },
-  menuItemContainer: { paddingVertical: 12, paddingHorizontal: 16 },
+  menuItemContainer: { paddingVertical: 12, paddingHorizontal: SPACE_MD },
   menuItemText: {
-    fontSize: 22,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_CARD_TITLE,
+    fontFamily: FONT_HEADING,
     color: c.primary,
   },
 });

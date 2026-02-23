@@ -10,6 +10,22 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/AppNavigator';
 import type { ThemeColors } from '@/constants/theme';
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_TITLE,
+  FONT_SIZE_SECTION,
+  FONT_SIZE_BODY,
+  CARD_PADDING,
+  CARD_BORDER_RADIUS,
+  CONTAINER_PADDING_H,
+  CONTAINER_PADDING_TOP_MOBILE,
+  HEADER_BACK_ICON_SIZE,
+  HEADER_MARGIN_BOTTOM,
+  BUTTON_BORDER_RADIUS,
+  SPACE_MD,
+  SPACE_LG,
+} from '@/constants/typography';
 import { useTheme } from '@/context/ThemeContext';
 
 // typed props for screen
@@ -94,7 +110,7 @@ export default function RoomDetailsScreen() {
           accessibilityLabel="Go back"
           accessibilityHint="Returns to the previous screen"
         >
-          <Ionicons name="arrow-back" size={28} color={colors.primary} />
+          <Ionicons name="arrow-back" size={HEADER_BACK_ICON_SIZE} color={colors.primary} />
         </TouchableOpacity>
 
         <Text style={styles.title} accessibilityRole="header">
@@ -157,7 +173,7 @@ export default function RoomDetailsScreen() {
             paddingVertical: 15,
             width: '85%',
             alignSelf: 'center',
-            borderRadius: 6,
+            borderRadius: CARD_BORDER_RADIUS,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.2,
@@ -207,73 +223,80 @@ export default function RoomDetailsScreen() {
 // Style section - implements styles for each section
 function createStyles(c: ThemeColors) {
   return StyleSheet.create({
-  container: { flex: 1, backgroundColor: c.gray100, paddingHorizontal: 20, paddingTop: 60 },
+  container: {
+    flex: 1,
+    backgroundColor: c.gray100,
+    paddingHorizontal: CONTAINER_PADDING_H,
+    paddingTop: CONTAINER_PADDING_TOP_MOBILE,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30,
-    marginTop: 20,
+    marginBottom: HEADER_MARGIN_BOTTOM,
+    marginTop: SPACE_LG,
   },
   title: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 34,
-    fontFamily: 'BebasNeue-Regular',
+    fontSize: FONT_SIZE_TITLE + 2,
+    fontFamily: FONT_HEADING,
     color: c.primary,
-    marginRight: 28,
+    marginRight: HEADER_BACK_ICON_SIZE,
   },
   topBox: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 18,
-    borderRadius: 6,
-    marginBottom: 24,
+    paddingVertical: CARD_PADDING,
+    paddingHorizontal: CARD_PADDING - 2,
+    borderRadius: CARD_BORDER_RADIUS,
+    marginBottom: HEADER_MARGIN_BOTTOM,
   },
   buildingName: {
-    fontFamily: 'BebasNeue-Regular',
-    fontSize: 28,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_SECTION,
     color: c.white,
   },
   statusDotRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: SPACE_MD,
   },
   statusDot: { width: 12, height: 12, borderRadius: 7 },
   roomNumber: {
-    fontFamily: 'BebasNeue-Regular',
-    fontSize: 28,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_SECTION,
     color: c.white,
   },
   infoBox: {
     backgroundColor: c.gray300,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
-    borderRadius: 6,
+    paddingVertical: SPACE_MD,
+    paddingHorizontal: CARD_PADDING - 2,
+    borderRadius: CARD_BORDER_RADIUS,
     marginBottom: 18,
   },
   sectionTitle: {
-    fontFamily: 'BebasNeue-Regular',
-    fontSize: 28,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_SECTION,
     color: c.primary,
-    marginBottom: 8,
+    marginBottom: SPACE_MD,
   },
   boldText: {
+    fontFamily: FONT_BODY,
     fontWeight: '700',
     color: c.primary,
-    fontSize: 16,
+    fontSize: FONT_SIZE_BODY,
   },
   subText: {
+    fontFamily: FONT_BODY,
     color: c.primary,
-    fontSize: 15,
+    fontSize: FONT_SIZE_BODY - 1,
     lineHeight: 25,
   },
   sectionBox: {
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    borderRadius: 6,
+    paddingVertical: CARD_PADDING,
+    paddingHorizontal: SPACE_MD,
+    borderRadius: BUTTON_BORDER_RADIUS,
     marginBottom: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -284,8 +307,8 @@ function createStyles(c: ThemeColors) {
     elevation: 4,
   },
   availabilityTitle: {
-    fontSize: 28,
-    fontFamily: 'BebasNeue-Regular',
+    fontSize: FONT_SIZE_SECTION,
+    fontFamily: FONT_HEADING,
     textAlign: 'center',
   },
 });

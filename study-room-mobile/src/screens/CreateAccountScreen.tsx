@@ -20,6 +20,26 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { ThemeColors } from "@/constants/theme";
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_BODY,
+  FONT_SIZE_BUTTON,
+  FONT_SIZE_TITLE_LARGE,
+  BUTTON_PADDING_V,
+  BUTTON_PADDING_H,
+  BUTTON_BORDER_RADIUS,
+  CONTAINER_PADDING_TOP_MOBILE,
+  CONTAINER_PADDING_TOP_WEB,
+  INPUT_PADDING,
+  INPUT_BORDER_RADIUS,
+  INPUT_MARGIN_BOTTOM,
+  LABEL_MARGIN_BOTTOM,
+  CARD_PADDING,
+  CARD_BORDER_RADIUS,
+  SPACE_LG,
+  SPACE_SM,
+} from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { authAPI } from "@/utils/api";
 import { useUser } from "@/context/UserContext";
@@ -267,13 +287,13 @@ function createStyles(c: ThemeColors) {
   },
 
   container: {
-    paddingTop: 80,
-    paddingHorizontal: 24,
+    paddingTop: CONTAINER_PADDING_TOP_MOBILE,
+    paddingHorizontal: SPACE_LG,
   },
 
   // only used on web so the top spacing isn't huge on desktop screens
   containerWeb: {
-    paddingTop: 40,
+    paddingTop: CONTAINER_PADDING_TOP_WEB,
   },
 
   logo: {
@@ -283,63 +303,61 @@ function createStyles(c: ThemeColors) {
     marginBottom: 30,
   },
 
-  // web-only logo tweak so it scales down nicely instead of overflowing
   logoWeb: {
     width: "100%",
   },
 
   header: {
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 35,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_TITLE_LARGE - 3,
     color: c.white,
-    marginBottom: 5,
+    marginBottom: SPACE_SM,
   },
   formBox: {
     backgroundColor: c.white,
-    borderRadius: 0,
-    paddingVertical: 25,
-    paddingHorizontal: 20,
+    borderRadius: CARD_BORDER_RADIUS,
+    paddingVertical: CARD_PADDING + 5,
+    paddingHorizontal: CARD_PADDING,
     marginBottom: 40,
   },
   label: {
-    fontFamily: "BebasNeue-Regular",
+    fontFamily: FONT_HEADING,
     color: c.primary,
-    fontSize: 20,
-    marginBottom: 6,
+    fontSize: FONT_SIZE_CARD_TITLE,
+    marginBottom: LABEL_MARGIN_BOTTOM,
   },
   input: {
     backgroundColor: c.gray300,
-    borderRadius: 3,
-    padding: 10,
-    marginBottom: 22,
+    borderRadius: INPUT_BORDER_RADIUS,
+    padding: INPUT_PADDING,
+    marginBottom: INPUT_MARGIN_BOTTOM,
     color: c.primary,
+    fontFamily: FONT_BODY,
   },
   createButton: {
     backgroundColor: c.gray300,
-    paddingVertical: 14,
-    borderRadius: 3,
+    paddingVertical: BUTTON_PADDING_V,
+    paddingHorizontal: BUTTON_PADDING_H,
+    borderRadius: BUTTON_BORDER_RADIUS,
     width: "50%",
     alignSelf: "center",
     marginBottom: 50,
   },
   createButtonText: {
     color: c.primary,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 26,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_BUTTON,
     textAlign: "center",
   },
   returnText: {
     color: c.white,
     textDecorationLine: "underline",
-    fontFamily: "Poppins",
-    fontSize: 15,
+    fontFamily: FONT_BODY,
+    fontSize: FONT_SIZE_BODY - 1,
     textAlign: "center",
-    marginTop: 10,
+    marginTop: SPACE_SM,
   },
 
-  // web-only: remove the custom font so it uses the browser default
-  returnTextWeb: {
-    fontFamily: undefined,
-  },
+  returnTextWeb: {},
   });
 }

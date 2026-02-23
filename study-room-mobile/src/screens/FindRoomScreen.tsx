@@ -16,6 +16,26 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import type { ThemeColors } from "@/constants/theme";
+import {
+  FONT_BODY,
+  FONT_HEADING,
+  FONT_SIZE_TITLE,
+  FONT_SIZE_SECTION,
+  FONT_SIZE_BODY,
+  FONT_SIZE_CARD_TITLE,
+  FONT_SIZE_NAV,
+  WEB_SIDEBAR_WIDTH,
+  WEB_TOPBAR_HEIGHT,
+  WEB_NAV_ITEM_PADDING_V,
+  WEB_NAV_ITEM_PADDING_H,
+  WEB_NAV_ITEM_MARGIN_BOTTOM,
+  WEB_CONTENT_PADDING_TOP,
+  WEB_CONTENT_PADDING_BOTTOM,
+  CARD_BORDER_RADIUS,
+  BUTTON_BORDER_RADIUS,
+  HEADER_BACK_ICON_SIZE,
+  SCROLL_PADDING_BOTTOM,
+} from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useNavigation } from "@react-navigation/native";
@@ -51,10 +71,6 @@ const getRoomStatus = (
 
 // Maximum width for large screens
 const MAX_SCREEN_WIDTH = 1400;
-
-// Web sizing (matches Home Screen)
-const WEB_SIDEBAR_WIDTH = 300;
-const WEB_TOPBAR_HEIGHT = 170;
 
 type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
 
@@ -652,9 +668,8 @@ function createStyles(c: ThemeColors) {
   },
 
   title: {
-    fontSize: 38,
-    fontFamily: "BebasNeue-Regular",
-    fontWeight: "500",
+    fontSize: FONT_SIZE_TITLE + 6,
+    fontFamily: FONT_HEADING,
     color: c.primary,
     textTransform: "uppercase",
     textAlign: "center",
@@ -675,11 +690,11 @@ function createStyles(c: ThemeColors) {
     paddingVertical: 6,
     paddingHorizontal: 4,
   },
-  subHeaderText: { fontSize: 18, color: c.primary },
+  subHeaderText: { fontSize: FONT_SIZE_BODY + 2, color: c.primary, fontFamily: FONT_BODY },
 
   dropdownMenu: {
     backgroundColor: c.white,
-    borderRadius: 4,
+    borderRadius: CARD_BORDER_RADIUS,
     marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
@@ -688,7 +703,7 @@ function createStyles(c: ThemeColors) {
     elevation: 5,
   },
   dropdownItem: { padding: 10 },
-  dropdownText: { fontSize: 16, fontFamily: "Poppins", color: c.primary },
+  dropdownText: { fontSize: FONT_SIZE_BODY, fontFamily: FONT_BODY, color: c.primary },
   dropdownSelected: { backgroundColor: c.primary },
   dropdownTextSelected: { color: c.white },
 
@@ -696,7 +711,7 @@ function createStyles(c: ThemeColors) {
     backgroundColor: c.gray100,
     borderWidth: 1,
     borderColor: c.primary,
-    borderRadius: 6,
+    borderRadius: BUTTON_BORDER_RADIUS,
     paddingVertical: 10,
     paddingHorizontal: 14,
     flexDirection: "row",
@@ -704,8 +719,8 @@ function createStyles(c: ThemeColors) {
     justifyContent: "space-between",
   },
   toggleBtnText: {
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 20,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_CARD_TITLE,
     color: c.primary,
     letterSpacing: 0.5,
   },
@@ -719,7 +734,7 @@ function createStyles(c: ThemeColors) {
   },
 
   roomBox: {
-    borderRadius: 4,
+    borderRadius: CARD_BORDER_RADIUS,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -731,17 +746,16 @@ function createStyles(c: ThemeColors) {
   },
 
   roomBoxInner: {
-    borderRadius: 4,
+    borderRadius: CARD_BORDER_RADIUS,
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
   },
 
   roomText: {
-    fontSize: 25,
-    fontWeight: "200",
+    fontSize: FONT_SIZE_SECTION - 2,
     color: "#000",
-    fontFamily: "Poppins",
+    fontFamily: FONT_BODY,
   },
 
   heartBtn: {
@@ -762,12 +776,13 @@ function createStyles(c: ThemeColors) {
     backgroundColor: c.primary,
     paddingVertical: 18,
     paddingHorizontal: 16,
-    borderRadius: 6,
+    borderRadius: CARD_BORDER_RADIUS,
     alignItems: "center",
   },
   noFloorPlanText: {
     color: c.white,
-    fontFamily: "Poppins",
+    fontFamily: FONT_BODY,
+    fontSize: FONT_SIZE_BODY,
     textAlign: "center",
   },
 
@@ -779,8 +794,8 @@ function createStyles(c: ThemeColors) {
   legendRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
   legendBox: { width: 28, height: 28, marginRight: 12, borderRadius: 2 },
   legendText: {
-    fontSize: 24,
-    fontFamily: "BebasNeue-Regular",
+    fontSize: FONT_SIZE_CARD_TITLE + 2,
+    fontFamily: FONT_HEADING,
     color: c.primary,
   },
 
@@ -848,18 +863,18 @@ function createStyles(c: ThemeColors) {
   webSidebarLinks: { marginTop: 6 },
 
   webNavItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 12,
+    paddingVertical: WEB_NAV_ITEM_PADDING_V,
+    paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
     borderRadius: 2,
-    marginBottom: 8,
+    marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
   },
   webNavItemSelected: {
     backgroundColor: "rgba(255,255,255,0.18)",
   },
   webNavText: {
     color: c.white,
-    fontFamily: "BebasNeue-Regular",
-    fontSize: 28,
+    fontFamily: FONT_HEADING,
+    fontSize: FONT_SIZE_NAV,
     letterSpacing: 0.8,
     textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 2, height: 2 },
@@ -869,6 +884,6 @@ function createStyles(c: ThemeColors) {
 
   webMain: { flex: 1, backgroundColor: c.gray100 },
 
-  webContentWrap: { paddingTop: 22, paddingBottom: 24 },
+  webContentWrap: { paddingTop: WEB_CONTENT_PADDING_TOP, paddingBottom: WEB_CONTENT_PADDING_BOTTOM },
   });
 }
