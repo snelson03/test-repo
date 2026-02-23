@@ -129,8 +129,8 @@ export default function FindARoomScreen() {
   // Map building name -> floor plan image (UPDATE THESE FILES to your real PNGs)
   const FLOOR_PLANS: Record<string, any> = {
     // Example filenames — replace with your actual assets:
-    "Stocker Center": require("@/assets/images/placeholder.png"),
-    "Academic Research Center": require("@/assets/images/placeholder.png"),
+    "Stocker Center": require("@/assets/images/stocker_floorplan.png"),
+    "Academic Research Center": require("@/assets/images/arc_floorplan.png"),
     "Alden Library": require("@/assets/images/placeholder.png"),
   };
 
