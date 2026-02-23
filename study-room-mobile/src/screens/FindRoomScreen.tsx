@@ -38,9 +38,9 @@ import {
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { useFavorites } from "@/context/FavoritesContext";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RootStackParamList } from "@/navigation/AppNavigator";
+import { RootStackParamList, MapBuildingId } from "@/navigation/AppNavigator";
 import { buildingsAPI } from "@/utils/api";
 import type { Building, Room } from "@/utils/api";
 
@@ -74,9 +74,26 @@ const MAX_SCREEN_WIDTH = 1400;
 
 type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
 
+// Match Campus Map building id to API building name (API may use "Academic Research Center" etc.)
+function findBuildingByMapId(buildings: Building[], mapId: MapBuildingId): Building | undefined {
+  const nameLower = (s: string) => s.toLowerCase();
+  switch (mapId) {
+    case "arc":
+      return buildings.find((b) => nameLower(b.name).includes("research") || nameLower(b.name).includes("academic"));
+    case "stocker":
+      return buildings.find((b) => nameLower(b.name).includes("stocker"));
+    case "alden":
+      return buildings.find((b) => nameLower(b.name).includes("alden"));
+    default:
+      return undefined;
+  }
+}
+
 export default function FindARoomScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, "FindRoom">>();
+  const buildingIdFromMap = route.params?.buildingIdFromMap;
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -158,7 +175,14 @@ export default function FindARoomScreen() {
       try {
         const buildingsData = await buildingsAPI.getAll();
         setBuildings(buildingsData);
-        if (buildingsData.length > 0) setSelectedBuilding(buildingsData[0]);
+        if (buildingsData.length > 0) {
+          if (buildingIdFromMap) {
+            const matched = findBuildingByMapId(buildingsData, buildingIdFromMap);
+            setSelectedBuilding(matched ?? buildingsData[0]);
+          } else {
+            setSelectedBuilding(buildingsData[0]);
+          }
+        }
       } catch (error) {
         console.error("Failed to load buildings:", error);
       } finally {
@@ -167,6 +191,13 @@ export default function FindARoomScreen() {
     };
     loadData();
   }, []);
+
+  // When navigated from Campus Map with a building, preselect it (e.g. if buildings already loaded)
+  useEffect(() => {
+    if (!buildingIdFromMap || buildings.length === 0) return;
+    const matched = findBuildingByMapId(buildings, buildingIdFromMap);
+    if (matched) setSelectedBuilding(matched);
+  }, [buildingIdFromMap, buildings]);
 
   useEffect(() => {
     const loadRooms = async () => {

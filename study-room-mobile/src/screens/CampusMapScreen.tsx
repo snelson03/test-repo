@@ -37,6 +37,8 @@ import {
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList, MapBuildingId } from "@/navigation/AppNavigator";
 
 type BuildingWithPin = {
   id: string;
@@ -135,21 +137,48 @@ export default function CampusMapScreen() {
   const zoomToBuilding = (buildingId: string) => {
     const pin = pinPositions[buildingId];
     const scrollView: any = mapScrollRef.current;
-    if (!pin || !scrollView || !scrollView.scrollResponderZoomTo) return;
+    if (!pin || !scrollView) return;
 
+    // Scroll main view so the map is visible (mobile)
+    if (!isWide) {
+      scrollViewMainRef.current?.scrollTo({ y: 0, animated: true });
+    }
+
+    // scrollResponderZoomTo is iOS-only; on web it can exist but throw (e.g. "Second argument must be a string")
+    if (Platform.OS !== "ios") return;
+    const zoomTo = scrollView.scrollResponderZoomTo;
+    if (typeof zoomTo !== "function") return;
     const zoomRect = {
       x: pin.x - mapSize.width * 0.25,
       y: pin.y - mapSize.height * 0.25,
       width: mapSize.width * 0.5,
       height: mapSize.height * 0.5,
-      animated: true,
     };
-
-    scrollView.scrollResponderZoomTo(zoomRect);
-
-    if (!isWide) {
-      scrollViewMainRef.current?.scrollTo({ y: 0, animated: true });
+    try {
+      zoomTo.call(scrollView, zoomRect, true);
+    } catch (_) {
+      // Ignore if zoom fails
     }
+  };
+
+  // Double-tap: first tap selects/zooms, second tap within 400ms navigates to Find a Room
+  const lastTapRef = useRef<{ buildingId: string; at: number } | null>(null);
+  const DOUBLE_TAP_MS = 400;
+
+  const handlePinPress = (buildingId: string) => {
+    const now = Date.now();
+    const last = lastTapRef.current;
+    if (last?.buildingId === buildingId && now - last.at < DOUBLE_TAP_MS) {
+      lastTapRef.current = null;
+      (navigation as NativeStackNavigationProp<RootStackParamList, "CampusMap">).navigate("FindRoom", {
+        buildingIdFromMap: buildingId as MapBuildingId,
+      });
+      return;
+    }
+    lastTapRef.current = { buildingId, at: now };
+    setSelectedBuildingId(buildingId);
+    startPulse();
+    zoomToBuilding(buildingId);
   };
 
   const handleSelectBuilding = (buildingId: string) => {
@@ -285,7 +314,7 @@ export default function CampusMapScreen() {
                               styles.pin,
                               { left: pin.x - 11, top: pin.y - 22 },
                             ]}
-                            onPress={() => handleSelectBuilding(b.id)}
+                            onPress={() => handlePinPress(b.id)}
                             activeOpacity={0.9}
                           >
                             <View style={styles.pinContainer}>

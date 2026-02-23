@@ -12,11 +12,14 @@ import LoginScreen from '@/screens/LoginScreen';
 import CreateAccountScreen from '../screens/CreateAccountScreen'; 
 
 // setting up app pages
+/** Map building id (Campus Map) -> used when navigating from map to Find a Room */
+export type MapBuildingId = 'arc' | 'stocker' | 'alden';
+
 export type RootStackParamList = {
   Login: undefined;
-  CreateAccount: undefined; 
+  CreateAccount: undefined;
   Home: undefined;
-  FindRoom: undefined;
+  FindRoom: { buildingIdFromMap?: MapBuildingId } | undefined;
   CampusMap: undefined;
   Favorites: undefined;
   Preferences: undefined;
