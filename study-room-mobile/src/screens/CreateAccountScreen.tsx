@@ -323,7 +323,7 @@ function createStyles(c: ThemeColors) {
   label: {
     fontFamily: FONT_HEADING,
     color: c.primary,
-    fontSize: FONT_SIZE_CARD_TITLE,
+    fontSize: FONT_SIZE_BODY,
     marginBottom: LABEL_MARGIN_BOTTOM,
   },
   input: {
