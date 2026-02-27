@@ -106,6 +106,13 @@ export default function HomeScreen() {
     inputRange: [0, 1],
     outputRange: [-height, 0],
   });
+// just ARC on IOS to fix formatting issue
+  const displayName = (name: string) => {
+    if (Platform.OS !== "web" && name === "Academic Research Center") {
+      return "ARC";
+    }
+    return name;
+  };
 
   const [rooms, setRooms] = useState<
     Array<{ name: string; status: string; subtitle: string }>
@@ -644,7 +651,9 @@ export default function HomeScreen() {
                       style={styles.availableItem}
                       accessibilityLabel={`${room.name}, ${room.subtitle}`}
                     >
-                      <Text style={styles.availableItemText}>{room.name}</Text>
+                      <Text style={styles.availableItemText}>
+                      {displayName(room.name)}
+                    </Text>
                       <View style={styles.availableRight}>
                         <View
                           style={[
