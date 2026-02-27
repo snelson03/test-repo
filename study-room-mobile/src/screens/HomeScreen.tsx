@@ -106,6 +106,13 @@ export default function HomeScreen() {
     inputRange: [0, 1],
     outputRange: [-height, 0],
   });
+// just ARC on IOS to fix formatting issue
+  const displayName = (name: string) => {
+    if (Platform.OS !== "web" && name === "Academic Research Center") {
+      return "ARC";
+    }
+    return name;
+  };
 
   const [rooms, setRooms] = useState<
     Array<{ name: string; status: string; subtitle: string }>
@@ -451,7 +458,7 @@ export default function HomeScreen() {
                           style={styles.manageBtn}
                         >
                           <Text style={styles.manageBtnText} numberOfLines={1}>
-                            NOTIFS
+                            NOTIFICATIONS
                           </Text>
                         </LinearGradient>
                       </TouchableOpacity>
@@ -477,29 +484,6 @@ export default function HomeScreen() {
                     </View>
                   </View>
                 </View>
-
-                {/* Preferences (optional full width quick link) */}
-                <TouchableOpacity
-                  onPress={() => navigation.navigate("Preferences" as never)}
-                  accessibilityRole="button"
-                  accessibilityLabel="Preferences"
-                  accessibilityHint="Opens the Preferences screen"
-                  activeOpacity={0.9}
-                >
-                  <View style={styles.roomCardContainer}>
-                    <View style={styles.preferencesLeft}>
-                      <Text style={styles.roomCardTextLeft}>PREFERENCES</Text>
-                    </View>
-                    <Feather
-                      name="menu"
-                      size={25}
-                      color={colors.white}
-                      style={styles.prefIcon}
-                      accessibilityElementsHidden
-                      importantForAccessibility="no"
-                    />
-                  </View>
-                </TouchableOpacity>
               </View>
             </ScrollView>
           </View>
@@ -667,7 +651,9 @@ export default function HomeScreen() {
                       style={styles.availableItem}
                       accessibilityLabel={`${room.name}, ${room.subtitle}`}
                     >
-                      <Text style={styles.availableItemText}>{room.name}</Text>
+                      <Text style={styles.availableItemText}>
+                      {displayName(room.name)}
+                    </Text>
                       <View style={styles.availableRight}>
                         <View
                           style={[
@@ -732,7 +718,7 @@ export default function HomeScreen() {
                   >
                     <LinearGradient colors={["#F4F4F4", "#A1B5A8"]} style={styles.manageBtn}>
                       <Text style={styles.manageBtnText} numberOfLines={1}>
-                        NOTIFS
+                        NOTIFICATIONS
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -752,29 +738,6 @@ export default function HomeScreen() {
                 </View>
               </View>
             </View>
-
-            {/* Preferences quick link */}
-            <TouchableOpacity
-              onPress={() => !menuOpen && navigation.navigate("Preferences" as never)}
-              accessibilityRole="button"
-              accessibilityLabel="Preferences"
-              accessibilityHint="Opens the Preferences screen"
-              activeOpacity={0.9}
-            >
-              <View style={styles.roomCardContainer}>
-                <View style={styles.preferencesLeft}>
-                  <Text style={styles.roomCardTextLeft}>PREFERENCES</Text>
-                </View>
-                <Feather
-                  name="menu"
-                  size={25}
-                  color={colors.white}
-                  style={styles.prefIcon}
-                  accessibilityElementsHidden
-                  importantForAccessibility="no"
-                />
-              </View>
-            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -1000,17 +963,18 @@ function createStyles(c: ThemeColors) {
     favoritesTopContainer: {
       marginVertical: 16,
       paddingHorizontal: 20,
-      top: 50,
+      top: 35,
+      bottom:  0,
     },
 
     bannerContainer: {
       marginVertical: 12,
       paddingHorizontal: 20,
-      top: 30,
-      bottom: 15,
+      //top: 15,
+      //bottom: 0,
       position: "relative",
     },
-    bannerImage: { width: "100%", height: 200, borderRadius: 0 },
+    bannerImage: { width: "100%", height: 200, borderRadius: CARD_BORDER_RADIUS},
     bannerText: {
       position: "absolute",
       paddingHorizontal: SPACE_LG,
@@ -1027,19 +991,19 @@ function createStyles(c: ThemeColors) {
     imageShadow: {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.6,
+      shadowOpacity: 0.7,
       shadowRadius: 6,
       elevation: 8,
       borderRadius: 10,
     },
 
     mapContainer: {
-      marginVertical: 16,
+      marginVertical: 12,
       paddingHorizontal: 20,
-      top: 40,
+      top: 0,
       position: "relative",
     },
-    mapImage: { width: "100%", height: 200, borderRadius: 0 },
+    mapImage: { width: "100%", height: 200, borderRadius: CARD_BORDER_RADIUS },
     mapText: {
       position: "absolute",
       paddingHorizontal: SPACE_LG,
@@ -1053,7 +1017,7 @@ function createStyles(c: ThemeColors) {
       textShadowRadius: 10,
     },
 
-    cardsContainer: { marginVertical: 16, paddingHorizontal: 20, top: 40 },
+    cardsContainer: { marginVertical: 0, paddingHorizontal:20, top: 16 },
 
     roomCardContainer: {
       flexDirection: "row",
@@ -1062,9 +1026,9 @@ function createStyles(c: ThemeColors) {
       padding: CARD_PADDING,
       backgroundColor: c.primary,
       borderRadius: CARD_BORDER_RADIUS,
-      marginBottom: CARD_MARGIN_BOTTOM - 5,
+      marginBottom: CARD_MARGIN_BOTTOM - 10,
       shadowColor: "#000",
-      shadowOpacity: 0.8,
+      shadowOpacity: 0.6,
       shadowRadius: 6,
       elevation: 2,
       shadowOffset: { width: 0, height: 5 },
@@ -1123,12 +1087,13 @@ function createStyles(c: ThemeColors) {
     },
 
     favoritesCard: {
-      backgroundColor: c.marigold,
       padding: CARD_PADDING,
       borderRadius: CARD_BORDER_RADIUS,
+      overflow: "hidden",
       marginTop: 0,
       marginBottom: 0,
     },
+
     favoritesHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -1151,7 +1116,7 @@ function createStyles(c: ThemeColors) {
 
     noAvailableText: {
       color: c.primary,
-      fontSize: FONT_SIZE_BODY + 2,
+      fontSize: FONT_SIZE_BODY,
       fontFamily: FONT_BODY,
       textAlign: "center",
       marginVertical: 10,
@@ -1187,8 +1152,8 @@ function createStyles(c: ThemeColors) {
     cardShadow: {
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.8,
-      shadowRadius: 5,
+      shadowOpacity: 0.7,
+      shadowRadius: 6,
       elevation: 8,
       borderRadius: CARD_BORDER_RADIUS,
       marginBottom: SCROLL_PADDING_BOTTOM,
