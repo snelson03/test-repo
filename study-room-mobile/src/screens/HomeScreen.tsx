@@ -43,7 +43,8 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { useUser } from "@/context/UserContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
-import { buildingsAPI, authAPI } from "@/utils/api";
+import { buildingsAPI, authAPI, usersAPI, Room } from "@/utils/api";
+import colors from "@/constants/colors";
 
 // describes what each favorite looks like for type safety
 interface FavoriteItem {
@@ -74,8 +75,11 @@ export default function HomeScreen() {
   const { width, height } = useWindowDimensions();
   const pagePad = width < 480 ? 12 : 0;
 
+  const [favoriteRooms, setFavoriteRooms] = useState<Room[]>([]); // real time favorites data
   // mobile content
   const contentWidthMobile = width;
+// get correct building name for favorites 
+  const [buildingNameById, setBuildingNameById] = useState<Record<string, string>>({});
 
   // Web content width accounts for sidebar and max width
   const webAvailable = width - WEB_SIDEBAR_WIDTH - pagePad * 2;
@@ -144,12 +148,68 @@ export default function HomeScreen() {
       });
     }
   };
-
+// automatically jump to correct preferences section when clicked on hoome screen 
   const goToPreferencesSection = (
     section: "Account" | "Groups" | "Notifications"
   ) => {
     (navigation as any).navigate("Preferences", { section });
   };
+// get building names for favorites
+  useEffect(() => {
+    const loadBuildingNames = async () => {
+      try {
+        const buildings = await buildingsAPI.getAll();
+        const map: Record<string, string> = {};
+        for (const b of buildings) {
+          map[String((b as any).id)] = (b as any).name;
+        }
+        setBuildingNameById(map);
+      } catch (e) {
+        console.error("Failed to load building names:", e);
+        setBuildingNameById({});
+      }
+    };
+  
+    loadBuildingNames();
+  }, []);
+// load favorites data
+// updates status when screens switch
+// load favorites data (and attach building_name)
+useEffect(() => {
+  const loadFavorites = async () => {
+    try {
+      const favsRaw = await usersAPI.getFavorites();
+
+      // ensure array
+      const favs: any[] =
+        Array.isArray(favsRaw) ? favsRaw :
+        Array.isArray((favsRaw as any)?.favorites) ? (favsRaw as any).favorites :
+        Array.isArray((favsRaw as any)?.data) ? (favsRaw as any).data :
+        [];
+
+      // normalize to always include building_name
+      const normalized = favs.map((room: any) => {
+        const buildingId =
+          room.building_id ?? room.buildingId ?? room.buildingID ?? room.building;
+
+        const buildingName =
+          room.building?.name ??
+          room.building_name ??
+          room.buildingName ??
+          (buildingId != null ? buildingNameById[String(buildingId)] : "");
+
+        return { ...room, building_name: buildingName };
+      });
+
+      setFavoriteRooms(normalized);
+    } catch (error) {
+      console.error("Failed to load favorites:", error);
+      setFavoriteRooms([]);
+    }
+  };
+
+  loadFavorites();
+}, [buildingNameById]);
 
   // Load building data
   useEffect(() => {
@@ -329,24 +389,37 @@ export default function HomeScreen() {
                           />
                         </View>
 
-                        {favorites.length === 0 ? (
-                          <Text style={styles.emptyText}>No favorites added yet</Text>
-                        ) : (
-                          favorites.map((fav) => (
-                            <View key={fav.name} style={styles.favItem}>
-                              <Text style={styles.favItemText}>{fav.name}</Text>
-                              <View style={styles.favRight}>
-                                <View
-                                  style={[
-                                    styles.favstatusDot,
-                                    { backgroundColor: colors.available },
-                                  ]}
-                                />
-                                <Text style={styles.favNumber}>Saved</Text>
-                              </View>
-                            </View>
-                          ))
-                        )}
+                        {favoriteRooms.length === 0 ? (
+                      <Text style={styles.emptyText}>No favorites added yet</Text>
+                    ) : (
+                      favoriteRooms.map((room: any, idx: number) => (
+                        <View
+                          key={String(room.id ?? `${room.building_name}-${room.room_number}-${idx}`)}
+                          style={styles.favItem}
+                        >
+                          <Text style={styles.favItemText}>
+                            {String(room.building_name ?? "").toUpperCase()} {room.room_number}
+                          </Text>
+
+                          <View style={styles.favRight}>
+                            <View
+                              style={[
+                                styles.favstatusDot,
+                                {
+                                  backgroundColor: room.is_available
+                                    ? colors.available
+                                    : colors.occupied,
+                                },
+                              ]}
+                            />
+
+                            <Text style={styles.favNumber}>
+                              {room.is_available ? "Available" : "Unavailable"}
+                            </Text>
+                          </View>
+                        </View>
+                      ))
+                    )}
                       </LinearGradient>
                     </View>
                   </TouchableOpacity>
@@ -552,20 +625,31 @@ export default function HomeScreen() {
                     <Feather name="heart" size={22} color={colors.primary} />
                   </View>
 
-                  {favorites.length === 0 ? (
+                  {favoriteRooms.length === 0 ? (
                     <Text style={styles.emptyText}>No favorites added yet</Text>
                   ) : (
-                    favorites.map((fav) => (
-                      <View key={fav.name} style={styles.favItem}>
-                        <Text style={styles.favItemText}>{fav.name}</Text>
+                    favoriteRooms.map((room) => (
+                      <View
+                      key={String((room as any).id ?? (room as any).room_id ?? `${(room as any).building_name}-${room.room_number}`)}
+                      style={styles.favItem}
+                    >
+                        <Text style={styles.favItemText}>
+                    {displayName(String((room as any).building_name ?? (room as any).buildingName ?? "")).toUpperCase()} {room.room_number}
+                  </Text>
                         <View style={styles.favRight}>
                           <View
                             style={[
                               styles.favstatusDot,
-                              { backgroundColor: colors.available },
+                              {
+                                backgroundColor: room.is_available
+                                  ? colors.available
+                                  : colors.occupied,
+                              },
                             ]}
                           />
-                          <Text style={styles.favNumber}>Saved</Text>
+                          <Text style={styles.favNumber}>
+                            {room.is_available ? "Available" : "Unavailable"}
+                          </Text>
                         </View>
                       </View>
                     ))
@@ -620,7 +704,14 @@ export default function HomeScreen() {
           {/* Room Cards + Favorites style setup */}
           <View style={styles.cardsContainer} accessibilityLabel="Cards">
             {/* Available Now Section */}
-            <View style={styles.cardShadow} accessibilityLabel="Available now">
+            <TouchableOpacity
+                style={styles.cardShadow}
+                onPress={() => !menuOpen && navigation.navigate("FindRoom" as never)}
+                activeOpacity={0.9}
+                accessibilityRole="button"
+                accessibilityLabel="Available now"
+                accessibilityHint="Opens the Find a Room screen"
+              >
               <LinearGradient
                 colors={["#F4F4F4", "#A1B5A8"]}
                 style={styles.availableNowCard}
@@ -672,7 +763,7 @@ export default function HomeScreen() {
                   ))
                 )}
               </LinearGradient>
-            </View>
+              </TouchableOpacity>
 
             {/* Manage quick buttons (mobile) */}
             <View style={styles.cardShadow}>
@@ -949,6 +1040,7 @@ function createStyles(c: ThemeColors) {
       justifyContent: "flex-start",
       width: "100%",
     },
+
     logo: { width: 300, height: 80, marginRight: 20 },
 
     welcome: {
@@ -1068,7 +1160,7 @@ function createStyles(c: ThemeColors) {
       justifyContent: "space-between",
       alignItems: "center",
       backgroundColor: c.primary,
-      borderRadius: 0,
+      borderRadius: 1,
       padding: 18,
       marginBottom: 6,
     },
@@ -1130,6 +1222,7 @@ function createStyles(c: ThemeColors) {
       paddingVertical: 18,
       paddingHorizontal: 18,
       marginVertical: 3,
+      borderRadius: 1,
     },
     favItemText: {
       color: c.white,
@@ -1223,10 +1316,12 @@ function createStyles(c: ThemeColors) {
       paddingHorizontal: 18,
       borderRadius: 6,
       flexDirection: "row",
-      justifyContent: "space-between",
+      justifyContent: "center",   // centers text
       alignItems: "center",
       backgroundColor: "#D9534F",
+      gap: 8,                     // keeps spacing between text + icon
     },
+
     logoutBtnText: {
       color: c.white,
       fontFamily: FONT_HEADING,
@@ -1235,6 +1330,8 @@ function createStyles(c: ThemeColors) {
     },
 
     // MOBILE floating menu (unchanged)
+
+
     menuButtonContainer: {
       position: "absolute",
       top: 100,

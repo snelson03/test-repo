@@ -83,6 +83,14 @@ export default function FavoritesScreen() {
     { name: "Favorites", route: "Favorites" },
     { name: "Preferences", route: "Preferences" },
   ];
+// ARC on mobile only to fit display
+  const displayFavName = (name: string) => {
+    // mobile only
+    if (Platform.OS !== "web" && name.startsWith("Academic Research Center")) {
+      return name.replace("Academic Research Center", "ARC");
+    }
+    return name;
+  };
 
   // toggle edit mode on or off
   const toggleEdit = () => setEditMode(!editMode);
@@ -380,7 +388,7 @@ export default function FavoritesScreen() {
                   style={styles.card}
                   accessibilityLabel={`Favorite room ${item.name}`}
                 >
-                  <Text style={styles.roomText}>{item.name}</Text>
+                  <Text style={styles.roomText}>{displayFavName(item.name)}</Text>
 
                   <View style={styles.rightSection}>
                     <View
