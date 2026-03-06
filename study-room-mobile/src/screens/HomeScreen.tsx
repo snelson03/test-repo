@@ -43,13 +43,15 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { useUser } from "@/context/UserContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
-import { buildingsAPI, authAPI } from "@/utils/api";
+import { buildingsAPI, authAPI, usersAPI} from "@/utils/api"; // added usersAPI
+
 
 // describes what each favorite looks like for type safety
 interface FavoriteItem {
   name: string;
   status?: string;
   tstatus?: string;
+  roomId?: number;
 }
 
 // Maximum width for large screens
@@ -61,6 +63,20 @@ type MenuRoute =
   | "CampusMap"
   | "Favorites"
   | "Preferences";
+
+type RoomStatus = "available" | "occupied" | "offline";
+
+function roomStatusLabel(s: RoomStatus) {
+  if (s === "available") return "Available";
+  if (s === "occupied") return "Occupied";
+  return "Offline";
+}
+
+function roomStatusColor(s: RoomStatus, colors: any) {
+  if (s === "available") return colors.available;
+  if (s === "occupied") return colors.occupied;
+  return colors.gray400; // offline
+}
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -90,6 +106,8 @@ export default function HomeScreen() {
   // Mobile Menu
   const [menuOpen, setMenuOpen] = useState(false);
   const menuAnim = useRef(new Animated.Value(0)).current;
+
+  const [favoriteStatusById, setFavoriteStatusById] = useState<Record<number, RoomStatus>>({});
 
   const toggleMenu = () => {
     const next = !menuOpen;
@@ -186,6 +204,34 @@ export default function HomeScreen() {
 
     loadBuildings();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadFavoriteStatuses = async () => {
+      try {
+        // one request returns full Room[] for the user's favorites
+        const favRooms = await usersAPI.getFavorites();
+
+        const map: Record<number, RoomStatus> = {};
+        for (const r of favRooms) {
+          map[r.id] = r.is_available ? "available" : "occupied";
+        }
+
+        if (!cancelled) setFavoriteStatusById(map);
+      } catch (e) {
+        // if request fails, don’t crash — just mark unknown as offline
+        if (!cancelled) setFavoriteStatusById({});
+      }
+    };
+
+    loadFavoriteStatuses();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [favorites]);
+
 
   // WEB VERSION
   if (isWeb) {
@@ -335,7 +381,7 @@ export default function HomeScreen() {
                           favorites.map((fav) => (
                             <View key={fav.name} style={styles.favItem}>
                               <Text style={styles.favItemText}>{fav.name}</Text>
-                              <View style={styles.favRight}>
+                              {/* <View style={styles.favRight}>
                                 <View
                                   style={[
                                     styles.favstatusDot,
@@ -343,7 +389,28 @@ export default function HomeScreen() {
                                   ]}
                                 />
                                 <Text style={styles.favNumber}>Saved</Text>
-                              </View>
+                              </View> */}
+                              {(() => {
+                              const roomId = (fav as any).roomId as number | undefined;
+
+                              const status: RoomStatus =
+                                roomId && favoriteStatusById[roomId]
+                                  ? favoriteStatusById[roomId]
+                                  : "offline";
+
+                              return (
+                                <View style={styles.favRight}>
+                                  <View
+                                    style={[
+                                      styles.favstatusDot,
+                                      { backgroundColor: roomStatusColor(status, colors) },
+                                    ]}
+                                  />
+                                  <Text style={styles.favNumber}>{roomStatusLabel(status)}</Text>
+                                </View>
+                              );
+                            })()}
+
                             </View>
                           ))
                         )}
@@ -383,7 +450,7 @@ export default function HomeScreen() {
                           >
                             <Text style={styles.availableItemText}>{room.name}</Text>
                             <View style={styles.availableRight}>
-                              <View
+                              {/* <View
                                 style={[
                                   styles.availableStatusDot,
                                   {
@@ -393,7 +460,7 @@ export default function HomeScreen() {
                                         : colors.occupied,
                                   },
                                 ]}
-                              />
+                              /> */}
                               <Text style={styles.availableSubtitle}>{room.subtitle}</Text>
                             </View>
                           </View>
@@ -558,7 +625,7 @@ export default function HomeScreen() {
                     favorites.map((fav) => (
                       <View key={fav.name} style={styles.favItem}>
                         <Text style={styles.favItemText}>{fav.name}</Text>
-                        <View style={styles.favRight}>
+                        {/* <View style={styles.favRight}>
                           <View
                             style={[
                               styles.favstatusDot,
@@ -566,7 +633,28 @@ export default function HomeScreen() {
                             ]}
                           />
                           <Text style={styles.favNumber}>Saved</Text>
-                        </View>
+                        </View> */}
+                        {(() => {
+                          const roomId = fav.roomId;
+
+                          const status: RoomStatus =
+                            roomId && favoriteStatusById[roomId]
+                              ? favoriteStatusById[roomId]
+                              : "offline";
+
+                          return (
+                            <View style={styles.favRight}>
+                              <View
+                                style={[
+                                  styles.favstatusDot,
+                                  { backgroundColor: roomStatusColor(status, colors) },
+                                ]}
+                              />
+                              <Text style={styles.favNumber}>{roomStatusLabel(status)}</Text>
+                            </View>
+                          );
+                        })()}
+
                       </View>
                     ))
                   )}
@@ -655,7 +743,7 @@ export default function HomeScreen() {
                       {displayName(room.name)}
                     </Text>
                       <View style={styles.availableRight}>
-                        <View
+                        {/* <View
                           style={[
                             styles.availableStatusDot,
                             {
@@ -665,7 +753,7 @@ export default function HomeScreen() {
                                   : colors.occupied,
                             },
                           ]}
-                        />
+                        /> */}
                         <Text style={styles.availableSubtitle}>{room.subtitle}</Text>
                       </View>
                     </View>

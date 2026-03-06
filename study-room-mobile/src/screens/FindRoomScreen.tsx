@@ -74,6 +74,12 @@ const MAX_SCREEN_WIDTH = 1400;
 
 type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
 
+function roomSortKey(roomNumber: string) {
+  // handles "108", "110", etc AND weird ones like "B12" safely
+  const n = parseInt(roomNumber, 10);
+  return Number.isNaN(n) ? Number.POSITIVE_INFINITY : n;
+}
+
 // Match Campus Map building id to API building name (API may use "Academic Research Center" etc.)
 function findBuildingByMapId(buildings: Building[], mapId: MapBuildingId): Building | undefined {
   const nameLower = (s: string) => s.toLowerCase();
@@ -98,32 +104,78 @@ export default function FindARoomScreen() {
   const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const pagePad = width < 480 ? 12 : width < 900 ? 18 : width < 1400 ? 28 : 40;
-  const usableWidth = Math.max(320, width - pagePad * 2);
+  // const pagePad = width < 480 ? 12 : width < 900 ? 18 : width < 1400 ? 28 : 40;
+  // const usableWidth = Math.max(320, width - pagePad * 2);
+
+  const [gridWidth, setGridWidth] = useState(0);
+
+  // ✅ compute layout widths FIRST
+  const isWeb = Platform.OS === "web";
+
+  // used to size the web content area like Home Screen
+  const webPagePad = width < 480 ? 12 : 0;
+  const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
+  const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
+
+  // ✅ this is what the grid math should use
+  const layoutWidth = isWeb ? contentWidthWeb : width;
+
+  // ✅ now safe to use layoutWidth
+  const pagePad =
+    layoutWidth < 480 ? 12 :
+    layoutWidth < 900 ? 18 :
+    layoutWidth < 1400 ? 28 : 40;
+
+  const usableWidth = Math.max(320, layoutWidth - pagePad * 2);
 
   const tileMargin = 12;
   const gridSidePad = 16;
 
-  const numColumns = useMemo(() => {
-    const w = usableWidth - gridSidePad * 2;
+  // const numColumns = useMemo(() => {
+  //   const w = usableWidth - gridSidePad * 2;
+  //   if (w < 520) return 2;
+  //   if (w < 820) return 3;
+  //   if (w < 1180) return 4;
+  //   if (w < 1540) return 5;
+  //   return 6;
+  // }, [usableWidth]);
+
+  // const tileSize = useMemo(() => {
+  //   const w = usableWidth - gridSidePad * 2;
+  //   const totalMarginsPerRow = tileMargin * 2 * numColumns;
+  //   const raw = (w - totalMarginsPerRow) / numColumns;
+
+  //   const min = 110;
+  //   const max = 260; 
+  //   const size = Math.max(min, Math.min(raw, max));
+
+  //   return { size, margin: tileMargin };
+  // }, [usableWidth, numColumns]);
+
+    const numColumns = useMemo(() => {
+    const w = gridWidth ? (gridWidth - gridSidePad * 2) : usableWidth;
     if (w < 520) return 2;
     if (w < 820) return 3;
     if (w < 1180) return 4;
     if (w < 1540) return 5;
     return 6;
-  }, [usableWidth]);
+  }, [gridWidth, usableWidth]);
 
   const tileSize = useMemo(() => {
-    const w = usableWidth - gridSidePad * 2;
+    const w = gridWidth ? (gridWidth - gridSidePad * 2) : usableWidth;
+
     const totalMarginsPerRow = tileMargin * 2 * numColumns;
-    const raw = (w - totalMarginsPerRow) / numColumns;
+
+    // ✅ subtract 1px to avoid fractional rounding overflow on web
+    const raw = (w - totalMarginsPerRow) / numColumns - 1;
 
     const min = 110;
-    const max = 260;
-    const size = Math.max(min, Math.min(raw, max));
+    const max = 220; // I’d keep this lower on web
+    const size = Math.floor(Math.max(min, Math.min(raw, max)));
 
     return { size, margin: tileMargin };
-  }, [usableWidth, numColumns]);
+  }, [gridWidth, usableWidth, numColumns]);
+
 
   const { favorites, addFavorite, removeFavorite } = useFavorites() as {
     favorites: FavoriteItem[];
@@ -142,12 +194,15 @@ export default function FindARoomScreen() {
   // New: toggle between rooms grid and floor plan (per selected building)
   const [viewMode, setViewMode] = useState<"rooms" | "floorPlan">("rooms");
 
-  const isWeb = Platform.OS === "web";
+  // const isWeb = Platform.OS === "web";
 
   // used to size the web content area like Home Screen
-  const webPagePad = width < 480 ? 12 : 0;
-  const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
-  const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
+  // const webPagePad = width < 480 ? 12 : 0;
+  // const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
+  // const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
+
+  // const layoutWidth = isWeb ? contentWidthWeb : width;
+
 
   const menuItems: WebMenuItem[] = [
     { name: "Home", route: "Home" },
@@ -207,8 +262,18 @@ export default function FindARoomScreen() {
       if (viewMode !== "rooms") return;
 
       try {
+        // const buildingRooms = await buildingsAPI.getRooms(selectedBuilding.id);
+        // setRooms(buildingRooms);
         const buildingRooms = await buildingsAPI.getRooms(selectedBuilding.id);
-        setRooms(buildingRooms);
+        const sortedRooms = [...buildingRooms].sort((a, b) => {
+          const an = roomSortKey(a.room_number);
+          const bn = roomSortKey(b.room_number);
+          // numeric first
+          if (an !== bn) return an - bn;
+          // tie-breaker / fallback for non-numeric or equal numeric:
+          return a.room_number.localeCompare(b.room_number, undefined, { numeric: true });
+        });
+        setRooms(sortedRooms);
       } catch (error) {
         console.error("Failed to load rooms:", error);
       }
@@ -419,7 +484,18 @@ export default function FindARoomScreen() {
           ) : (
             <>
               {/* Room grid */}
+              {/* <View
+                style={[
+                  styles.gridContainer,
+                  {
+                    width: "100%",
+                    paddingHorizontal: gridSidePad,
+                  },
+                ]}
+                accessibilityLabel="Room grid"
+              > */}
               <View
+                onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}
                 style={[
                   styles.gridContainer,
                   {
@@ -452,8 +528,14 @@ export default function FindARoomScreen() {
                     data={roomItems}
                     numColumns={numColumns}
                     key={numColumns}
+
+                    removeClippedSubviews={true}
+                    initialNumToRender={24}
+                    maxToRenderPerBatch={24}
+                    windowSize={5}
+
                     keyExtractor={(item) => item.roomId.toString()}
-                    scrollEnabled={false}
+                    scrollEnabled={true}
                     renderItem={({ item }) => {
                       const favorite = isFavorite(item.roomId);
 
@@ -538,12 +620,12 @@ export default function FindARoomScreen() {
                       );
                     }}
                     contentContainerStyle={{
-                      alignItems: "center",
-                      justifyContent: "center",
+                      alignItems: "stretch", // was center
+                      // justifyContent: "center",
                       width: "100%",
                     }}
                     columnWrapperStyle={{
-                      justifyContent: "center",
+                      justifyContent: "center", 
                     }}
                   />
                 )}
@@ -774,6 +856,11 @@ function createStyles(c: ThemeColors) {
     shadowRadius: 5,
     position: "relative",
     overflow: "hidden",
+    transitionDuration: "150ms",
+
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
+
   },
 
   roomBoxInner: {
