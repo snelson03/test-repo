@@ -159,6 +159,7 @@ async def update_room(
         room.floor_number = room_data.floor_number
 
     if room_data.is_available is not None:
+        print("Updating availability to:", room_data.is_available)
         room.is_available = room_data.is_available
 
     # Check if sensor_id is unique if being updated

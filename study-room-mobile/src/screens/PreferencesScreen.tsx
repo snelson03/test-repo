@@ -408,7 +408,7 @@ export default function PreferencesScreen() {
 
                     {modal && (
                       <TouchableOpacity
-                        onPress={() => openModal(key)}
+                      onPress={() => openModal(key as "favoritesOnly" | "buildingSpecific")}
                         accessibilityRole="button"
                         accessibilityLabel={`Edit ${label}`}
                       >
