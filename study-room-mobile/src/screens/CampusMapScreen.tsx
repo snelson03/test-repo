@@ -37,11 +37,13 @@ import {
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type {
   RootStackParamList,
   MapBuildingId,
 } from "@/navigation/AppNavigator";
+import colors from "@/constants/colors";
 
 type BuildingWithPin = {
   id: string;
@@ -69,6 +71,7 @@ export default function CampusMapScreen() {
   const mapScrollXRef = useRef<ScrollView | null>(null);
   const mapScrollYRef = useRef<ScrollView | null>(null);
 
+  const route = useRoute() as any;
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
 
@@ -264,7 +267,17 @@ export default function CampusMapScreen() {
       setTimeout(() => zoomToBuilding(selectedBuildingId), 0);
     }
   }, [zoom, selectedBuildingId]); // include selectedBuildingId so it's not stale
+  // take directly to building when clicked on room details
+  useEffect(() => {
+    const id = route?.params?.selectedBuildingId as string | undefined;
+    if (!id) return;
 
+    setSelectedBuildingId(id);
+    startPulse();
+
+    // wait for layout measurement so pinPositions is ready
+    setTimeout(() => zoomToBuilding(id), 0);
+  }, [route?.params?.selectedBuildingId]);
   const pagePadding = isWide ? 36 : 0;
 
   const headerTopPad = isWide ? 50 : 80;
@@ -730,15 +743,16 @@ function createStyles(c: ThemeColors) {
 
     mapWrapper: {
       alignItems: "stretch",
-      marginBottom: 45,
+      marginBottom: 0,
     },
 
     mapFrame: {
-      backgroundColor: c.primary,
+      backgroundColor: c.darkAccent,
       width: "100%",
       alignItems: "center",
       justifyContent: "center",
-      borderRadius: CARD_BORDER_RADIUS,
+      borderRadius: 0,
+      paddingVertical: 30,
     },
 
     mapViewport: {
@@ -816,16 +830,19 @@ function createStyles(c: ThemeColors) {
     // legend with colored pins + ping effect
     legend: {
       position: "absolute",
-      left: 10,
-      right: 10,
-      bottom: 10,
+      left: 15,
+      right: 110,
+      bottom: 25,
       zIndex: 20,
-      backgroundColor: "rgba(255,255,255,0.6)",
+      backgroundColor: "rgba(5, 71, 42, 0.75)",
+
+      // solid border around the legend
+      borderWidth: 1.5,
+      borderColor: colors.primary,
+
       shadowColor: "#000",
       shadowOpacity: 0.15,
       shadowRadius: 8,
-
-      borderRadius: 6,
       paddingVertical: 10,
       paddingHorizontal: 12,
       gap: 8,
@@ -835,7 +852,7 @@ function createStyles(c: ThemeColors) {
       flexDirection: "row",
       alignItems: "center",
       gap: 10,
-      paddingVertical: 2,
+      paddingVertical: 1,
     },
 
     legendIconWrap: {
@@ -855,33 +872,39 @@ function createStyles(c: ThemeColors) {
 
     legendText: {
       flex: 1,
-      color: c.primary,
-      fontSize: 14,
+      color: c.white,
+      fontSize: 15,
       fontFamily: "BebasNeue-Regular",
       letterSpacing: 0.4,
+      textShadowColor: "rgba(0, 0, 0, 0.4)",
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 3,
     },
 
     buildingsContainer: {
       backgroundColor: c.white,
       alignItems: "center",
-      paddingVertical: 25,
+      paddingTop: 0,
+      paddingBottom: 25,
       shadowColor: "#000",
       shadowOpacity: 0.6,
+      shadowOffset: { width: 0, height: 6 },
       shadowRadius: 6,
       elevation: 8,
-      borderRadius: CARD_BORDER_RADIUS,
+      borderRadius: 0,
+      overflow: "hidden",
     },
 
     sectionTitle: {
       fontSize: FONT_SIZE_TITLE - 2,
       fontFamily: FONT_HEADING,
       color: c.white,
-      backgroundColor: c.primary,
-      paddingVertical: 15,
+      backgroundColor: colors.green3,
+      paddingVertical:13,
       textAlign: "center",
       width: "100%",
       marginBottom: 30,
-      marginTop: -25,
+      marginTop: 0,
       alignSelf: "stretch",
     },
 

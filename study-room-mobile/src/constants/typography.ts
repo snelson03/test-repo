@@ -62,7 +62,7 @@ export const INPUT_MARGIN_BOTTOM = 16;
 export const LABEL_MARGIN_BOTTOM = 6;
 
 // Web layout (shared with screens)
-export const WEB_SIDEBAR_WIDTH = 300;
+export const WEB_SIDEBAR_WIDTH = 220;
 export const WEB_TOPBAR_HEIGHT = 170;
 export const WEB_NAV_ITEM_PADDING_V = 14;
 export const WEB_NAV_ITEM_PADDING_H = 12;
