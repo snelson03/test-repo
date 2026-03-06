@@ -20,7 +20,7 @@ export type RootStackParamList = {
   CreateAccount: undefined;
   Home: undefined;
   FindRoom: { buildingIdFromMap?: MapBuildingId } | undefined;
-  CampusMap: undefined;
+  CampusMap: { selectedBuildingId?: "arc" | "stocker" | "alden" } | undefined;
   Favorites: undefined;
   Preferences: undefined;
   RoomDetails: {

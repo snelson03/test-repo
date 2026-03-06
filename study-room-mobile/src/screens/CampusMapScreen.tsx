@@ -888,6 +888,7 @@ function createStyles(c: ThemeColors) {
       paddingBottom: 25,
       shadowColor: "#000",
       shadowOpacity: 0.6,
+      shadowOffset: { width: 0, height: 6 },
       shadowRadius: 6,
       elevation: 8,
       borderRadius: 0,

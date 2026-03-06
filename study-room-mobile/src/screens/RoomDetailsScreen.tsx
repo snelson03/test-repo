@@ -185,7 +185,20 @@ export default function RoomDetailsScreen() {
             paddingHorizontal: 20,
           },
         ]}
-        onPress={() => navigation.navigate('CampusMap')}
+        onPress={() => {
+          // converts the building name to the id used by CampusMap pins
+          const toMapId = (b: string) => {
+            const s = b.toLowerCase();
+            if (s.includes("stocker")) return "stocker";
+            if (s.includes("alden")) return "alden";
+            // handles ARC / Academic & Research Center
+            return "arc";
+          };
+        
+          navigation.navigate("CampusMap", {
+            selectedBuildingId: toMapId(building),
+          } as any);
+        }}
         accessibilityRole="button"
         accessibilityLabel="View on map"
         accessibilityHint="Opens the campus map screen"
