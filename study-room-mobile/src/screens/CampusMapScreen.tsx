@@ -747,7 +747,7 @@ function createStyles(c: ThemeColors) {
     },
 
     mapFrame: {
-      backgroundColor: c.primary,
+      backgroundColor: c.darkAccent,
       width: "100%",
       alignItems: "center",
       justifyContent: "center",
@@ -899,7 +899,7 @@ function createStyles(c: ThemeColors) {
       fontSize: FONT_SIZE_TITLE - 2,
       fontFamily: FONT_HEADING,
       color: c.white,
-      backgroundColor: colors.marigold,
+      backgroundColor: colors.green3,
       paddingVertical:13,
       textAlign: "center",
       width: "100%",

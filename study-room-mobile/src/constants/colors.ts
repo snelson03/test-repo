@@ -5,7 +5,7 @@ const colors =
   // Primary colors
   primary: "#05472A",     // Cutler Green
   green2: "#006435",
-  green3:"#016C3A",
+  green3:"#0E6A43",
   green4:"1A7A4A",
   darkAccent: "#04301D",  // Under The Elms (Dark Green)
   white: "#FFFFFF",       // Cupola White

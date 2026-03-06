@@ -259,7 +259,10 @@ export default function HomeScreen() {
     return (
       <View style={styles.webPage} accessibilityLabel="Home screen">
         {/* top bar */}
-        <View style={styles.webTopBar} accessibilityLabel="Top bar">
+        <LinearGradient
+              colors={["#06442A", "#04301D"]}
+              style={styles.webTopBar}
+            accessibilityLabel="Top bar">
           <Image
             source={require("@/assets/images/bf_logo.png")}
             style={styles.webTopBarLogo}
@@ -268,13 +271,12 @@ export default function HomeScreen() {
             accessibilityLabel="Bobcat Finder logo"
             accessibilityIgnoresInvertColors
           />
-        </View>
+        </LinearGradient>
 
         {/* sidebar + main */}
         <View style={styles.webBody}>
           {/* Left Sidebar */}
-          <View
-            style={styles.webSidebar}
+          <View style={styles.webSidebar}
             accessibilityLabel="Navigation sidebar"
           >
             <View style={styles.webSidebarLinks}>
@@ -304,7 +306,7 @@ export default function HomeScreen() {
                 );
               })}
             </View>
-          </View>
+            </View>
 
           {/* Main area */}
           <View style={styles.webMain}>
@@ -392,7 +394,7 @@ export default function HomeScreen() {
                   >
                     <View style={styles.cardShadow}>
                     <LinearGradient
-                  colors={["#016C3A", "#013F26"]} style={styles.favoritesCard}>
+                 colors={["#06442A", "#04301D"]}style={styles.favoritesCard}>
                         <View style={styles.favoritesHeader}>
                           <Text style={styles.favoritesTitle}>MY FAVORITES</Text>
                           <Feather
@@ -415,7 +417,7 @@ export default function HomeScreen() {
                                 room.id ??
                                   `${room.building_name}-${room.room_number}-${idx}`
                               )}
-                              colors={["#F4F4F4", "#A1B5A8"]}
+                              colors={["#0F7046", "#0D6440"]}
                               style={styles.favItem}
                             >
                               <Text style={styles.favItemText}>
@@ -452,7 +454,7 @@ export default function HomeScreen() {
                     accessibilityLabel="Available now"
                   >
                     <LinearGradient
-                  colors={["#016C3A", "#013F26"]} style={styles.availableNowCard}>
+                  colors={["#06442A", "#04301D"]}style={styles.availableNowCard}>
                       <View style={styles.availableHeader}>
                         <Text style={styles.availableTitle}>AVAILABLE NOW</Text>
                         <Ionicons
@@ -474,7 +476,7 @@ export default function HomeScreen() {
                         availableRooms.map((room) => (
                           <LinearGradient
                             key={room.name}
-                            colors={["#F4F4F4", "#A1B5A8"]}
+                            colors={["#0F7046", "#0D6440"]}
                             style={styles.availableItem}
                             accessibilityLabel={`${room.name}, ${room.subtitle}`}
                           >
@@ -503,9 +505,9 @@ export default function HomeScreen() {
                 </View>
 
                 {/* WEB: Manage row */}
-                <View style={styles.cardShadow}>
+                <View style={[styles.cardShadow, { marginHorizontal: 12, borderRadius: CARD_BORDER_RADIUS }]}>
                 <LinearGradient
-                  colors={["#C9A300", "#9B7A00"]}
+                  colors={["#0F7046", "#0D6440"]}
                   style={styles.manageCardWeb}
                 >
                     <View style={styles.manageHeader}>
@@ -526,7 +528,7 @@ export default function HomeScreen() {
                         activeOpacity={0.9}
                       >
                         <LinearGradient
-                          colors={["#016C3A", "#013F26"]} 
+                          colors={["#F3F7F5", "#E4ECE7"]} 
                           style={styles.manageBtn}
                         >
                           <Text style={styles.manageBtnText} numberOfLines={1}>
@@ -541,7 +543,7 @@ export default function HomeScreen() {
                         activeOpacity={0.9}
                       >
                         <LinearGradient
-                          colors={["#016C3A", "#013F26"]} 
+                          colors={["#F3F7F5", "#E4ECE7"]} 
                           style={styles.manageBtn}
                         >
                           <Text style={styles.manageBtnText} numberOfLines={1}>
@@ -556,7 +558,7 @@ export default function HomeScreen() {
                         activeOpacity={0.9}
                       >
                         <LinearGradient
-                          colors={["#016C3A", "#013F26"]} 
+                          colors={["#F3F7F5", "#E4ECE7"]} 
                           style={styles.manageBtn}
                         >
                           <Text style={styles.manageBtnText} numberOfLines={1}>
@@ -621,7 +623,10 @@ export default function HomeScreen() {
           ]}
         >
           {/* Header style setup */}
-          <View style={styles.header} accessibilityLabel="Header">
+          <LinearGradient
+              colors={["#0A5A38", "#05472A"]}
+              style={styles.header}
+            >
             <Image
               source={require("@/assets/images/bf_logo.png")}
               style={styles.logo}
@@ -629,7 +634,7 @@ export default function HomeScreen() {
               accessibilityLabel="Bobcat Finder logo"
               accessibilityIgnoresInvertColors
             />
-          </View>
+          </LinearGradient>
 
           {/* Welcome message style setup */}
           <View style={styles.welcome}>
@@ -648,7 +653,7 @@ export default function HomeScreen() {
             >
               <View style={styles.cardShadow}>
               <LinearGradient
-                  colors={["#016C3A", "#013F26"]}
+                  colors={["#06442A", "#04301D"]}
                   style={styles.favoritesCard}
                 >
                   {/* Header with title and heart icon */}
@@ -667,7 +672,7 @@ export default function HomeScreen() {
                             (room as any).room_id ??
                             `${(room as any).building_name}-${room.room_number}`
                         )}
-                        colors={["#F4F4F4", "#A1B5A8"]}
+                        colors={["#0F7046", "#0D6440"]}
                         style={styles.favItem}
                       >
                         <Text style={styles.favItemText}>
@@ -757,7 +762,7 @@ export default function HomeScreen() {
               accessibilityHint="Opens the Find a Room screen"
             >
               <LinearGradient
-                  colors={["#016C3A", "#013F26"]} style={styles.availableNowCard}>
+                  colors={["#06442A", "#04301D"]}style={styles.availableNowCard}>
                 <View style={styles.availableHeader}>
                   <Text style={styles.availableTitle}>AVAILABLE NOW</Text>
                   <Ionicons
@@ -784,7 +789,7 @@ export default function HomeScreen() {
                   availableRooms.map((room) => (
                     <LinearGradient
                       key={room.name}
-                      colors={["#F4F4F4", "#A1B5A8"]}
+                      colors={["#0F7046", "#0D6440"]}
                       style={styles.availableItem}
                       accessibilityLabel={`${room.name}, ${room.subtitle}`}
                     >
@@ -814,7 +819,7 @@ export default function HomeScreen() {
             {/* Manage quick buttons (mobile) */}
             <View style={[styles.cardShadow, { marginVertical: 0 }]}>
             <LinearGradient
-                colors={["#C9A300", "#9B7A00"]}
+                colors={["#0F7046", "#0D6440"]}
                 style={styles.manageCard}
               >
                 <View style={styles.manageHeader}>
@@ -829,7 +834,7 @@ export default function HomeScreen() {
                     onPress={() => !menuOpen && goToPreferencesSection("Account")}
                     activeOpacity={0.9}
                   >
-                    <LinearGradient colors={["#016C3A", "#013F26"]} style={styles.manageBtn}>
+                    <LinearGradient colors={["#F3F7F5", "#E4ECE7"]} style={styles.manageBtn}>
                       <Text style={styles.manageBtnText} numberOfLines={1}>
                         ACCOUNT
                       </Text>
@@ -841,7 +846,7 @@ export default function HomeScreen() {
                     onPress={() => !menuOpen && goToPreferencesSection("Groups")}
                     activeOpacity={0.9}
                   >
-                    <LinearGradient colors={["#016C3A", "#013F26"]}  style={styles.manageBtn}>
+                    <LinearGradient colors={["#F3F7F5", "#E4ECE7"]} style={styles.manageBtn}>
                       <Text style={styles.manageBtnText} numberOfLines={1}>
                         GROUPS
                       </Text>
@@ -856,7 +861,7 @@ export default function HomeScreen() {
                     onPress={() => !menuOpen && goToPreferencesSection("Notifications")}
                     activeOpacity={0.9}
                   >
-                    <LinearGradient colors={["#016C3A", "#013F26"]}  style={styles.manageBtn}>
+                    <LinearGradient colors={["#F3F7F5", "#E4ECE7"]}  style={styles.manageBtn}>
                       <Text style={styles.manageBtnText} numberOfLines={1}>
                         NOTIFICATIONS
                       </Text>
@@ -974,7 +979,7 @@ function createStyles(c: ThemeColors) {
     },
 
     webBody: {
-      flex: 1,
+      flex:1,
       flexDirection: "row",
       backgroundColor: c.gray100,
     },
@@ -983,7 +988,7 @@ function createStyles(c: ThemeColors) {
       width: WEB_SIDEBAR_WIDTH,
       backgroundColor: c.primary,
       paddingTop: 0,
-      paddingHorizontal: 14,
+      paddingHorizontal:10,
       shadowColor: "#000",
       shadowOffset: { width: 6, height: 0 },
       shadowOpacity: 0.22,
@@ -993,7 +998,7 @@ function createStyles(c: ThemeColors) {
       zIndex: 5,
     },
 
-    webSidebarLinks: { marginTop: 6 },
+    webSidebarLinks: { marginTop: 6,},
 
     webNavItem: {
       paddingVertical: WEB_NAV_ITEM_PADDING_V,
@@ -1213,14 +1218,14 @@ function createStyles(c: ThemeColors) {
     },
 
     availableItemText: {
-      color: c.primary,
+      color: c.white,
       fontFamily: FONT_HEADING,
       fontSize: FONT_SIZE_CARD_TITLE,
     },
     availableRight: { flexDirection: "row", alignItems: "center", gap: 12 },
     availableStatusDot: { width: 11, height: 11, borderRadius: 5.5 },
     availableSubtitle: {
-      color: c.primary,
+      color: c.white,
       fontSize: FONT_SIZE_CAPTION,
       fontFamily: FONT_BODY,
     },
@@ -1255,7 +1260,7 @@ function createStyles(c: ThemeColors) {
     },
 
     noAvailableText: {
-      color: c.primary,
+      color: c.white,
       fontSize: FONT_SIZE_BODY,
       fontFamily: FONT_BODY,
       textAlign: "center",
@@ -1272,14 +1277,14 @@ function createStyles(c: ThemeColors) {
       borderRadius: 0,
     },
     favItemText: {
-      color: c.primary,
+      color: c.white,
       fontFamily: FONT_HEADING,
       fontSize: FONT_SIZE_CARD_TITLE,
     },
     favRight: { flexDirection: "row", alignItems: "center", gap: 12 },
     favstatusDot: { width: 11, height: 11, borderRadius: 5.5 },
     favNumber: {
-      color: c.primary,
+      color: c.white,
       fontSize: FONT_SIZE_CAPTION,
       fontFamily: FONT_BODY,
     },
@@ -1294,13 +1299,19 @@ function createStyles(c: ThemeColors) {
     prefIcon: { marginTop: 2, marginRight: 12 },
 
     cardShadow: {
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.65,
-      shadowRadius: 6,
-      elevation: 8,
       borderRadius: CARD_BORDER_RADIUS,
       marginBottom: SCROLL_PADDING_BOTTOM,
+      ...(Platform.OS === "web"
+        ? {
+          boxShadow: "0px 10px 26px rgba(0, 0, 0, 0.35)"// fixed shadow on web
+          }
+        : {
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.65,
+            shadowRadius: 6,
+            elevation: 8,
+          }),
     },
 
     loadingText: {
@@ -1336,13 +1347,12 @@ function createStyles(c: ThemeColors) {
       gap: 14,
       alignItems: "stretch",
     },
-     manageCardWeb: {
-      marginHorizontal: 12,
+    manageCardWeb: {
       borderRadius: CARD_BORDER_RADIUS,
       padding: 20,
-      marginTop: -18,
+      marginTop: 0,
       marginBottom: 0,
-     },
+    },
 
     // MOBILE manage rows
     manageRowMobile: {
@@ -1362,7 +1372,7 @@ function createStyles(c: ThemeColors) {
       justifyContent: "center",
     },
     manageBtnText: {
-      color: c.white,
+      color: c.primary,
       fontFamily: FONT_HEADING,
       fontSize: 22,
       letterSpacing: 0.4,
