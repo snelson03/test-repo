@@ -43,13 +43,9 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { useUser } from "@/context/UserContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
-<<<<<<< HEAD
-import { buildingsAPI, authAPI, usersAPI, Room } from "@/utils/api";
-=======
-import { buildingsAPI, authAPI, usersAPI} from "@/utils/api"; // added usersAPI
+import { buildingsAPI, authAPI, usersAPI, Room } from "@/utils/api"; // added usersAPI
 import InfoTooltip from "@/components/InfoTooltip";
 
->>>>>>> 78adb31 (Tasks completed. Forgot to create branches)
 
 // describes what each favorite looks like for type safety
 interface FavoriteItem {
@@ -312,7 +308,8 @@ export default function HomeScreen() {
         <LinearGradient
               colors={["#06442A", "#04301D"]}
               style={styles.webTopBar}
-            accessibilityLabel="Top bar">
+            accessibilityLabel="Top bar"
+          >
           <Image
             source={require("@/assets/images/bf_logo.png")}
             style={styles.webTopBarLogo}
@@ -321,14 +318,10 @@ export default function HomeScreen() {
             accessibilityLabel="Bobcat Finder logo"
             accessibilityIgnoresInvertColors
           />
-<<<<<<< HEAD
-        </LinearGradient>
-=======
           <View style={styles.topBarTooltipSlot}>
             <InfoTooltip message="This is your dashboard. View favorites, available rooms, and manage your account." />
           </View>
-        </View>
->>>>>>> 78adb31 (Tasks completed. Forgot to create branches)
+        </LinearGradient>
 
         {/* sidebar + main */}
         <View style={styles.webBody}>
@@ -691,14 +684,10 @@ export default function HomeScreen() {
               accessibilityLabel="Bobcat Finder logo"
               accessibilityIgnoresInvertColors
             />
-<<<<<<< HEAD
-          </LinearGradient>
-=======
             <View style={styles.topBarTooltipSlot}>
               <InfoTooltip message="This is your dashboard. View favorites, available rooms, and manage your account." />
             </View>
-          </View>
->>>>>>> 78adb31 (Tasks completed. Forgot to create branches)
+          </LinearGradient>
 
           {/* Welcome message style setup */}
           <View style={styles.welcome}>

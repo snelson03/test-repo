@@ -43,12 +43,8 @@ import type {
   RootStackParamList,
   MapBuildingId,
 } from "@/navigation/AppNavigator";
-<<<<<<< HEAD
-import colors from "@/constants/colors";
-=======
 import InfoTooltip from "@/components/InfoTooltip";
 import HoverTooltip from "@/components/HoverTooltip";
->>>>>>> 78adb31 (Tasks completed. Forgot to create branches)
 
 type BuildingWithPin = {
   id: string;
@@ -985,7 +981,7 @@ function createStyles(c: ThemeColors) {
 
       // solid border around the legend
       borderWidth: 1.5,
-      borderColor: colors.primary,
+      borderColor: c.primary,
 
       shadowColor: "#000",
       shadowOpacity: 0.15,
@@ -1077,7 +1073,7 @@ function createStyles(c: ThemeColors) {
       fontSize: FONT_SIZE_TITLE - 2,
       fontFamily: FONT_HEADING,
       color: c.white,
-      backgroundColor: colors.green3,
+      backgroundColor: c.green3,
       paddingVertical:13,
       textAlign: "center",
       width: "100%",
