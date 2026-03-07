@@ -37,6 +37,30 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+def create_password_reset_token(email: str, expires_minutes: int = 30) -> str:
+    """Create a JWT password reset token"""
+    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
+    to_encode = {
+        "sub": email,
+        "type": "password_reset",
+        "exp": expire,
+    }
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+def verify_password_reset_token(token: str) -> Optional[str]:
+    """Verify password reset token and return email if valid"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        token_type = payload.get("type")
+
+        if email is None or token_type != "password_reset":
+            return None
+
+        return email
+    except JWTError:
+        return None
 
 def get_user_by_email(db: Session, email: str) -> Optional[UserModel]:
     """Get a user by email from the database"""

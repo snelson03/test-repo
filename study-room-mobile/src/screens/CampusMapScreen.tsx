@@ -43,7 +43,12 @@ import type {
   RootStackParamList,
   MapBuildingId,
 } from "@/navigation/AppNavigator";
+<<<<<<< HEAD
 import colors from "@/constants/colors";
+=======
+import InfoTooltip from "@/components/InfoTooltip";
+import HoverTooltip from "@/components/HoverTooltip";
+>>>>>>> 78adb31 (Tasks completed. Forgot to create branches)
 
 type BuildingWithPin = {
   id: string;
@@ -122,8 +127,8 @@ export default function CampusMapScreen() {
       name: "Academic & Research Center",
       address: "61 Oxbow Trail, Athens, OH 45701",
       image: require("../assets/images/arc.png"),
-      pinX: 0.135,
-      pinY: 0.29,
+      pinX: 0.194,
+      pinY: 0.25,
       pinColor: "#E53935", // red
     },
     {
@@ -131,8 +136,8 @@ export default function CampusMapScreen() {
       name: "Stocker Center",
       address: "28 West Green Dr, Athens, OH 45701",
       image: require("../assets/images/stocker.png"),
-      pinX: 0.087,
-      pinY: 0.325,
+      pinX: 0.15555,
+      pinY: 0.285,
       pinColor: "#FB8C00", // orange
     },
     {
@@ -300,6 +305,7 @@ export default function CampusMapScreen() {
         paddingBottom: 50,
         paddingHorizontal: pagePadding,
       }}
+      accessibilityLabel="Campus map content"
     >
       {/* Header (full width on web) */}
       <View
@@ -311,11 +317,20 @@ export default function CampusMapScreen() {
             paddingHorizontal: isWide ? 0 : 20,
           },
         ]}
+        accessibilityLabel="Campus map header"
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.back()}
+          style={styles.backButton}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+          accessibilityHint="Returns to the previous screen"
+        >
           <Ionicons name="arrow-back" size={28} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={[styles.title, isWide && styles.titleWide]}>CAMPUS MAP</Text>
+        <Text style={[styles.title, isWide && styles.titleWide]}
+          accessibilityRole="header"
+          accessibilityLabel="Campus map title"
+        >CAMPUS MAP</Text>
       </View>
 
       {/* Wide layout = row, Mobile = column */}
@@ -330,12 +345,19 @@ export default function CampusMapScreen() {
             transformOrigin: "top left" as any,
           },
         ]}
+        accessibilityLabel="Campus map main layout"
       >
         {/* LEFT: MAP */}
-        <View style={[styles.leftCol, isWide && { flex: leftColFlex }]}>
-          <View style={[styles.mapWrapper, isWide && { marginBottom: 0 }]}>
+        <View style={[styles.leftCol, isWide && { flex: leftColFlex }]}
+          accessibilityLabel="Map section"
+        >
+          <View style={[styles.mapWrapper, isWide && { marginBottom: 0 }]}
+            accessibilityLabel="Map wrapper"
+          >
             {/* Uniform green frame */}
-            <View style={[styles.mapFrame, { padding: framePad }]}>
+            <View style={[styles.mapFrame, { padding: framePad }]}
+              accessibilityLabel="Map frame"
+            >
               {/* Map viewport */}
               <View
                 style={[
@@ -346,38 +368,59 @@ export default function CampusMapScreen() {
                   },
                 ]}
                 onLayout={(e) => setViewportWidth(e.nativeEvent.layout.width)}
+                accessibilityLabel="Map viewport"
               >
                 {/* Zoom controls (web + mobile) */}
-                <View style={styles.zoomControls}>
+                <View style={styles.zoomControls} accessibilityLabel="Map controls">
+                  <HoverTooltip message="Zoom in">
                   <TouchableOpacity
                     style={styles.zoomBtn}
                     onPress={() => setZoomSafe(zoom + 0.25)}
                     activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel="Zoom in"
+                    accessibilityHint="Increases map zoom"
                   >
                     <Ionicons name="add" size={18} color={colors.white} />
                   </TouchableOpacity>
+                  </HoverTooltip>
 
+                  <HoverTooltip message="Zoom out">
                   <TouchableOpacity
                     style={styles.zoomBtn}
                     onPress={() => setZoomSafe(zoom - 0.25)}
                     activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel="Zoom out"
+                    accessibilityHint="Decreases map zoom"
                   >
                     <Ionicons name="remove" size={18} color={colors.white} />
                   </TouchableOpacity>
+                  </HoverTooltip>
 
+                  <HoverTooltip message="Reset zoom">
                   <TouchableOpacity
                     style={styles.zoomBtn}
                     onPress={() => setZoomSafe(1)}
                     activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel="Reset zoom"
+                    accessibilityHint="Resets map zoom to default"
                   >
                     <Ionicons name="refresh" size={16} color={colors.white} />
                   </TouchableOpacity>
+                  </HoverTooltip>
 
                   {/* Key toggle */}
+                  <HoverTooltip message={showLegend ? "Hide legend" : "Show legend"}>
                   <TouchableOpacity
                     style={styles.zoomBtn}
                     onPress={() => setShowLegend((prev) => !prev)}
                     activeOpacity={0.85}
+                    accessibilityRole="button"
+                    accessibilityLabel={showLegend ? "Hide legend" : "Show legend"}
+                    accessibilityHint="Toggles the legend for map pins"
+                    accessibilityState={{ expanded: showLegend }}
                   >
                     <Ionicons
                       name={showLegend ? "eye-off-outline" : "eye-outline"}
@@ -385,6 +428,7 @@ export default function CampusMapScreen() {
                       color={colors.white}
                     />
                   </TouchableOpacity>
+                  </HoverTooltip>
                 </View>
 
                 {/* PAN (both axes) via nested scrollviews */}
@@ -395,6 +439,7 @@ export default function CampusMapScreen() {
                   bounces={false}
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.panOuterContent}
+                  accessibilityLabel="Map horizontal pan"
                 >
                   <ScrollView
                     ref={mapScrollYRef}
@@ -402,10 +447,12 @@ export default function CampusMapScreen() {
                     bounces={false}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.panInnerContent}
+                    accessibilityLabel="Map vertical pan"
                   >
                     <View
                       style={[styles.mapInner, { height: mapHeight, width: "100%" }]}
                       onLayout={handleMapLayout}
+                      accessibilityLabel="Map content container"
                     >
                       <View
                         style={[
@@ -415,11 +462,15 @@ export default function CampusMapScreen() {
                             height: baseHeight > 0 ? baseHeight * zoom : "100%",
                           },
                         ]}
+                        accessibilityLabel="Scaled map layer"
                       >
                         <Image
                           source={require("../assets/images/map.jpeg")}
                           style={styles.mapImage}
                           resizeMode="contain"
+                          accessibilityRole="image"
+                          accessibilityLabel="Campus map image"
+                          accessibilityIgnoresInvertColors
                         />
 
                         {/* PINS */}
@@ -446,10 +497,20 @@ export default function CampusMapScreen() {
                                 style={[styles.pin, { left: pin.x - 11, top: pin.y - 22 }]}
                                 onPress={() => handlePinPress(b.id)}
                                 activeOpacity={0.9}
+                                accessibilityRole="button"
+                                accessibilityLabel={`Map pin: ${b.name}`}
+                                accessibilityHint="Tap once to zoom to this building. Tap twice quickly to open Find a Room for this building."
+                                accessibilityState={{ selected: isSelected }}
                               >
-                                <View style={styles.pinContainer}>
+                                <View style={styles.pinContainer}
+                                  accessibilityLabel={`Pin container for ${b.name}`}>
                                   {isSelected && (
-                                    <Text style={styles.pinLabel}>{b.name}</Text>
+                                    <Text 
+                                      style={styles.pinLabel}
+                                      accessibilityLabel={`Selected building: ${b.name}`}
+                                    >
+                                      {b.name}
+                                    </Text>
                                   )}
 
                                   {isSelected && (
@@ -462,6 +523,8 @@ export default function CampusMapScreen() {
                                           opacity: pulseOpacity,
                                         },
                                       ]}
+                                      accessibilityElementsHidden
+                                      importantForAccessibility="no"
                                     />
                                   )}
 
@@ -469,6 +532,8 @@ export default function CampusMapScreen() {
                                     name="location-sharp"
                                     size={22}
                                     color={b.pinColor}
+                                    accessibilityElementsHidden
+                                    importantForAccessibility="no"
                                   />
                                 </View>
                               </TouchableOpacity>
@@ -481,7 +546,7 @@ export default function CampusMapScreen() {
 
                 {/* Legend (pins + ping effect) */}
                 {showLegend && (
-                  <View style={styles.legend}>
+                  <View style={styles.legend} accessibilityLabel="Map legend">
                     {buildings.map((b) => {
                       const isSelected = selectedBuildingId === b.id;
 
@@ -496,13 +561,20 @@ export default function CampusMapScreen() {
                       });
 
                       return (
+                        <View key={b.id} style={styles.legendRowWrap}>
                         <TouchableOpacity
-                          key={b.id}
                           style={styles.legendItem}
                           onPress={() => handleSelectBuilding(b.id)}
                           activeOpacity={0.9}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Legend item: ${b.name}`}
+                          accessibilityHint="Selects this building and centers it on the map"
+                          accessibilityState={{ selected: isSelected }}
                         >
-                          <View style={styles.legendIconWrap}>
+                          <View 
+                            style={styles.legendIconWrap}
+                            accessibilityLabel={`Legend icon for ${b.name}`}
+                          >
                             {isSelected && (
                               <Animated.View
                                 style={[
@@ -513,16 +585,42 @@ export default function CampusMapScreen() {
                                     opacity: pulseOpacity,
                                   },
                                 ]}
+                                accessibilityElementsHidden
+                                importantForAccessibility="no"
                               />
                             )}
                             <Ionicons
                               name="location-sharp"
                               size={18}
                               color={b.pinColor}
+                              accessibilityElementsHidden
+                              importantForAccessibility="no"
                             />
                           </View>
-                          <Text style={styles.legendText}>{b.name}</Text>
+                          <Text
+                           style={styles.legendText}
+                           accessibilityLabel={`Legend text: ${b.name}`}
+                          >
+                            {b.name}</Text>
                         </TouchableOpacity>
+
+                        <HoverTooltip message={`Open ${b.name} in Find a Room`}>
+                          <TouchableOpacity
+                            style={styles.takeMeThereBtn}
+                            onPress={() =>
+                              navigation.navigate("FindRoom", {
+                                buildingIdFromMap: b.id as MapBuildingId,
+                              })
+                            }
+                            activeOpacity={0.9}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Take me to ${b.name}`}
+                            accessibilityHint="Opens Find a Room filtered to this building"
+                          >
+                            <Text style={styles.takeMeThereText}>TAKE ME THERE</Text>
+                          </TouchableOpacity>
+                        </HoverTooltip>
+                      </View>
                       );
                     })}
                   </View>
@@ -538,28 +636,58 @@ export default function CampusMapScreen() {
             styles.rightCol,
             isWide && { flex: rightColFlex, marginLeft: 28 },
           ]}
+          accessibilityLabel="Buildings section"
         >
-          <View style={[styles.buildingsContainer, { width: "100%" }]}>
-            <Text style={styles.sectionTitle}>AVAILABLE BUILDINGS</Text>
+          <View style={[styles.buildingsContainer, { width: "100%" }]}
+            accessibilityLabel="Available buildings container"
+          >
+            <Text style={styles.sectionTitle}
+              accessibilityRole="header"
+              accessibilityLabel="Available buildings"
+            >AVAILABLE BUILDINGS</Text>
 
             {buildings.map((b) => (
-              <View key={b.id} style={styles.buildingCard}>
-                <View style={styles.buildingNameRow}>
-                  <Text style={styles.buildingName}>{b.name}</Text>
+              <View key={b.id} style={styles.buildingCard}
+                accessibilityLabel={`Building card: ${b.name}`}
+              >
+                <View style={styles.buildingNameRow}
+                  accessibilityLabel={`Building name row: ${b.name}`}
+                >
+                  <Text style={styles.buildingName}
+                    accessibilityLabel={`Building name: ${b.name}`}
+                  >
+                    {b.name}
+                  </Text>
+                  <HoverTooltip message={`Center map on ${b.name}`}>
                   <TouchableOpacity
                     style={styles.buildingPinButton}
                     onPress={() => handleSelectBuilding(b.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Center map on ${b.name}`}
+                    accessibilityHint="Selects this building and centers it on the map"
+                    accessibilityState={{ selected: selectedBuildingId === b.id }}
                   >
                     <Ionicons
                       name="location-sharp"
                       size={20}
                       color={b.pinColor}
+                      accessibilityElementsHidden
+                      importantForAccessibility="no"
                     />
                   </TouchableOpacity>
+                  </HoverTooltip>
                 </View>
 
-                <Text style={styles.address}>{b.address}</Text>
-                <Image source={b.image} style={styles.buildingImage} />
+                <Text style={styles.address}
+                  accessibilityLabel={`Address for ${b.name}: ${b.address}`}
+                >
+                  {b.address}
+                </Text>
+                <Image source={b.image} style={styles.buildingImage} 
+                  accessibilityRole="image"
+                  accessibilityLabel={`Image of ${b.name}`}
+                  accessibilityIgnoresInvertColors
+                />
               </View>
             ))}
           </View>
@@ -572,21 +700,27 @@ export default function CampusMapScreen() {
 
   // WEB ONLY: use the same top bar + sidebar layout as HomeScreen
   return (
-    <View style={styles.webPage}>
+    <View style={styles.webPage} accessibilityLabel="Campus map screen">
       {/* top bar */}
-      <View style={styles.webTopBar}>
+      <View style={styles.webTopBar} accessibilityLabel="Top bar">
         <Image
           source={require("../assets/images/bf_logo.png")}
           style={styles.webTopBarLogo}
           resizeMode="contain"
+          accessibilityRole="image"
+          accessibilityLabel="Bobcat Finder logo"
+          accessibilityIgnoresInvertColors
         />
+        <View style={styles.topBarTooltipSlot}>
+          <InfoTooltip message="Explore campus buildings on the interactive map. Select a map pin or legend pin to find a particular building, or use Take Me There to view its rooms." />
+        </View>
       </View>
 
       {/* sidebar + main */}
-      <View style={styles.webBody}>
+      <View style={styles.webBody} accessibilityLabel="Web layout">
         {/* Left Sidebar */}
-        <View style={styles.webSidebar}>
-          <View style={styles.webSidebarLinks}>
+        <View style={styles.webSidebar} accessibilityLabel="Navigation sidebar">
+          <View style={styles.webSidebarLinks} accessibilityLabel="Navigation links">
             {menuItems.map((item) => {
               const selected = item.route === "CampusMap";
               return (
@@ -597,12 +731,16 @@ export default function CampusMapScreen() {
                     selected && styles.webNavItemSelected,
                   ]}
                   onPress={() => navigation.navigate(item.route as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Go to ${item.name}`}
+                  accessibilityState={{ selected }}
                 >
                   <Text
                     style={[
                       styles.webNavText,
                       selected && styles.webNavTextSelected,
                     ]}
+                    accessibilityLabel={`${item.name} navigation item`}
                   >
                     {item.name.toUpperCase()}
                   </Text>
@@ -613,7 +751,8 @@ export default function CampusMapScreen() {
         </View>
 
         {/* Main area */}
-        <View style={styles.webMain}>{screenContent}</View>
+        <View style={styles.webMain} accessibilityLabel="Main content">
+          {screenContent}</View>
       </View>
     </View>
   );
@@ -648,6 +787,14 @@ function createStyles(c: ThemeColors) {
       height: 130,
       width: 400,
     },
+
+    topBarTooltipSlot: {
+      position: "absolute",
+      right: 20,
+      top: "50%",
+      transform: [{ translateY: -11 }],
+    },
+
 
     webBody: {
       flex: 1,
@@ -879,6 +1026,37 @@ function createStyles(c: ThemeColors) {
       textShadowColor: "rgba(0, 0, 0, 0.4)",
       textShadowOffset: { width: 2, height: 2 },
       textShadowRadius: 3,
+    },
+
+    legendRowWrap: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 10,
+    },
+
+    legendItemMain: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      paddingVertical: 2,
+      flex: 1,
+    },
+
+    takeMeThereBtn: {
+      backgroundColor: c.primary,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 6,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+
+    takeMeThereText: {
+      color: c.white,
+      fontSize: FONT_SIZE_CAPTION,
+      fontFamily: FONT_HEADING,
+      letterSpacing: 0.4,
     },
 
     buildingsContainer: {

@@ -43,7 +43,13 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import { useUser } from "@/context/UserContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
+<<<<<<< HEAD
 import { buildingsAPI, authAPI, usersAPI, Room } from "@/utils/api";
+=======
+import { buildingsAPI, authAPI, usersAPI} from "@/utils/api"; // added usersAPI
+import InfoTooltip from "@/components/InfoTooltip";
+
+>>>>>>> 78adb31 (Tasks completed. Forgot to create branches)
 
 // describes what each favorite looks like for type safety
 interface FavoriteItem {
@@ -315,7 +321,14 @@ export default function HomeScreen() {
             accessibilityLabel="Bobcat Finder logo"
             accessibilityIgnoresInvertColors
           />
+<<<<<<< HEAD
         </LinearGradient>
+=======
+          <View style={styles.topBarTooltipSlot}>
+            <InfoTooltip message="This is your dashboard. View favorites, available rooms, and manage your account." />
+          </View>
+        </View>
+>>>>>>> 78adb31 (Tasks completed. Forgot to create branches)
 
         {/* sidebar + main */}
         <View style={styles.webBody}>
@@ -678,7 +691,14 @@ export default function HomeScreen() {
               accessibilityLabel="Bobcat Finder logo"
               accessibilityIgnoresInvertColors
             />
+<<<<<<< HEAD
           </LinearGradient>
+=======
+            <View style={styles.topBarTooltipSlot}>
+              <InfoTooltip message="This is your dashboard. View favorites, available rooms, and manage your account." />
+            </View>
+          </View>
+>>>>>>> 78adb31 (Tasks completed. Forgot to create branches)
 
           {/* Welcome message style setup */}
           <View style={styles.welcome}>
@@ -1020,6 +1040,13 @@ function createStyles(c: ThemeColors) {
     webTopBarLogo: {
       height: 130,
       width: 400,
+    },
+
+    topBarTooltipSlot: {
+      position: "absolute",
+      right: 20,
+      top: "50%",
+      transform: [{ translateY: -11 }],
     },
 
     webBody: {

@@ -1,7 +1,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
+
+
+const getDefaultApiBaseUrl = () => {
+  if (Platform.OS === "android") {
+    return "http://10.0.2.2:8000/api/v1";
+  }
+
+  return "http://localhost:8000/api/v1";
+};
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+  process.env.EXPO_PUBLIC_API_BASE_URL || getDefaultApiBaseUrl();
 
 // Types matching backend models
 export interface User {
@@ -134,6 +144,43 @@ export const authAPI = {
     const tokenData = await response.json();
     await setAuthToken(tokenData.access_token);
     return tokenData;
+  },
+
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const error = await response
+        .json()
+        .catch(() => ({ detail: "An error occurred" }));
+      throw new Error(error.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, new_password: newPassword }),
+    });
+
+    if (!response.ok) {
+      const error = await response
+        .json()
+        .catch(() => ({ detail: "An error occurred" }));
+      throw new Error(error.detail || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
   },
 
   async logout(): Promise<void> {

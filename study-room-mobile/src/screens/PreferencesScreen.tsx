@@ -46,6 +46,8 @@ import { useUser } from "@/context/UserContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/AppNavigator";
 import { useFavorites } from "@/context/FavoritesContext";
+import InfoTooltip from "@/components/InfoTooltip";
+import HoverTooltip from "@/components/HoverTooltip";
 
 // describes what each favorite looks like
 interface FavoriteItem {
@@ -289,6 +291,7 @@ export default function PreferencesScreen() {
       {/* Header */}
       <View style={[styles.header, isWeb && styles.headerWeb]}>
         {/* back arrow on web + mobile */}
+        <HoverTooltip message="Go back">
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => {
@@ -300,6 +303,7 @@ export default function PreferencesScreen() {
         >
           <Ionicons name="arrow-back" size={26} color={colors.primary} />
         </TouchableOpacity>
+        </HoverTooltip>
 
         <Text
           style={[styles.title, isWeb && styles.titleWeb]}
@@ -311,6 +315,7 @@ export default function PreferencesScreen() {
 
       {/* Dropdown */}
       <View style={styles.subHeader}>
+        <HoverTooltip message="Choose a preferences section">
         <TouchableOpacity
           style={styles.dropdownToggle}
           onPress={() => setDropdownOpen(!dropdownOpen)}
@@ -327,6 +332,7 @@ export default function PreferencesScreen() {
             style={{ marginLeft: 6 }}
           />
         </TouchableOpacity>
+        </HoverTooltip>
 
         {dropdownOpen && (
           <View style={styles.dropdownMenu} accessibilityLabel="Preferences sections">
@@ -407,6 +413,7 @@ export default function PreferencesScreen() {
                     <Text style={styles.optionText}>{label}</Text>
 
                     {modal && (
+                      <HoverTooltip message="Choose which buildings send notifications">
                       <TouchableOpacity
                       onPress={() => openModal(key as "favoritesOnly" | "buildingSpecific")}
                         accessibilityRole="button"
@@ -414,6 +421,7 @@ export default function PreferencesScreen() {
                       >
                         <Text style={styles.editText}>Edit</Text>
                       </TouchableOpacity>
+                      </HoverTooltip>
                     )}
                   </View>
                 );
@@ -992,6 +1000,9 @@ export default function PreferencesScreen() {
             accessibilityLabel="Bobcat Finder logo"
             accessibilityIgnoresInvertColors
           />
+          <View style={styles.topBarTooltipSlot}>
+            <InfoTooltip message="Manage your account settings, notifications, and appearance preferences." />
+          </View>
         </View>
 
         {/* sidebar + main */}
@@ -1066,6 +1077,13 @@ function createStyles(c: ThemeColors) {
     webTopBarLogo: {
       height: 130,
       width: 400,
+    },
+
+    topBarTooltipSlot: {
+      position: "absolute",
+      right: 20,
+      top: "50%",
+      transform: [{ translateY: -11 }],
     },
 
     webBody: {

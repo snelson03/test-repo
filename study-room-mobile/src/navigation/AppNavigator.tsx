@@ -10,6 +10,7 @@ import PreferencesScreen from '@/screens/PreferencesScreen';
 import RoomDetailsScreen from '@/screens/RoomDetailsScreen';
 import LoginScreen from '@/screens/LoginScreen';
 import CreateAccountScreen from '../screens/CreateAccountScreen'; 
+import ForgotPasswordScreen from '@/screens/ForgotPasswordScreen';
 
 // setting up app pages
 /** Map building id (Campus Map) -> used when navigating from map to Find a Room */
@@ -18,6 +19,7 @@ export type MapBuildingId = 'arc' | 'stocker' | 'alden';
 export type RootStackParamList = {
   Login: undefined;
   CreateAccount: undefined;
+  ForgotPassword: undefined;
   Home: undefined;
   FindRoom: { buildingIdFromMap?: MapBuildingId } | undefined;
   CampusMap: { selectedBuildingId?: "arc" | "stocker" | "alden" } | undefined;
@@ -44,6 +46,11 @@ export default function AppNavigator() {
       <Stack.Screen
         name="CreateAccount"          
         component={CreateAccountScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
         options={{ headerShown: false }}
       />
       <Stack.Screen 

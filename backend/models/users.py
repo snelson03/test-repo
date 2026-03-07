@@ -29,6 +29,8 @@ class User(Base):
     email_verified = Column(Boolean, default=False, nullable=False)
     email_verification_token = Column(String, nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    password_reset_token = Column(String, nullable=True)
+    password_reset_expires = Column(DateTime, nullable=True)
 
     # Relationship to room blocks
     room_blocks = relationship("RoomBlock", back_populates="faculty")

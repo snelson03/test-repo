@@ -203,9 +203,10 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={{ alignSelf: "flex-end" }}
+          onPress={() => navigation.navigate("ForgotPassword")}
           accessibilityRole="button"
           accessibilityLabel="Reset password"
-          accessibilityHint="Password reset is not implemented yet"
+          accessibilityHint="Opens the forgot password screen"
         >
           <Text style={styles.resetText}>Reset Password</Text>
         </TouchableOpacity>

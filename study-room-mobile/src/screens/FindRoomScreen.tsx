@@ -43,6 +43,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList, MapBuildingId } from "@/navigation/AppNavigator";
 import { buildingsAPI } from "@/utils/api";
 import type { Building, Room } from "@/utils/api";
+import InfoTooltip from "@/components/InfoTooltip";
+import HoverTooltip from "@/components/HoverTooltip";
 
 interface RoomItem {
   id: string;
@@ -343,6 +345,7 @@ export default function FindARoomScreen() {
           {/* Header */}
           <View style={styles.headerWrapper}>
             <View style={[styles.header, { width: "100%" }]}>
+              <HoverTooltip message="Go back">
               <TouchableOpacity
                 onPress={() => {
                   if (navigation.canGoBack()) navigation.goBack();
@@ -354,6 +357,7 @@ export default function FindARoomScreen() {
               >
                 <Ionicons name="arrow-back" size={28} color={colors.primary} />
               </TouchableOpacity>
+              </HoverTooltip>
 
               <View style={{ flex: 1, alignItems: "center" }}>
                 <Text style={styles.title} accessibilityRole="header">
@@ -366,6 +370,7 @@ export default function FindARoomScreen() {
 
             {/* Subheader row */}
             <View style={[styles.subHeader, { width: "100%" }]}>
+              <HoverTooltip message="Choose a building">
               <TouchableOpacity
                 style={styles.dropdownRow}
                 activeOpacity={0.8}
@@ -387,6 +392,7 @@ export default function FindARoomScreen() {
                   {selectedBuilding?.name || "Select Building"}
                 </Text>
               </TouchableOpacity>
+              </HoverTooltip>
             </View>
 
             {dropdownOpen && (
@@ -687,6 +693,9 @@ export default function FindARoomScreen() {
             accessibilityLabel="Bobcat Finder logo"
             accessibilityIgnoresInvertColors
           />
+          <View style={styles.topBarTooltipSlot}>
+            <InfoTooltip message="Browse buildings, switch room views, select a room to see details, and press the heart button to save a room." />
+          </View>
         </View>
 
         {/* sidebar + main */}
@@ -943,6 +952,13 @@ function createStyles(c: ThemeColors) {
   webTopBarLogo: {
     height: 130,
     width: 400,
+  },
+
+  topBarTooltipSlot: {
+    position: "absolute",
+    right: 20,
+    top: "50%",
+    transform: [{ translateY: -11 }],
   },
 
   webBody: {

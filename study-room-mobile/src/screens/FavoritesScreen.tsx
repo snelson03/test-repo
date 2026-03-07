@@ -44,6 +44,8 @@ import { useFavorites } from "@/context/FavoritesContext"; // shared favorites c
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/AppNavigator";
+import InfoTooltip from "@/components/InfoTooltip";
+import HoverTooltip from "@/components/HoverTooltip";
 
 // define interface to recognize favorite
 interface FavoriteRoom {
@@ -109,6 +111,9 @@ export default function FavoritesScreen() {
             accessibilityLabel="Bobcat Finder logo"
             accessibilityIgnoresInvertColors
           />
+          <View style={styles.topBarTooltipSlot}>
+            <InfoTooltip message="Explore campus buildings on the interactive map. Click a pin to ping the appropriate building and show its name." />
+          </View>
         </View>
 
         {/* sidebar + main */}
@@ -154,6 +159,7 @@ export default function FavoritesScreen() {
                 <View style={styles.container}>
                   {/* Header */}
                   <View style={styles.header}>
+                    <HoverTooltip message="Go back">
                     <Pressable
                       onPress={() => {
                         if (navigation.canGoBack()) {
@@ -169,12 +175,14 @@ export default function FavoritesScreen() {
                     >
                       <Ionicons name="arrow-back" size={35} color={colors.primary} />
                     </Pressable>
+                    </HoverTooltip>
 
                     <Text style={styles.title} accessibilityRole="header">
                       FAVORITES
                     </Text>
 
                     {/* edit button (pencil icon turns into checkmark when editing) */}
+                    <HoverTooltip message={editMode ? "Done editing" : "Edit favorites"}>
                     <Pressable
                       onPress={toggleEdit}
                       style={styles.backButton}
@@ -193,6 +201,7 @@ export default function FavoritesScreen() {
                         color={colors.primary}
                       />
                     </Pressable>
+                    </HoverTooltip>
                   </View>
 
                   {/* Favorite Rooms List */}
@@ -251,6 +260,7 @@ export default function FavoritesScreen() {
 
                               {/* trash button only shows when in edit mode */}
                               {editMode && (
+                                <HoverTooltip message="Remove favorite">
                                 <TouchableOpacity
                                   onPress={() => removeFavorite(item.name)}
                                   style={{ marginLeft: 12 }}
@@ -260,6 +270,7 @@ export default function FavoritesScreen() {
                                 >
                                   <Ionicons name="trash" size={22} color={colors.white} />
                                 </TouchableOpacity>
+                                </HoverTooltip>
                               )}
                             </View>
                           </View>
@@ -293,6 +304,7 @@ export default function FavoritesScreen() {
               accessibilityLabel="Bobcat Finder logo"
               accessibilityIgnoresInvertColors
             />
+          <InfoTooltip message="Explore campus buildings on the interactive map. Click a pin to ping the appropriate building and show its name." />
           </View>
 
           {/* list of pages  */}
@@ -484,6 +496,13 @@ function createStyles(c: ThemeColors) {
   webTopBarLogo: {
     height: 130,
     width: 400,
+  },
+
+  topBarTooltipSlot: {
+    position: "absolute",
+    right: 20,
+    top: "50%",
+    transform: [{ translateY: -11 }],
   },
 
   webBody: {
