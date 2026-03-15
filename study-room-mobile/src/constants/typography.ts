@@ -69,3 +69,8 @@ export const WEB_NAV_ITEM_PADDING_H = 12;
 export const WEB_NAV_ITEM_MARGIN_BOTTOM = 8;
 export const WEB_CONTENT_PADDING_TOP = 22;
 export const WEB_CONTENT_PADDING_BOTTOM = 24;
+export const WEB_CONTENT_PADDING_H = 24;
+export const WEB_SIDEBAR_PADDING_H = 12;
+
+// Page content (consistent horizontal margin across all screens)
+export const PAGE_CONTENT_PADDING_H = 20;
