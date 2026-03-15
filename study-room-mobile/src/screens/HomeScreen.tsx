@@ -31,6 +31,9 @@ import {
   WEB_NAV_ITEM_MARGIN_BOTTOM,
   WEB_CONTENT_PADDING_TOP,
   WEB_CONTENT_PADDING_BOTTOM,
+  WEB_CONTENT_PADDING_H,
+  WEB_SIDEBAR_PADDING_H,
+  PAGE_CONTENT_PADDING_H,
   CARD_PADDING,
   CARD_MARGIN_BOTTOM,
   CARD_BORDER_RADIUS,
@@ -91,7 +94,7 @@ export default function HomeScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const { width, height } = useWindowDimensions();
-  const pagePad = width < 480 ? 12 : 0;
+  const pagePad = PAGE_CONTENT_PADDING_H;
 
   const [favoriteRooms, setFavoriteRooms] = useState<Room[]>([]); // real time favorites data
   // mobile content
@@ -366,7 +369,7 @@ export default function HomeScreen() {
               style={{ flex: 1 }}
               contentContainerStyle={{
                 alignItems: "center",
-                paddingBottom: 16,
+                paddingBottom: SCROLL_PADDING_BOTTOM,
                 paddingHorizontal: 0,
                 flexGrow: 1,
               }}
@@ -557,7 +560,7 @@ export default function HomeScreen() {
                 </View>
 
                 {/* WEB: Manage row */}
-                <View style={[styles.cardShadow, { marginHorizontal: 12, borderRadius: CARD_BORDER_RADIUS }]}>
+                <View style={[styles.cardShadow, { marginHorizontal: 0, borderRadius: CARD_BORDER_RADIUS }]}>
                 <LinearGradient
                   colors={["#0F7046", "#0D6440"]}
                   style={styles.manageCardWeb}
@@ -661,7 +664,7 @@ export default function HomeScreen() {
         style={{ width: "100%" }}
         contentContainerStyle={{
           alignItems: "center",
-          paddingBottom: 32,
+          paddingBottom: SCROLL_PADDING_BOTTOM,
           paddingHorizontal: pagePad,
         }}
         scrollEnabled={!menuOpen}
@@ -1050,7 +1053,7 @@ function createStyles(c: ThemeColors) {
       width: WEB_SIDEBAR_WIDTH,
       backgroundColor: c.primary,
       paddingTop: 0,
-      paddingHorizontal:10,
+      paddingHorizontal: WEB_SIDEBAR_PADDING_H,
       shadowColor: "#000",
       shadowOffset: { width: 6, height: 0 },
       shadowOpacity: 0.22,
@@ -1085,10 +1088,11 @@ function createStyles(c: ThemeColors) {
     webContentWrap: {
       paddingTop: WEB_CONTENT_PADDING_TOP,
       paddingBottom: WEB_CONTENT_PADDING_BOTTOM,
+      paddingHorizontal: WEB_CONTENT_PADDING_H,
     },
 
     webWelcomeWrap: {
-      paddingHorizontal: SPACE_LG,
+      paddingHorizontal: 0,
       marginBottom: 14,
       marginTop: 15,
     },
@@ -1102,7 +1106,7 @@ function createStyles(c: ThemeColors) {
     webTwoColRow: {
       flexDirection: "row",
       gap: 20,
-      paddingHorizontal: 12,
+      paddingHorizontal: 0,
       marginBottom: 16,
       alignItems: "flex-start",
     },
@@ -1168,19 +1172,19 @@ function createStyles(c: ThemeColors) {
       fontFamily: FONT_HEADING,
       color: c.primary,
       position: "relative",
-      paddingHorizontal: SPACE_MD,
+      paddingHorizontal: PAGE_CONTENT_PADDING_H,
     },
 
     favoritesTopContainer: {
       marginVertical: 16,
-      paddingHorizontal: 20,
+      paddingHorizontal: PAGE_CONTENT_PADDING_H,
       top: 35,
       bottom: 0,
     },
 
     bannerContainer: {
       marginVertical: 12,
-      paddingHorizontal: 20,
+      paddingHorizontal: PAGE_CONTENT_PADDING_H,
       //top: 15,
       //bottom: 0,
       position: "relative",
@@ -1210,7 +1214,7 @@ function createStyles(c: ThemeColors) {
 
     mapContainer: {
       marginVertical: 12,
-      paddingHorizontal: 20,
+      paddingHorizontal: PAGE_CONTENT_PADDING_H,
       top: 0,
       position: "relative",
     },
@@ -1228,7 +1232,7 @@ function createStyles(c: ThemeColors) {
       textShadowRadius: 10,
     },
 
-    cardsContainer: { marginVertical: 0, paddingHorizontal: 20, top: 16 },
+    cardsContainer: { marginVertical: 0, paddingHorizontal: PAGE_CONTENT_PADDING_H, top: 16 },
 
     roomCardContainer: {
       flexDirection: "row",

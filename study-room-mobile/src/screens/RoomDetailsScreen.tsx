@@ -19,7 +19,7 @@ import {
   FONT_SIZE_BODY,
   CARD_PADDING,
   CARD_BORDER_RADIUS,
-  CONTAINER_PADDING_H,
+  PAGE_CONTENT_PADDING_H,
   CONTAINER_PADDING_TOP_MOBILE,
   HEADER_BACK_ICON_SIZE,
   HEADER_MARGIN_BOTTOM,
@@ -241,7 +241,7 @@ function createStyles(c: ThemeColors) {
   container: {
     flex: 1,
     backgroundColor: c.gray100,
-    paddingHorizontal: CONTAINER_PADDING_H,
+    paddingHorizontal: PAGE_CONTENT_PADDING_H,
     paddingTop: CONTAINER_PADDING_TOP_MOBILE,
   },
   header: {

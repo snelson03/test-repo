@@ -32,6 +32,9 @@ import {
   WEB_NAV_ITEM_PADDING_V,
   WEB_NAV_ITEM_PADDING_H,
   WEB_NAV_ITEM_MARGIN_BOTTOM,
+  WEB_CONTENT_PADDING_H,
+  WEB_SIDEBAR_PADDING_H,
+  PAGE_CONTENT_PADDING_H,
   CARD_BORDER_RADIUS,
   SPACE_MD,
 } from "@/constants/typography";
@@ -281,7 +284,7 @@ export default function CampusMapScreen() {
     // wait for layout measurement so pinPositions is ready
     setTimeout(() => zoomToBuilding(id), 0);
   }, [route?.params?.selectedBuildingId]);
-  const pagePadding = isWide ? 36 : 0;
+  const pagePadding = isWide ? WEB_CONTENT_PADDING_H : PAGE_CONTENT_PADDING_H;
 
   const headerTopPad = isWide ? 50 : 80;
   const mainTopGap = isWide ? 50 : 20;
@@ -312,7 +315,7 @@ export default function CampusMapScreen() {
           {
             width: "100%",
             paddingTop: headerTopPad,
-            paddingHorizontal: isWide ? 0 : 20,
+            paddingHorizontal: isWide ? 0 : PAGE_CONTENT_PADDING_H,
           },
         ]}
         accessibilityLabel="Campus map header"
@@ -804,7 +807,7 @@ function createStyles(c: ThemeColors) {
       width: WEB_SIDEBAR_WIDTH,
       backgroundColor: c.primary,
       paddingTop: 0,
-      paddingHorizontal: 14,
+      paddingHorizontal: WEB_SIDEBAR_PADDING_H,
       shadowColor: "#000",
       shadowOffset: { width: 6, height: 0 },
       shadowOpacity: 0.22,

@@ -32,6 +32,9 @@ import {
   WEB_NAV_ITEM_PADDING_V,
   WEB_NAV_ITEM_PADDING_H,
   WEB_NAV_ITEM_MARGIN_BOTTOM,
+  WEB_CONTENT_PADDING_H,
+  WEB_SIDEBAR_PADDING_H,
+  PAGE_CONTENT_PADDING_H,
   CARD_PADDING,
   CARD_BORDER_RADIUS,
   BUTTON_BORDER_RADIUS,
@@ -1098,7 +1101,7 @@ function createStyles(c: ThemeColors) {
       width: WEB_SIDEBAR_WIDTH,
       backgroundColor: c.primary,
       paddingTop: 0,
-      paddingHorizontal: 14,
+      paddingHorizontal: WEB_SIDEBAR_PADDING_H,
       shadowColor: "#000",
       shadowOffset: { width: 6, height: 0 },
       shadowOpacity: 0.22,
@@ -1142,14 +1145,14 @@ function createStyles(c: ThemeColors) {
     container: {
       flex: 1,
       backgroundColor: c.gray100,
-      paddingHorizontal: SPACE_MD,
+      paddingHorizontal: PAGE_CONTENT_PADDING_H,
     },
 
     //  reduced top whitespace on web
     webContent: {
-      paddingTop: 16, // was 40
-      paddingLeft: 36,
-      paddingRight: 36,
+      paddingTop: 16,
+      paddingLeft: WEB_CONTENT_PADDING_H,
+      paddingRight: WEB_CONTENT_PADDING_H,
       flex: 1,
       alignSelf: "stretch",
     },
@@ -1165,9 +1168,9 @@ function createStyles(c: ThemeColors) {
     header: {
       flexDirection: "row",
       alignItems: "center",
-      marginTop: 80, // mobile spacing
+      marginTop: 80,
       marginBottom: 10,
-      paddingHorizontal: 36,
+      paddingHorizontal: 0,
     },
 
     //  center header + reduce top whitespace on web

@@ -29,6 +29,9 @@ import {
   WEB_NAV_ITEM_MARGIN_BOTTOM,
   WEB_CONTENT_PADDING_TOP,
   WEB_CONTENT_PADDING_BOTTOM,
+  WEB_CONTENT_PADDING_H,
+  WEB_SIDEBAR_PADDING_H,
+  PAGE_CONTENT_PADDING_H,
   CARD_PADDING,
   CARD_MARGIN_BOTTOM,
   CONTAINER_PADDING_TOP_MOBILE,
@@ -150,7 +153,7 @@ export default function FavoritesScreen() {
               style={{ flex: 1 }}
               contentContainerStyle={{
                 alignItems: "center",
-                paddingBottom: 32,
+                paddingBottom: SCROLL_PADDING_BOTTOM,
                 paddingHorizontal: 0,
               }}
               keyboardShouldPersistTaps="handled"
@@ -463,13 +466,13 @@ function createStyles(c: ThemeColors) {
     flex: 1,
     backgroundColor: c.gray100,
     paddingTop: CONTAINER_PADDING_TOP_MOBILE,
-    paddingHorizontal: SPACE_MD,
+    paddingHorizontal: PAGE_CONTENT_PADDING_H,
   },
 
   webContent: {
     paddingTop: CONTAINER_PADDING_TOP_WEB + 26,
-    paddingLeft: 36,
-    paddingRight: 36,
+    paddingLeft: WEB_CONTENT_PADDING_H,
+    paddingRight: WEB_CONTENT_PADDING_H,
   },
 
   // Web styles (same top bar + sidebar as Home Screen)
@@ -518,7 +521,7 @@ function createStyles(c: ThemeColors) {
     width: WEB_SIDEBAR_WIDTH,
     backgroundColor: c.primary,
     paddingTop: 0,
-    paddingHorizontal: 14,
+    paddingHorizontal: WEB_SIDEBAR_PADDING_H,
     shadowColor: "#000",
     shadowOffset: { width: 6, height: 0 },
     shadowOpacity: 0.22,
@@ -604,7 +607,7 @@ function createStyles(c: ThemeColors) {
     borderRadius: 6,
     padding: CARD_PADDING + 5,
     marginBottom: CARD_MARGIN_BOTTOM - 5,
-    marginHorizontal: 10,
+    marginHorizontal: 0,
     justifyContent: "space-between",
     alignItems: "center",
   },

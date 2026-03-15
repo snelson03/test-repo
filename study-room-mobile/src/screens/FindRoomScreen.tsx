@@ -31,6 +31,9 @@ import {
   WEB_NAV_ITEM_MARGIN_BOTTOM,
   WEB_CONTENT_PADDING_TOP,
   WEB_CONTENT_PADDING_BOTTOM,
+  WEB_CONTENT_PADDING_H,
+  WEB_SIDEBAR_PADDING_H,
+  PAGE_CONTENT_PADDING_H,
   CARD_BORDER_RADIUS,
   BUTTON_BORDER_RADIUS,
   HEADER_BACK_ICON_SIZE,
@@ -739,7 +742,7 @@ export default function FindARoomScreen() {
               style={{ flex: 1 }}
               contentContainerStyle={{
                 alignItems: "center",
-                paddingBottom: 32,
+                paddingBottom: SCROLL_PADDING_BOTTOM,
                 paddingHorizontal: 0,
               }}
               keyboardShouldPersistTaps="handled"
@@ -774,13 +777,13 @@ function createStyles(c: ThemeColors) {
     flex: 1,
     backgroundColor: c.gray100,
     paddingTop: 80,
-    paddingHorizontal: 16,
+    paddingHorizontal: PAGE_CONTENT_PADDING_H,
   },
 
   webContent: {
     paddingTop: 50,
-    paddingLeft: 36,
-    paddingRight: 36,
+    paddingLeft: WEB_CONTENT_PADDING_H,
+    paddingRight: WEB_CONTENT_PADDING_H,
   },
 
   headerWrapper: { width: "100%", alignItems: "center" },
@@ -974,7 +977,7 @@ function createStyles(c: ThemeColors) {
     width: WEB_SIDEBAR_WIDTH,
     backgroundColor: c.primary,
     paddingTop: 0,
-    paddingHorizontal: 14,
+    paddingHorizontal: WEB_SIDEBAR_PADDING_H,
     shadowColor: "#000",
     shadowOffset: { width: 6, height: 0 },
     shadowOpacity: 0.22,
@@ -1020,6 +1023,9 @@ function createStyles(c: ThemeColors) {
 
   webMain: { flex: 1, backgroundColor: c.gray100 },
 
-  webContentWrap: { paddingTop: WEB_CONTENT_PADDING_TOP, paddingBottom: WEB_CONTENT_PADDING_BOTTOM },
+  webContentWrap: {
+    paddingTop: WEB_CONTENT_PADDING_TOP,
+    paddingBottom: WEB_CONTENT_PADDING_BOTTOM,
+  },
   });
 }
