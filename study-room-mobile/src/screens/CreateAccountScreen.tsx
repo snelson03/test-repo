@@ -41,11 +41,13 @@ import {
   SPACE_SM,
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
+import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
 import { authAPI } from "@/utils/api";
 import { useUser } from "@/context/UserContext";
 
 export default function CreateAccountScreen() {
   const navigation = useNavigation();
+  useRegisterSessionExpiryNavigation();
   const { setUserForLogin } = useUser();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);

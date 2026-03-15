@@ -66,6 +66,13 @@ async function removeAuthToken(): Promise<void> {
   await AsyncStorage.removeItem("auth_token");
 }
 
+// Called when the server returns 401 (e.g. session expired). App can register
+// a handler to clear user state and navigate to Login.
+let onSessionExpired: (() => void) | null = null;
+export function setOnSessionExpired(handler: (() => void) | null): void {
+  onSessionExpired = handler;
+}
+
 // Make authenticated API request
 async function apiRequest<T>(
   endpoint: string,
@@ -88,8 +95,9 @@ async function apiRequest<T>(
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Unauthorized - remove token
+      // Unauthorized / session expired - clear token and trigger app logout
       await removeAuthToken();
+      onSessionExpired?.();
     }
     const error = await response
       .json()

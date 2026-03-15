@@ -41,6 +41,7 @@ import {
 import { useTheme } from "@/context/ThemeContext";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useUser } from "@/context/UserContext";
+import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
 import { buildingsAPI, authAPI, usersAPI, Room } from "@/utils/api"; // added usersAPI
@@ -81,6 +82,7 @@ function roomStatusColor(s: RoomStatus, colors: any) {
 
 export default function HomeScreen() {
   const navigation = useNavigation();
+  useRegisterSessionExpiryNavigation();
   const { user } = useUser();
   const { colors } = useTheme();
   const name = (user as any)?.name ?? "User";

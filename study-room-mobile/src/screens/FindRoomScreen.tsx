@@ -41,6 +41,7 @@ import { useFavorites } from "@/context/FavoritesContext";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList, MapBuildingId } from "@/navigation/AppNavigator";
+import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
 import { buildingsAPI } from "@/utils/api";
 import type { Building, Room } from "@/utils/api";
 import InfoTooltip from "@/components/InfoTooltip";
@@ -100,6 +101,7 @@ function findBuildingByMapId(buildings: Building[], mapId: MapBuildingId): Build
 export default function FindARoomScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  useRegisterSessionExpiryNavigation();
   const route = useRoute<RouteProp<RootStackParamList, "FindRoom">>();
   const buildingIdFromMap = route.params?.buildingIdFromMap;
   const { colors } = useTheme();

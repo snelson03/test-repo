@@ -45,6 +45,7 @@ import type { ThemeMode } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/AppNavigator";
+import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
 import { useFavorites } from "@/context/FavoritesContext";
 import InfoTooltip from "@/components/InfoTooltip";
 import HoverTooltip from "@/components/HoverTooltip";
@@ -94,6 +95,7 @@ export default function PreferencesScreen() {
     "Preferences"
   >;
   const navigation = useNavigation<PreferencesNavProp>();
+  useRegisterSessionExpiryNavigation();
 
   const route = useRoute<RouteProp<RootStackParamList, "Preferences">>();
 
