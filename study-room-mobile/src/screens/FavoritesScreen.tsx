@@ -44,6 +44,7 @@ import { useFavorites } from "@/context/FavoritesContext"; // shared favorites c
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/AppNavigator";
+import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
 import InfoTooltip from "@/components/InfoTooltip";
 import HoverTooltip from "@/components/HoverTooltip";
 
@@ -63,6 +64,7 @@ export default function FavoritesScreen() {
   // Navigation setup
   type FavoritesNavProp = NativeStackNavigationProp<RootStackParamList, "Favorites">;
   const navigation = useNavigation<FavoritesNavProp>();
+  useRegisterSessionExpiryNavigation();
   const { colors } = useTheme();
   const { favorites, removeFavorite } = useFavorites(); // shared list and remove function
   const [editMode, setEditMode] = useState(false); // keeps track of edit mode state

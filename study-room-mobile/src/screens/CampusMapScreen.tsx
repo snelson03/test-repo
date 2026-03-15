@@ -43,6 +43,7 @@ import type {
   RootStackParamList,
   MapBuildingId,
 } from "@/navigation/AppNavigator";
+import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
 import InfoTooltip from "@/components/InfoTooltip";
 import HoverTooltip from "@/components/HoverTooltip";
 
@@ -62,6 +63,7 @@ export default function CampusMapScreen() {
   // typed navigation (so we can pass params to FindRoom)
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  useRegisterSessionExpiryNavigation();
 
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);

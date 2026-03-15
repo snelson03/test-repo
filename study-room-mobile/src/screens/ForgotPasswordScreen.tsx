@@ -36,11 +36,13 @@ import {
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { RootStackParamList } from "@/navigation/AppNavigator";
+import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
 import { authAPI } from "@/utils/api";
 
 export default function ForgotPasswordScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  useRegisterSessionExpiryNavigation();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 

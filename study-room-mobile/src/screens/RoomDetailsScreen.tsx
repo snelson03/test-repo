@@ -9,6 +9,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '@/navigation/AppNavigator';
+import { useRegisterSessionExpiryNavigation } from '@/context/SessionExpiryContext';
 import type { ThemeColors } from '@/constants/theme';
 import {
   FONT_BODY,
@@ -39,6 +40,7 @@ type RoomDetailsScreenRouteProp = {
 
 export default function RoomDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  useRegisterSessionExpiryNavigation();
   const route = useRoute() as unknown as RoomDetailsScreenRouteProp;
   const { building, roomId, status } = route.params;
   const { colors } = useTheme();

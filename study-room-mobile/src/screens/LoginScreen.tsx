@@ -43,12 +43,14 @@ import {
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
 import { RootStackParamList } from "@/navigation/AppNavigator";
+import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
 import { authAPI } from "@/utils/api";
 
 // navigation
 export default function LoginScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  useRegisterSessionExpiryNavigation();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 

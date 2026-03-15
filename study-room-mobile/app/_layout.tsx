@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Slot, usePathname } from 'expo-router';
 import AppNavigator from '@/navigation/AppNavigator';
 import { UserProvider } from '@/context/UserContext';
+import { SessionExpiryProvider } from '@/context/SessionExpiryContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import 'react-native-gesture-handler';
@@ -41,9 +42,11 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <UserProvider>
-        <FavoritesProvider>
-          <ThemedApp />
-        </FavoritesProvider>
+        <SessionExpiryProvider>
+          <FavoritesProvider>
+            <ThemedApp />
+          </FavoritesProvider>
+        </SessionExpiryProvider>
       </UserProvider>
     </ThemeProvider>
   );
