@@ -120,7 +120,7 @@ export default function ForgotPasswordScreen() {
           />
         </Animated.View>
 
-        <Text style={styles.header}>FORGOT PASSWORD</Text>
+        <Text style={styles.header}>FORGOT PASSWORD?</Text>
 
         <Text style={styles.helpText}>
           Enter your Ohio University email and we’ll send password reset instructions.
