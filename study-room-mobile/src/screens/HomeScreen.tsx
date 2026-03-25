@@ -204,8 +204,7 @@ export default function HomeScreen() {
     const loadFavorites = async () => {
       try {
         const favsRaw = await usersAPI.getFavorites();
-
-        // ensure array
+  
         const favs: any[] = Array.isArray(favsRaw)
           ? favsRaw
           : Array.isArray((favsRaw as any)?.favorites)
@@ -213,33 +212,32 @@ export default function HomeScreen() {
           : Array.isArray((favsRaw as any)?.data)
           ? (favsRaw as any).data
           : [];
-
-        // normalize to always include building_name
+  
         const normalized = favs.map((room: any) => {
           const buildingId =
             room.building_id ??
             room.buildingId ??
             room.buildingID ??
             room.building;
-
+  
           const buildingName =
             room.building?.name ??
             room.building_name ??
             room.buildingName ??
             (buildingId != null ? buildingNameById[String(buildingId)] : "");
-
+  
           return { ...room, building_name: buildingName };
         });
-
+  
         setFavoriteRooms(normalized);
       } catch (error) {
         console.error("Failed to load favorites:", error);
         setFavoriteRooms([]);
       }
     };
-
+  
     loadFavorites();
-  }, [buildingNameById]);
+  }, [buildingNameById, favorites]);
 
   // Load building data
   useEffect(() => {
@@ -679,7 +677,7 @@ export default function HomeScreen() {
         >
           {/* Header style setup */}
           <LinearGradient
-              colors={["#0A5A38", "#05472A"]}
+              colors={["#06442A", "#04301D"]}
               style={styles.header}
             >
             <Image
@@ -1168,6 +1166,7 @@ function createStyles(c: ThemeColors) {
 
     welcome: {
       top: 15,
+      marginLeft: -5,
       fontSize: FONT_SIZE_TITLE_LARGE - 8,
       fontFamily: FONT_HEADING,
       color: c.primary,

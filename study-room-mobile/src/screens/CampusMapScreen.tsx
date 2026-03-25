@@ -10,19 +10,18 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-  LayoutChangeEvent,
   Animated,
   useWindowDimensions,
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import type { ThemeColors } from "@/constants/theme";
 import {
   FONT_BODY,
   FONT_HEADING,
   FONT_SIZE_TITLE,
-  FONT_SIZE_SECTION,
   FONT_SIZE_CARD_TITLE,
   FONT_SIZE_BODY,
   FONT_SIZE_CAPTION,
@@ -35,8 +34,6 @@ import {
   WEB_CONTENT_PADDING_H,
   WEB_SIDEBAR_PADDING_H,
   PAGE_CONTENT_PADDING_H,
-  CARD_BORDER_RADIUS,
-  SPACE_MD,
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { useNavigation } from "@react-navigation/native";
@@ -73,9 +70,8 @@ export default function CampusMapScreen() {
 
   const scrollViewMainRef = useRef<ScrollView | null>(null);
 
-  // nested scroll (we pan horizontally + vertically)
+  // horizontal-only map pan
   const mapScrollXRef = useRef<ScrollView | null>(null);
-  const mapScrollYRef = useRef<ScrollView | null>(null);
 
   const route = useRoute() as any;
   const { width } = useWindowDimensions();
@@ -97,16 +93,18 @@ export default function CampusMapScreen() {
 
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
-  const [mapSize, setMapSize] = useState<{ width: number; height: number }>({
-    width: 0,
-    height: 0,
-  });
-
-  // Measure the map viewport width for IOS
+  // Measure the map viewport width
   const [viewportWidth, setViewportWidth] = useState<number>(0);
 
-  // Cross-platform zoom state (works on web + android + ios)
-  const [zoom, setZoom] = useState<number>(1);
+  // Use the real image aspect ratio here
+  const MAP_ASPECT_RATIO = 1536 / 960;
+
+  // Cross-platform zoom state
+  const mobileDefaultZoom = 1.4;
+  const webDefaultZoom = 1;
+  const [zoom, setZoom] = useState<number>(
+    Platform.OS === "web" ? webDefaultZoom : mobileDefaultZoom
+  );
 
   // Show/hide the key
   const [showLegend, setShowLegend] = useState<boolean>(true);
@@ -128,8 +126,8 @@ export default function CampusMapScreen() {
       name: "Academic & Research Center",
       address: "61 Oxbow Trail, Athens, OH 45701",
       image: require("../assets/images/arc.png"),
-      pinX: 0.194,
-      pinY: 0.25,
+      pinX: 0.135,
+      pinY: 0.08,
       pinColor: "#E53935", // red
     },
     {
@@ -137,8 +135,8 @@ export default function CampusMapScreen() {
       name: "Stocker Center",
       address: "28 West Green Dr, Athens, OH 45701",
       image: require("../assets/images/stocker.png"),
-      pinX: 0.15555,
-      pinY: 0.285,
+      pinX: 0.087,
+      pinY: 0.137,
       pinColor: "#FB8C00", // orange
     },
     {
@@ -147,7 +145,7 @@ export default function CampusMapScreen() {
       address: "30 Park Pl, Athens, OH 45701",
       image: require("../assets/images/alden.png"),
       pinX: 0.483,
-      pinY: 0.455,
+      pinY: 0.41,
       pinColor: "#1E88E5", // blue
     },
   ];
@@ -158,28 +156,27 @@ export default function CampusMapScreen() {
     return m;
   }, [buildings]);
 
-  // taller map for web
-  const mapHeight = isWide ? (isWeb ? 650 : 930) : 300;
+  // taller map for web and bigger on mobile
+  const mapHeight = isWide ? (isWeb ? 650 : 930) : 430;
 
   const clamp = (v: number, min: number, max: number) =>
     Math.max(min, Math.min(max, v));
 
   const setZoomSafe = (next: number) => setZoom(clamp(next, 1, 3));
 
-  // Base sizing for zoom content
-  const baseWidth = viewportWidth || mapSize.width;
+  // lock the map to container height and only scale horizontally
   const baseHeight = mapHeight;
+  const baseWidth = baseHeight * MAP_ASPECT_RATIO;
 
-  // compute pixel locations of pins
   const contentWidth = baseWidth * zoom;
-  const contentHeight = baseHeight * zoom;
+  const contentHeight = mapHeight;
 
   const pinPositions: Record<string, { x: number; y: number }> = {};
   if (baseWidth > 0 && baseHeight > 0) {
     buildings.forEach((b) => {
       pinPositions[b.id] = {
         x: baseWidth * b.pinX * zoom,
-        y: baseHeight * b.pinY * zoom,
+        y: baseHeight * b.pinY,
       };
     });
   }
@@ -187,35 +184,24 @@ export default function CampusMapScreen() {
   const zoomToBuilding = (buildingId: string) => {
     const pin = pinPositions[buildingId];
     const scrollX: any = mapScrollXRef.current;
-    const scrollY: any = mapScrollYRef.current;
 
-    if (!pin || !scrollX || !scrollY || baseWidth <= 0 || baseHeight <= 0)
-      return;
+    if (!pin || !scrollX || viewportWidth <= 0 || baseHeight <= 0) return;
 
     // Scroll main view so the map is visible (mobile)
     if (!isWide) {
       scrollViewMainRef.current?.scrollTo({ y: 0, animated: true });
     }
 
-    // Center the pin in the viewport
-    const viewportW = baseWidth;
-    const viewportH = mapHeight;
+    const viewportW = viewportWidth;
 
     const targetX = clamp(
       pin.x - viewportW / 2,
       0,
       Math.max(0, contentWidth - viewportW)
     );
-    const targetY = clamp(
-      pin.y - viewportH / 2,
-      0,
-      Math.max(0, contentHeight - viewportH)
-    );
 
-    // Address the error that comes from clicking a pin:
     try {
       scrollX.scrollTo({ x: targetX, animated: true });
-      scrollY.scrollTo({ y: targetY, animated: true });
     } catch (e) {
       // prevents platform-specific scroll responder issues from crashing
     }
@@ -241,8 +227,7 @@ export default function CampusMapScreen() {
     setSelectedBuildingId(buildingId);
     startPulse();
 
-    // If map isn't measured yet, delay the zoom-to so pinPositions is ready
-    if (baseWidth <= 0 || baseHeight <= 0) {
+    if (viewportWidth <= 0 || baseHeight <= 0) {
       setTimeout(() => zoomToBuilding(buildingId), 0);
       return;
     }
@@ -254,17 +239,11 @@ export default function CampusMapScreen() {
     setSelectedBuildingId(buildingId);
     startPulse();
 
-    // If map isn't measured yet, delay the zoom-to so pinPositions is ready
-    if (baseWidth <= 0 || baseHeight <= 0) {
+    if (viewportWidth <= 0 || baseHeight <= 0) {
       setTimeout(() => zoomToBuilding(buildingId), 0);
       return;
     }
     zoomToBuilding(buildingId);
-  };
-
-  const handleMapLayout = (e: LayoutChangeEvent) => {
-    const { width: w, height: h } = e.nativeEvent.layout;
-    setMapSize({ width: w, height: h });
   };
 
   useEffect(() => {
@@ -272,7 +251,8 @@ export default function CampusMapScreen() {
     if (selectedBuildingId) {
       setTimeout(() => zoomToBuilding(selectedBuildingId), 0);
     }
-  }, [zoom, selectedBuildingId]); // include selectedBuildingId so it's not stale
+  }, [zoom, selectedBuildingId]);
+
   // take directly to building when clicked on room details
   useEffect(() => {
     const id = route?.params?.selectedBuildingId as string | undefined;
@@ -281,13 +261,12 @@ export default function CampusMapScreen() {
     setSelectedBuildingId(id);
     startPulse();
 
-    // wait for layout measurement so pinPositions is ready
     setTimeout(() => zoomToBuilding(id), 0);
   }, [route?.params?.selectedBuildingId]);
+
   const pagePadding = isWide ? WEB_CONTENT_PADDING_H : PAGE_CONTENT_PADDING_H;
 
-  const headerTopPad = isWide ? 50 : 80;
-  const mainTopGap = isWide ? 50 : 20;
+  const mainTopGap = isWide ? 20 : 20;
 
   const webScale = isWide ? 1.0 : 1;
 
@@ -308,31 +287,11 @@ export default function CampusMapScreen() {
       }}
       accessibilityLabel="Campus map content"
     >
-      {/* Header (full width on web) */}
-      <View
-        style={[
-          styles.header,
-          {
-            width: "100%",
-            paddingTop: headerTopPad,
-            paddingHorizontal: isWide ? 0 : PAGE_CONTENT_PADDING_H,
-          },
-        ]}
-        accessibilityLabel="Campus map header"
-      >
-        <TouchableOpacity onPress={() => router.back()}
-          style={styles.backButton}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-          accessibilityHint="Returns to the previous screen"
-        >
-          <Ionicons name="arrow-back" size={28} color={colors.primary} />
-        </TouchableOpacity>
-        <Text style={[styles.title, isWide && styles.titleWide]}
-          accessibilityRole="header"
-          accessibilityLabel="Campus map title"
-        >CAMPUS MAP</Text>
-      </View>
+      {isWeb && (
+        <View style={styles.webHeaderRow}>
+          <Text style={styles.webPageTitle}>CAMPUS MAP</Text>
+        </View>
+      )}
 
       {/* Wide layout = row, Mobile = column */}
       <View
@@ -349,18 +308,25 @@ export default function CampusMapScreen() {
         accessibilityLabel="Campus map main layout"
       >
         {/* LEFT: MAP */}
-        <View style={[styles.leftCol, isWide && { flex: leftColFlex }]}
+        <View
+          style={[styles.leftCol, isWide && { flex: leftColFlex }]}
           accessibilityLabel="Map section"
         >
-          <View style={[styles.mapWrapper, isWide && { marginBottom: 0 }]}
+          <View
+            style={[styles.mapWrapper, isWide && { marginBottom: 0 }]}
             accessibilityLabel="Map wrapper"
           >
             {/* Uniform green frame */}
-            <View style={[styles.mapFrame, { padding: framePad }]}
+            <LinearGradient
+              colors={["#06442A", "#04301D"]}
+              style={[styles.mapFrame, { padding: framePad }]}
               accessibilityLabel="Map frame"
             >
               {/* Map viewport */}
-              <View
+              <LinearGradient
+                colors={["#0F7046", "#0D6440"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
                 style={[
                   styles.mapViewport,
                   {
@@ -374,175 +340,180 @@ export default function CampusMapScreen() {
                 {/* Zoom controls (web + mobile) */}
                 <View style={styles.zoomControls} accessibilityLabel="Map controls">
                   <HoverTooltip message="Zoom in">
-                  <TouchableOpacity
-                    style={styles.zoomBtn}
-                    onPress={() => setZoomSafe(zoom + 0.25)}
-                    activeOpacity={0.85}
-                    accessibilityRole="button"
-                    accessibilityLabel="Zoom in"
-                    accessibilityHint="Increases map zoom"
-                  >
-                    <Ionicons name="add" size={18} color={colors.white} />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.zoomBtn}
+                      onPress={() => setZoomSafe(zoom + 0.25)}
+                      activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel="Zoom in"
+                      accessibilityHint="Increases map zoom"
+                    >
+                      <Ionicons name="add" size={18} color={colors.white} />
+                    </TouchableOpacity>
                   </HoverTooltip>
 
                   <HoverTooltip message="Zoom out">
-                  <TouchableOpacity
-                    style={styles.zoomBtn}
-                    onPress={() => setZoomSafe(zoom - 0.25)}
-                    activeOpacity={0.85}
-                    accessibilityRole="button"
-                    accessibilityLabel="Zoom out"
-                    accessibilityHint="Decreases map zoom"
-                  >
-                    <Ionicons name="remove" size={18} color={colors.white} />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.zoomBtn}
+                      onPress={() => setZoomSafe(zoom - 0.25)}
+                      activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel="Zoom out"
+                      accessibilityHint="Decreases map zoom"
+                    >
+                      <Ionicons name="remove" size={18} color={colors.white} />
+                    </TouchableOpacity>
                   </HoverTooltip>
 
                   <HoverTooltip message="Reset zoom">
-                  <TouchableOpacity
-                    style={styles.zoomBtn}
-                    onPress={() => setZoomSafe(1)}
-                    activeOpacity={0.85}
-                    accessibilityRole="button"
-                    accessibilityLabel="Reset zoom"
-                    accessibilityHint="Resets map zoom to default"
-                  >
-                    <Ionicons name="refresh" size={16} color={colors.white} />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.zoomBtn}
+                      onPress={() =>
+                        setZoomSafe(isWeb ? webDefaultZoom : mobileDefaultZoom)
+                      }
+                      activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel="Reset zoom"
+                      accessibilityHint="Resets map zoom to default"
+                    >
+                      <Ionicons name="refresh" size={16} color={colors.white} />
+                    </TouchableOpacity>
                   </HoverTooltip>
 
                   {/* Key toggle */}
                   <HoverTooltip message={showLegend ? "Hide legend" : "Show legend"}>
-                  <TouchableOpacity
-                    style={styles.zoomBtn}
-                    onPress={() => setShowLegend((prev) => !prev)}
-                    activeOpacity={0.85}
-                    accessibilityRole="button"
-                    accessibilityLabel={showLegend ? "Hide legend" : "Show legend"}
-                    accessibilityHint="Toggles the legend for map pins"
-                    accessibilityState={{ expanded: showLegend }}
-                  >
-                    <Ionicons
-                      name={showLegend ? "eye-off-outline" : "eye-outline"}
-                      size={18}
-                      color={colors.white}
-                    />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.zoomBtn}
+                      onPress={() => setShowLegend((prev) => !prev)}
+                      activeOpacity={0.85}
+                      accessibilityRole="button"
+                      accessibilityLabel={showLegend ? "Hide legend" : "Show legend"}
+                      accessibilityHint="Toggles the legend for map pins"
+                      accessibilityState={{ expanded: showLegend }}
+                    >
+                      <Ionicons
+                        name={showLegend ? "eye-off-outline" : "eye-outline"}
+                        size={18}
+                        color={colors.white}
+                      />
+                    </TouchableOpacity>
                   </HoverTooltip>
                 </View>
 
-                {/* PAN (both axes) via nested scrollviews */}
+                {/* horizontal only pan */}
                 <ScrollView
                   ref={mapScrollXRef}
-                  style={{ width: "100%" }}
+                  style={{ width: "100%", height: "100%" }}
                   horizontal
                   bounces={false}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.panOuterContent}
+                  showsHorizontalScrollIndicator={true}
+                  contentContainerStyle={{
+                    minWidth: "100%",
+                    height: "100%",
+                    alignItems: "flex-start",
+                    justifyContent: "flex-start",
+                  }}
                   accessibilityLabel="Map horizontal pan"
                 >
-                  <ScrollView
-                    ref={mapScrollYRef}
-                    style={{ width: "100%" }}
-                    bounces={false}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.panInnerContent}
-                    accessibilityLabel="Map vertical pan"
+                  <View
+                    style={[
+                      styles.mapInner,
+                      {
+                        width: contentWidth,
+                        height: contentHeight,
+                      },
+                    ]}
+                    accessibilityLabel="Map content container"
                   >
                     <View
-                      style={[styles.mapInner, { height: mapHeight, width: "100%" }]}
-                      onLayout={handleMapLayout}
-                      accessibilityLabel="Map content container"
+                      style={[
+                        styles.mapScaledLayer,
+                        {
+                          width: contentWidth,
+                          height: contentHeight,
+                        },
+                      ]}
+                      accessibilityLabel="Scaled map layer"
                     >
-                      <View
-                        style={[
-                          styles.mapScaledLayer,
-                          {
-                            width: baseWidth > 0 ? baseWidth * zoom : "100%",
-                            height: baseHeight > 0 ? baseHeight * zoom : "100%",
-                          },
-                        ]}
-                        accessibilityLabel="Scaled map layer"
-                      >
-                        <Image
-                          source={require("../assets/images/map.jpeg")}
-                          style={styles.mapImage}
-                          resizeMode="contain"
-                          accessibilityRole="image"
-                          accessibilityLabel="Campus map image"
-                          accessibilityIgnoresInvertColors
-                        />
+                      <Image
+                        source={require("../assets/images/map.jpeg")}
+                        style={styles.mapImage}
+                        resizeMode="cover"
+                        accessibilityRole="image"
+                        accessibilityLabel="Campus map image"
+                        accessibilityIgnoresInvertColors
+                      />
 
-                        {/* PINS */}
-                        {baseWidth > 0 &&
-                          buildings.map((b) => {
-                            const pin = pinPositions[b.id];
-                            if (!pin) return null;
+                      {/* PINS */}
+                      {viewportWidth > 0 &&
+                        buildings.map((b) => {
+                          const pin = pinPositions[b.id];
+                          if (!pin) return null;
 
-                            const isSelected = selectedBuildingId === b.id;
+                          const isSelected = selectedBuildingId === b.id;
 
-                            const pulseScale = pulseAnim.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [0.7, 1.6],
-                            });
+                          const pulseScale = pulseAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.7, 1.6],
+                          });
 
-                            const pulseOpacity = pulseAnim.interpolate({
-                              inputRange: [0, 1],
-                              outputRange: [0.8, 0],
-                            });
+                          const pulseOpacity = pulseAnim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [0.8, 0],
+                          });
 
-                            return (
-                              <TouchableOpacity
-                                key={b.id}
-                                style={[styles.pin, { left: pin.x - 11, top: pin.y - 22 }]}
-                                onPress={() => handlePinPress(b.id)}
-                                activeOpacity={0.9}
-                                accessibilityRole="button"
-                                accessibilityLabel={`Map pin: ${b.name}`}
-                                accessibilityHint="Tap once to zoom to this building. Tap twice quickly to open Find a Room for this building."
-                                accessibilityState={{ selected: isSelected }}
+                          return (
+                            <TouchableOpacity
+                              key={b.id}
+                              style={[styles.pin, { left: pin.x - 11, top: pin.y - 22 }]}
+                              onPress={() => handlePinPress(b.id)}
+                              activeOpacity={0.9}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Map pin: ${b.name}`}
+                              accessibilityHint="Tap once to center this building. Tap twice quickly to open Find a Room for this building."
+                              accessibilityState={{ selected: isSelected }}
+                            >
+                              <View
+                                style={styles.pinContainer}
+                                accessibilityLabel={`Pin container for ${b.name}`}
                               >
-                                <View style={styles.pinContainer}
-                                  accessibilityLabel={`Pin container for ${b.name}`}>
-                                  {isSelected && (
-                                    <Text 
-                                      style={styles.pinLabel}
-                                      accessibilityLabel={`Selected building: ${b.name}`}
-                                    >
-                                      {b.name}
-                                    </Text>
-                                  )}
+                                {isSelected && (
+                                  <Text
+                                    style={styles.pinLabel}
+                                    accessibilityLabel={`Selected building: ${b.name}`}
+                                  >
+                                    {b.name}
+                                  </Text>
+                                )}
 
-                                  {isSelected && (
-                                    <Animated.View
-                                      style={[
-                                        styles.pulseRing,
-                                        {
-                                          backgroundColor: b.pinColor,
-                                          transform: [{ scale: pulseScale }],
-                                          opacity: pulseOpacity,
-                                        },
-                                      ]}
-                                      accessibilityElementsHidden
-                                      importantForAccessibility="no"
-                                    />
-                                  )}
-
-                                  <Ionicons
-                                    name="location-sharp"
-                                    size={22}
-                                    color={b.pinColor}
+                                {isSelected && (
+                                  <Animated.View
+                                    style={[
+                                      styles.pulseRing,
+                                      {
+                                        backgroundColor: b.pinColor,
+                                        transform: [{ scale: pulseScale }],
+                                        opacity: pulseOpacity,
+                                      },
+                                    ]}
                                     accessibilityElementsHidden
                                     importantForAccessibility="no"
                                   />
-                                </View>
-                              </TouchableOpacity>
-                            );
-                          })}
-                      </View>
+                                )}
+
+                                <Ionicons
+                                  name="location-sharp"
+                                  size={22}
+                                  color={b.pinColor}
+                                  accessibilityElementsHidden
+                                  importantForAccessibility="no"
+                                />
+                              </View>
+                            </TouchableOpacity>
+                          );
+                        })}
                     </View>
-                  </ScrollView>
+                  </View>
                 </ScrollView>
 
                 {/* Legend (pins + ping effect) */}
@@ -563,71 +534,74 @@ export default function CampusMapScreen() {
 
                       return (
                         <View key={b.id} style={styles.legendRowWrap}>
-                        <TouchableOpacity
-                          style={styles.legendItem}
-                          onPress={() => handleSelectBuilding(b.id)}
-                          activeOpacity={0.9}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Legend item: ${b.name}`}
-                          accessibilityHint="Selects this building and centers it on the map"
-                          accessibilityState={{ selected: isSelected }}
-                        >
-                          <View 
-                            style={styles.legendIconWrap}
-                            accessibilityLabel={`Legend icon for ${b.name}`}
+                          <TouchableOpacity
+                            style={styles.legendItem}
+                            onPress={() => handleSelectBuilding(b.id)}
+                            activeOpacity={0.9}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Legend item: ${b.name}`}
+                            accessibilityHint="Selects this building and centers it on the map"
+                            accessibilityState={{ selected: isSelected }}
                           >
-                            {isSelected && (
-                              <Animated.View
-                                style={[
-                                  styles.legendPulse,
-                                  {
-                                    backgroundColor: b.pinColor,
-                                    transform: [{ scale: pulseScale }],
-                                    opacity: pulseOpacity,
-                                  },
-                                ]}
+                            <View
+                              style={styles.legendIconWrap}
+                              accessibilityLabel={`Legend icon for ${b.name}`}
+                            >
+                              {isSelected && (
+                                <Animated.View
+                                  style={[
+                                    styles.legendPulse,
+                                    {
+                                      backgroundColor: b.pinColor,
+                                      transform: [{ scale: pulseScale }],
+                                      opacity: pulseOpacity,
+                                    },
+                                  ]}
+                                  accessibilityElementsHidden
+                                  importantForAccessibility="no"
+                                />
+                              )}
+                              <Ionicons
+                                name="location-sharp"
+                                size={18}
+                                color={b.pinColor}
                                 accessibilityElementsHidden
                                 importantForAccessibility="no"
                               />
-                            )}
-                            <Ionicons
-                              name="location-sharp"
-                              size={18}
-                              color={b.pinColor}
-                              accessibilityElementsHidden
-                              importantForAccessibility="no"
-                            />
-                          </View>
-                          <Text
-                           style={styles.legendText}
-                           accessibilityLabel={`Legend text: ${b.name}`}
-                          >
-                            {b.name}</Text>
-                        </TouchableOpacity>
-
-                        <HoverTooltip message={`Open ${b.name} in Find a Room`}>
-                          <TouchableOpacity
-                            style={styles.takeMeThereBtn}
-                            onPress={() =>
-                              navigation.navigate("FindRoom", {
-                                buildingIdFromMap: b.id as MapBuildingId,
-                              })
-                            }
-                            activeOpacity={0.9}
-                            accessibilityRole="button"
-                            accessibilityLabel={`Take me to ${b.name}`}
-                            accessibilityHint="Opens Find a Room filtered to this building"
-                          >
-                            <Text style={styles.takeMeThereText}>TAKE ME THERE</Text>
+                            </View>
+                            <Text
+                              style={styles.legendText}
+                              accessibilityLabel={`Legend text: ${b.name}`}
+                            >
+                              {b.name}
+                            </Text>
                           </TouchableOpacity>
-                        </HoverTooltip>
-                      </View>
+
+                          <HoverTooltip message={`Open ${b.name} in Find a Room`}>
+                            <TouchableOpacity
+                              style={styles.takeMeThereBtn}
+                              onPress={() =>
+                                navigation.navigate("FindRoom", {
+                                  buildingIdFromMap: b.id as MapBuildingId,
+                                })
+                              }
+                              activeOpacity={0.9}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Take me to ${b.name}`}
+                              accessibilityHint="Opens Find a Room filtered to this building"
+                            >
+                              <Text style={styles.takeMeThereText}>
+                                {Platform.OS === "web" ? "TAKE ME THERE" : "SEE ROOMS"}
+                              </Text>
+                            </TouchableOpacity>
+                          </HoverTooltip>
+                        </View>
                       );
                     })}
                   </View>
                 )}
-              </View>
-            </View>
+              </LinearGradient>
+            </LinearGradient>
           </View>
         </View>
 
@@ -639,52 +613,68 @@ export default function CampusMapScreen() {
           ]}
           accessibilityLabel="Buildings section"
         >
-          <View style={[styles.buildingsContainer, { width: "100%" }]}
+          <View
+            style={[styles.buildingsContainer, { width: "100%" }]}
             accessibilityLabel="Available buildings container"
           >
-            <Text style={styles.sectionTitle}
-              accessibilityRole="header"
-              accessibilityLabel="Available buildings"
-            >AVAILABLE BUILDINGS</Text>
+            <LinearGradient
+              colors={["#0F7046", "#0D6440"]}
+              style={styles.sectionTitleBanner}
+            >
+              <Text
+                style={styles.sectionTitle}
+                accessibilityRole="header"
+                accessibilityLabel="Available buildings"
+              >
+                AVAILABLE BUILDINGS
+              </Text>
+            </LinearGradient>
 
             {buildings.map((b) => (
-              <View key={b.id} style={styles.buildingCard}
+              <View
+                key={b.id}
+                style={styles.buildingCard}
                 accessibilityLabel={`Building card: ${b.name}`}
               >
-                <View style={styles.buildingNameRow}
+                <View
+                  style={styles.buildingNameRow}
                   accessibilityLabel={`Building name row: ${b.name}`}
                 >
-                  <Text style={styles.buildingName}
+                  <Text
+                    style={styles.buildingName}
                     accessibilityLabel={`Building name: ${b.name}`}
                   >
                     {b.name}
                   </Text>
                   <HoverTooltip message={`Center map on ${b.name}`}>
-                  <TouchableOpacity
-                    style={styles.buildingPinButton}
-                    onPress={() => handleSelectBuilding(b.id)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Center map on ${b.name}`}
-                    accessibilityHint="Selects this building and centers it on the map"
-                    accessibilityState={{ selected: selectedBuildingId === b.id }}
-                  >
-                    <Ionicons
-                      name="location-sharp"
-                      size={20}
-                      color={b.pinColor}
-                      accessibilityElementsHidden
-                      importantForAccessibility="no"
-                    />
-                  </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.buildingPinButton}
+                      onPress={() => handleSelectBuilding(b.id)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Center map on ${b.name}`}
+                      accessibilityHint="Selects this building and centers it on the map"
+                      accessibilityState={{ selected: selectedBuildingId === b.id }}
+                    >
+                      <Ionicons
+                        name="location-sharp"
+                        size={20}
+                        color={b.pinColor}
+                        accessibilityElementsHidden
+                        importantForAccessibility="no"
+                      />
+                    </TouchableOpacity>
                   </HoverTooltip>
                 </View>
 
-                <Text style={styles.address}
+                <Text
+                  style={styles.address}
                   accessibilityLabel={`Address for ${b.name}: ${b.address}`}
                 >
                   {b.address}
                 </Text>
-                <Image source={b.image} style={styles.buildingImage} 
+                <Image
+                  source={b.image}
+                  style={styles.buildingImage}
                   accessibilityRole="image"
                   accessibilityLabel={`Image of ${b.name}`}
                   accessibilityIgnoresInvertColors
@@ -697,13 +687,43 @@ export default function CampusMapScreen() {
     </ScrollView>
   );
 
-  if (!isWeb) return screenContent;
+  if (!isWeb) {
+    return (
+      <View style={{ flex: 1 }}>
+        {/* MOBILE HEADER */}
+        <LinearGradient
+          colors={["#06442A", "#04301D"]}
+          style={styles.mobileHeaderBar}
+        >
+          <TouchableOpacity
+            onPress={() => router.back()}
+          >
+            <Ionicons name="arrow-back" size={28} color={colors.white} />
+          </TouchableOpacity>
+
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Text style={styles.mobileHeaderTitle}>
+              CAMPUS MAP
+            </Text>
+          </View>
+
+          <View style={{ width: 28 }} />
+        </LinearGradient>
+
+        {screenContent}
+      </View>
+    );
+  }
 
   // WEB ONLY: use the same top bar + sidebar layout as HomeScreen
   return (
     <View style={styles.webPage} accessibilityLabel="Campus map screen">
       {/* top bar */}
-      <View style={styles.webTopBar} accessibilityLabel="Top bar">
+      <LinearGradient
+        colors={["#06442A", "#04301D"]}
+        style={styles.webTopBar}
+        accessibilityLabel="Top bar"
+      >
         <Image
           source={require("../assets/images/bf_logo.png")}
           style={styles.webTopBarLogo}
@@ -715,13 +735,16 @@ export default function CampusMapScreen() {
         <View style={styles.topBarTooltipSlot}>
           <InfoTooltip message="Explore campus buildings on the interactive map. Select a map pin or legend pin to find a particular building, or use Take Me There to view its rooms." />
         </View>
-      </View>
+      </LinearGradient>
 
       {/* sidebar + main */}
       <View style={styles.webBody} accessibilityLabel="Web layout">
         {/* Left Sidebar */}
         <View style={styles.webSidebar} accessibilityLabel="Navigation sidebar">
-          <View style={styles.webSidebarLinks} accessibilityLabel="Navigation links">
+          <View
+            style={styles.webSidebarLinks}
+            accessibilityLabel="Navigation links"
+          >
             {menuItems.map((item) => {
               const selected = item.route === "CampusMap";
               return (
@@ -753,7 +776,8 @@ export default function CampusMapScreen() {
 
         {/* Main area */}
         <View style={styles.webMain} accessibilityLabel="Main content">
-          {screenContent}</View>
+          {screenContent}
+        </View>
       </View>
     </View>
   );
@@ -770,16 +794,13 @@ function createStyles(c: ThemeColors) {
 
     webTopBar: {
       height: WEB_TOPBAR_HEIGHT,
-      backgroundColor: c.darkAccent,
       width: "100%",
       justifyContent: "center",
       paddingLeft: 20,
-      // shadow
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.25,
       shadowRadius: 10,
-      // android
       elevation: 10,
       zIndex: 10,
     },
@@ -796,7 +817,6 @@ function createStyles(c: ThemeColors) {
       transform: [{ translateY: -11 }],
     },
 
-
     webBody: {
       flex: 1,
       flexDirection: "row",
@@ -812,7 +832,6 @@ function createStyles(c: ThemeColors) {
       shadowOffset: { width: 6, height: 0 },
       shadowOpacity: 0.22,
       shadowRadius: 10,
-      // android
       elevation: 8,
       zIndex: 5,
     },
@@ -842,7 +861,6 @@ function createStyles(c: ThemeColors) {
 
     webMain: { flex: 1, backgroundColor: c.gray100 },
 
-    //
     page: {
       flex: 1,
       flexDirection: "row",
@@ -854,12 +872,29 @@ function createStyles(c: ThemeColors) {
       backgroundColor: c.gray100,
     },
 
+    webHeaderRow: {
+      width: "100%",
+      justifyContent: "flex-start",
+      alignItems: "flex-start",
+      marginTop: 25,
+      marginBottom: 8,
+      paddingLeft: 8,
+    },
+
+    webPageTitle: {
+      fontSize: FONT_SIZE_TITLE + 16,
+      fontFamily: FONT_HEADING,
+      color: c.primary,
+      textTransform: "uppercase",
+      textAlign: "left",
+      letterSpacing: 1,
+    },
+
     header: {
       flexDirection: "row",
       alignItems: "center",
-      //paddingHorizontal: 20,
-      //gap: 20,
     },
+
     backButton: { padding: 5 },
 
     titleWide: {
@@ -895,33 +930,34 @@ function createStyles(c: ThemeColors) {
     },
 
     mapFrame: {
-      backgroundColor: c.darkAccent,
       width: "100%",
       alignItems: "center",
       justifyContent: "center",
       borderRadius: 0,
       paddingVertical: 30,
+      overflow: "hidden",
     },
 
     mapViewport: {
       width: "100%",
       overflow: "hidden",
       position: "relative",
-      borderRadius: CARD_BORDER_RADIUS,
+      borderRadius: 6,
     },
 
-    //  pan container helpers
-    panOuterContent: { alignItems: "flex-start", justifyContent: "flex-start" },
-    panInnerContent: { alignItems: "flex-start", justifyContent: "flex-start" },
-
-    mapInner: { width: "100%", position: "relative" },
-
-    // zoomed content layer
-    mapScaledLayer: {
+    mapInner: {
       position: "relative",
     },
 
-    mapImage: { width: "100%", height: "100%" },
+    mapScaledLayer: {
+      position: "relative",
+      height: "100%",
+    },
+
+    mapImage: {
+      width: "100%",
+      height: "100%",
+    },
 
     pin: { position: "absolute" },
     pinContainer: { alignItems: "center", justifyContent: "center" },
@@ -952,7 +988,6 @@ function createStyles(c: ThemeColors) {
       opacity: 0.35,
     },
 
-    // zoom buttons (map overlay)
     zoomControls: {
       position: "absolute",
       right: 12,
@@ -975,19 +1010,15 @@ function createStyles(c: ThemeColors) {
       elevation: 6,
     },
 
-    // legend with colored pins + ping effect
     legend: {
       position: "absolute",
       left: 15,
-      right: 110,
-      bottom: 25,
+      right: Platform.OS === "web" ? 110 : 15,
+      bottom: Platform.OS === "web" ? 25 : 10,
       zIndex: 20,
       backgroundColor: "rgba(5, 71, 42, 0.75)",
-
-      // solid border around the legend
       borderWidth: 1.5,
       borderColor: c.primary,
-
       shadowColor: "#000",
       shadowOpacity: 0.15,
       shadowRadius: 8,
@@ -1032,8 +1063,8 @@ function createStyles(c: ThemeColors) {
     legendRowWrap: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "space-between",
-      gap: 10,
+      justifyContent: Platform.OS === "web" ? "space-between" : "flex-start",
+      gap: Platform.OS === "web" ? 10 : 6,
     },
 
     legendItemMain: {
@@ -1051,6 +1082,7 @@ function createStyles(c: ThemeColors) {
       borderRadius: 6,
       alignItems: "center",
       justifyContent: "center",
+      marginLeft: Platform.OS === "web" ? 0 : -67,
     },
 
     takeMeThereText: {
@@ -1066,10 +1098,23 @@ function createStyles(c: ThemeColors) {
       paddingTop: 0,
       paddingBottom: 25,
       shadowColor: "#000",
-      shadowOpacity: 0.6,
-      shadowOffset: { width: 0, height: 6 },
-      shadowRadius: 6,
-      elevation: 8,
+      shadowOpacity: 0.28,
+      shadowOffset: { width: 0, height: 12 },
+      shadowRadius: 18,
+      elevation: 12,
+      borderRadius: 0,
+      overflow: "visible",
+      ...(Platform.OS === "web"
+        ? {
+            boxShadow: "0px 14px 30px rgba(0, 0, 0, 0.22)",
+          }
+        : {}),
+    },
+
+    sectionTitleBanner: {
+      width: "100%",
+      marginBottom: 30,
+      alignSelf: "stretch",
       borderRadius: 0,
       overflow: "hidden",
     },
@@ -1078,11 +1123,10 @@ function createStyles(c: ThemeColors) {
       fontSize: FONT_SIZE_TITLE - 2,
       fontFamily: FONT_HEADING,
       color: c.white,
-      backgroundColor: c.green3,
-      paddingVertical:13,
+      paddingVertical: 13,
       textAlign: "center",
       width: "100%",
-      marginBottom: 30,
+      marginBottom: 0,
       marginTop: 0,
       alignSelf: "stretch",
     },
@@ -1119,9 +1163,29 @@ function createStyles(c: ThemeColors) {
       borderBottomColor: "rgba(255,255,255,0.25)",
       marginBottom: 12,
     },
+
     webSidebarLogo: {
       width: "100%",
       height: 80,
+    },
+
+    mobileHeaderBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      width: "100%",
+      paddingHorizontal: 24,
+      paddingTop: 65,
+      paddingBottom: 22,
+      marginBottom: 8,
+    },
+
+    mobileHeaderTitle: {
+      fontSize: FONT_SIZE_TITLE + 6,
+      fontFamily: FONT_HEADING,
+      color: c.white,
+      textTransform: "uppercase",
+      textAlign: "center",
     },
   });
 }
