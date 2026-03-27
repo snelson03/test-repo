@@ -204,7 +204,7 @@ export default function HomeScreen() {
     const loadFavorites = async () => {
       try {
         const favsRaw = await usersAPI.getFavorites();
-  
+
         const favs: any[] = Array.isArray(favsRaw)
           ? favsRaw
           : Array.isArray((favsRaw as any)?.favorites)
@@ -212,30 +212,30 @@ export default function HomeScreen() {
           : Array.isArray((favsRaw as any)?.data)
           ? (favsRaw as any).data
           : [];
-  
+
         const normalized = favs.map((room: any) => {
           const buildingId =
             room.building_id ??
             room.buildingId ??
             room.buildingID ??
             room.building;
-  
+
           const buildingName =
             room.building?.name ??
             room.building_name ??
             room.buildingName ??
             (buildingId != null ? buildingNameById[String(buildingId)] : "");
-  
+
           return { ...room, building_name: buildingName };
         });
-  
+
         setFavoriteRooms(normalized);
       } catch (error) {
         console.error("Failed to load favorites:", error);
         setFavoriteRooms([]);
       }
     };
-  
+
     loadFavorites();
   }, [buildingNameById, favorites]);
 
@@ -309,10 +309,10 @@ export default function HomeScreen() {
       <View style={styles.webPage} accessibilityLabel="Home screen">
         {/* top bar */}
         <LinearGradient
-              colors={["#06442A", "#04301D"]}
-              style={styles.webTopBar}
-            accessibilityLabel="Top bar"
-          >
+          colors={["#06442A", "#04301D"]}
+          style={styles.webTopBar}
+          accessibilityLabel="Top bar"
+        >
           <Image
             source={require("@/assets/images/bf_logo.png")}
             style={styles.webTopBarLogo}
@@ -359,7 +359,7 @@ export default function HomeScreen() {
                 );
               })}
             </View>
-            </View>
+          </View>
 
           {/* Main area */}
           <View style={styles.webMain}>
@@ -434,24 +434,22 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
 
-                {/* WEB: Favorites + Available Now side-by-side */}
+                {/* WEB: Available Now + Favorites side-by-side */}
                 <View style={styles.webTwoColRow} accessibilityLabel="Cards row">
-                  {/* Favorites */}
-                  <TouchableOpacity
-                    style={styles.webTwoColItem}
-                    onPress={() => navigation.navigate("Favorites" as never)}
-                    activeOpacity={0.9}
-                    accessibilityRole="button"
-                    accessibilityLabel="My favorites"
-                    accessibilityHint="Opens the Favorites screen"
-                  >
-                    <View style={styles.cardShadow}>
-                    <LinearGradient
-                 colors={["#06442A", "#04301D"]}style={styles.favoritesCard}>
-                        <View style={styles.favoritesHeader}>
-                          <Text style={styles.favoritesTitle}>MY FAVORITES</Text>
-                          <Feather
-                            name="heart"
+                  <View style={styles.webDashboardLeftColumn}>
+                    {/* Available Now */}
+                    <View
+                      style={[styles.webLeftColumnCard, styles.cardShadow]}
+                      accessibilityLabel="Available now"
+                    >
+                      <LinearGradient
+                        colors={["#06442A", "#04301D"]}
+                        style={styles.availableNowCard}
+                      >
+                        <View style={styles.availableHeader}>
+                          <Text style={styles.availableTitle}>AVAILABLE NOW</Text>
+                          <Ionicons
+                            name="location-sharp"
                             size={22}
                             color={colors.white}
                             accessibilityElementsHidden
@@ -459,39 +457,35 @@ export default function HomeScreen() {
                           />
                         </View>
 
-                        {favoriteRooms.length === 0 ? (
-                          <Text style={styles.emptyText}>
-                            No favorites added yet
+                        {loading ? (
+                          <Text style={styles.loadingText}>Loading...</Text>
+                        ) : availableRooms.length === 0 ? (
+                          <Text style={styles.noAvailableText}>
+                            No rooms available right now
                           </Text>
                         ) : (
-                          favoriteRooms.map((room: any, idx: number) => (
+                          availableRooms.map((room) => (
                             <LinearGradient
-                              key={String(
-                                room.id ??
-                                  `${room.building_name}-${room.room_number}-${idx}`
-                              )}
+                              key={room.name}
                               colors={["#0F7046", "#0D6440"]}
-                              style={styles.favItem}
+                              style={styles.availableItem}
+                              accessibilityLabel={`${room.name}, ${room.subtitle}`}
                             >
-                              <Text style={styles.favItemText}>
-                                {String(room.building_name ?? "").toUpperCase()}{" "}
-                                {room.room_number}
-                              </Text>
-
-                              <View style={styles.favRight}>
+                              <Text style={styles.availableItemText}>{room.name}</Text>
+                              <View style={styles.availableRight}>
                                 <View
                                   style={[
-                                    styles.favstatusDot,
+                                    styles.availableStatusDot,
                                     {
-                                      backgroundColor: room.is_available
-                                        ? colors.available
-                                        : colors.occupied,
+                                      backgroundColor:
+                                        room.status === "available"
+                                          ? colors.available
+                                          : colors.occupied,
                                     },
                                   ]}
                                 />
-
-                                <Text style={styles.favNumber}>
-                                  {room.is_available ? "Available" : "Unavailable"}
+                                <Text style={styles.availableSubtitle}>
+                                  {room.subtitle}
                                 </Text>
                               </View>
                             </LinearGradient>
@@ -499,150 +493,166 @@ export default function HomeScreen() {
                         )}
                       </LinearGradient>
                     </View>
-                  </TouchableOpacity>
 
-                  {/* Available Now */}
-                  <View
-                    style={[styles.webTwoColItem, styles.cardShadow]}
-                    accessibilityLabel="Available now"
-                  >
-                    <LinearGradient
-                  colors={["#06442A", "#04301D"]}style={styles.availableNowCard}>
-                      <View style={styles.availableHeader}>
-                        <Text style={styles.availableTitle}>AVAILABLE NOW</Text>
-                        <Ionicons
-                          name="location-sharp"
-                          size={22}
-                          color={colors.white}
-                          accessibilityElementsHidden
-                          importantForAccessibility="no"
-                        />
+                    {/* WEB: Manage row */}
+                    <View style={styles.webLeftColumnCard}>
+                      <View style={[styles.cardShadow, { marginHorizontal: 0, borderRadius: CARD_BORDER_RADIUS }]}>
+                        <LinearGradient
+                          colors={["#0F7046", "#0D6440"]}
+                          style={styles.manageCardWeb}
+                        >
+                          <View style={styles.manageHeader}>
+                            <Text style={styles.manageTitle}>MANAGE</Text>
+                            <Feather
+                              name="menu"
+                              size={22}
+                              color={colors.white}
+                              accessibilityElementsHidden
+                              importantForAccessibility="no"
+                            />
+                          </View>
+
+                          <View style={styles.manageRowWeb}>
+                            <TouchableOpacity
+                              style={styles.manageBtnWrap}
+                              onPress={() => goToPreferencesSection("Account")}
+                              activeOpacity={0.9}
+                            >
+                              <LinearGradient
+                                colors={["#F3F7F5", "#E4ECE7"]}
+                                style={styles.manageBtn}
+                              >
+                                <Text style={styles.manageBtnText} numberOfLines={1}>
+                                  ACCOUNT
+                                </Text>
+                              </LinearGradient>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={styles.manageBtnWrap}
+                              onPress={() => goToPreferencesSection("Groups")}
+                              activeOpacity={0.9}
+                            >
+                              <LinearGradient
+                                colors={["#F3F7F5", "#E4ECE7"]}
+                                style={styles.manageBtn}
+                              >
+                                <Text style={styles.manageBtnText} numberOfLines={1}>
+                                  GROUPS
+                                </Text>
+                              </LinearGradient>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={styles.manageBtnWrap}
+                              onPress={() => goToPreferencesSection("Notifications")}
+                              activeOpacity={0.9}
+                            >
+                              <LinearGradient
+                                colors={["#F3F7F5", "#E4ECE7"]}
+                                style={styles.manageBtn}
+                              >
+                                <Text style={styles.manageBtnText} numberOfLines={1}>
+                                  NOTIFICATIONS
+                                </Text>
+                              </LinearGradient>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                              style={styles.manageBtnWrap}
+                              onPress={handleLogout}
+                              activeOpacity={0.9}
+                            >
+                              <LinearGradient
+                                colors={["#D96B68", "#B95653"]}
+                                style={styles.logoutBtn}
+                              >
+                                <Text style={styles.logoutBtnText} numberOfLines={1}>
+                                  LOG OUT
+                                </Text>
+                                <Feather
+                                  name="log-out"
+                                  size={20}
+                                  color={colors.white}
+                                  accessibilityElementsHidden
+                                  importantForAccessibility="no"
+                                />
+                              </LinearGradient>
+                            </TouchableOpacity>
+                          </View>
+                        </LinearGradient>
                       </View>
-
-                      {loading ? (
-                        <Text style={styles.loadingText}>Loading...</Text>
-                      ) : availableRooms.length === 0 ? (
-                        <Text style={styles.noAvailableText}>
-                          No rooms available right now
-                        </Text>
-                      ) : (
-                        availableRooms.map((room) => (
-                          <LinearGradient
-                            key={room.name}
-                            colors={["#0F7046", "#0D6440"]}
-                            style={styles.availableItem}
-                            accessibilityLabel={`${room.name}, ${room.subtitle}`}
-                          >
-                            <Text style={styles.availableItemText}>{room.name}</Text>
-                            <View style={styles.availableRight}>
-                              <View
-                                style={[
-                                  styles.availableStatusDot,
-                                  {
-                                    backgroundColor:
-                                      room.status === "available"
-                                        ? colors.available
-                                        : colors.occupied,
-                                  },
-                                ]}
-                              />
-                              <Text style={styles.availableSubtitle}>
-                                {room.subtitle}
-                              </Text>
-                            </View>
-                          </LinearGradient>
-                        ))
-                      )}
-                    </LinearGradient>
+                    </View>
                   </View>
-                </View>
 
-                {/* WEB: Manage row */}
-                <View style={[styles.cardShadow, { marginHorizontal: 0, borderRadius: CARD_BORDER_RADIUS }]}>
-                <LinearGradient
-                  colors={["#0F7046", "#0D6440"]}
-                  style={styles.manageCardWeb}
-                >
-                    <View style={styles.manageHeader}>
-                      <Text style={styles.manageTitle}>MANAGE</Text>
-                      <Feather
-                        name="menu"
-                        size={22}
-                        color={colors.white}
-                        accessibilityElementsHidden
-                        importantForAccessibility="no"
-                      />
-                    </View>
-
-                    <View style={styles.manageRowWeb}>
-                      <TouchableOpacity
-                        style={styles.manageBtnWrap}
-                        onPress={() => goToPreferencesSection("Account")}
-                        activeOpacity={0.9}
-                      >
+                  <View style={styles.webDashboardRightColumn}>
+                    {/* Favorites */}
+                    <TouchableOpacity
+                      style={styles.webRightColumnCard}
+                      onPress={() => navigation.navigate("Favorites" as never)}
+                      activeOpacity={0.9}
+                      accessibilityRole="button"
+                      accessibilityLabel="My favorites"
+                      accessibilityHint="Opens the Favorites screen"
+                    >
+                      <View style={styles.cardShadow}>
                         <LinearGradient
-                          colors={["#F3F7F5", "#E4ECE7"]} 
-                          style={styles.manageBtn}
+                          colors={["#06442A", "#04301D"]}
+                          style={styles.favoritesCard}
                         >
-                          <Text style={styles.manageBtnText} numberOfLines={1}>
-                            ACCOUNT
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
+                          <View style={styles.favoritesHeader}>
+                            <Text style={styles.favoritesTitle}>MY FAVORITES</Text>
+                            <Feather
+                              name="heart"
+                              size={22}
+                              color={colors.white}
+                              accessibilityElementsHidden
+                              importantForAccessibility="no"
+                            />
+                          </View>
 
-                      <TouchableOpacity
-                        style={styles.manageBtnWrap}
-                        onPress={() => goToPreferencesSection("Groups")}
-                        activeOpacity={0.9}
-                      >
-                        <LinearGradient
-                          colors={["#F3F7F5", "#E4ECE7"]} 
-                          style={styles.manageBtn}
-                        >
-                          <Text style={styles.manageBtnText} numberOfLines={1}>
-                            GROUPS
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
+                          {favoriteRooms.length === 0 ? (
+                            <Text style={styles.emptyText}>
+                              No favorites added yet
+                            </Text>
+                          ) : (
+                            favoriteRooms.map((room: any, idx: number) => (
+                              <LinearGradient
+                                key={String(
+                                  room.id ??
+                                    `${room.building_name}-${room.room_number}-${idx}`
+                                )}
+                                colors={["#0F7046", "#0D6440"]}
+                                style={styles.favItem}
+                              >
+                                <Text style={styles.favItemText}>
+                                  {String(room.building_name ?? "").toUpperCase()}{" "}
+                                  {room.room_number}
+                                </Text>
 
-                      <TouchableOpacity
-                        style={styles.manageBtnWrap}
-                        onPress={() => goToPreferencesSection("Notifications")}
-                        activeOpacity={0.9}
-                      >
-                        <LinearGradient
-                          colors={["#F3F7F5", "#E4ECE7"]} 
-                          style={styles.manageBtn}
-                        >
-                          <Text style={styles.manageBtnText} numberOfLines={1}>
-                            NOTIFICATIONS
-                          </Text>
-                        </LinearGradient>
-                      </TouchableOpacity>
+                                <View style={styles.favRight}>
+                                  <View
+                                    style={[
+                                      styles.favstatusDot,
+                                      {
+                                        backgroundColor: room.is_available
+                                          ? colors.available
+                                          : colors.occupied,
+                                      },
+                                    ]}
+                                  />
 
-                      <TouchableOpacity
-                        style={styles.manageBtnWrap}
-                        onPress={handleLogout}
-                        activeOpacity={0.9}
-                      >
-                        <LinearGradient
-                          colors={["#E25A56", "#B93A36"]}
-                          style={styles.logoutBtn}
-                        >
-                          <Text style={styles.logoutBtnText} numberOfLines={1}>
-                            LOG OUT
-                          </Text>
-                          <Feather
-                            name="log-out"
-                            size={20}
-                            color={colors.white}
-                            accessibilityElementsHidden
-                            importantForAccessibility="no"
-                          />
+                                  <Text style={styles.favNumber}>
+                                    {room.is_available ? "Available" : "Unavailable"}
+                                  </Text>
+                                </View>
+                              </LinearGradient>
+                            ))
+                          )}
                         </LinearGradient>
-                      </TouchableOpacity>
-                    </View>
-                  </LinearGradient>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </ScrollView>
@@ -677,9 +687,9 @@ export default function HomeScreen() {
         >
           {/* Header style setup */}
           <LinearGradient
-              colors={["#06442A", "#04301D"]}
-              style={styles.header}
-            >
+            colors={["#06442A", "#04301D"]}
+            style={styles.header}
+          >
             <Image
               source={require("@/assets/images/bf_logo.png")}
               style={styles.logo}
@@ -708,7 +718,7 @@ export default function HomeScreen() {
               activeOpacity={0.9}
             >
               <View style={styles.cardShadow}>
-              <LinearGradient
+                <LinearGradient
                   colors={["#06442A", "#04301D"]}
                   style={styles.favoritesCard}
                 >
@@ -818,7 +828,7 @@ export default function HomeScreen() {
               accessibilityHint="Opens the Find a Room screen"
             >
               <LinearGradient
-                  colors={["#06442A", "#04301D"]}style={styles.availableNowCard}>
+                colors={["#06442A", "#04301D"]}style={styles.availableNowCard}>
                 <View style={styles.availableHeader}>
                   <Text style={styles.availableTitle}>AVAILABLE NOW</Text>
                   <Ionicons
@@ -853,19 +863,19 @@ export default function HomeScreen() {
                         {displayName(room.name)}
                       </Text>
                       <View style={styles.availableRight}>
-                    <View
-                      style={[
-                        styles.availableStatusDot,
-                        {
-                          backgroundColor:
-                            room.status === "available"
-                              ? colors.available
-                              : colors.occupied,
-                        },
-                      ]}
-                    />
-                    <Text style={styles.availableSubtitle}>{room.subtitle}</Text>
-                  </View>
+                        <View
+                          style={[
+                            styles.availableStatusDot,
+                            {
+                              backgroundColor:
+                                room.status === "available"
+                                  ? colors.available
+                                  : colors.occupied,
+                            },
+                          ]}
+                        />
+                        <Text style={styles.availableSubtitle}>{room.subtitle}</Text>
+                      </View>
                     </LinearGradient>
                   ))
                 )}
@@ -874,7 +884,7 @@ export default function HomeScreen() {
 
             {/* Manage quick buttons (mobile) */}
             <View style={[styles.cardShadow, { marginVertical: 0 }]}>
-            <LinearGradient
+              <LinearGradient
                 colors={["#0F7046", "#0D6440"]}
                 style={styles.manageCard}
               >
@@ -917,7 +927,7 @@ export default function HomeScreen() {
                     onPress={() => !menuOpen && goToPreferencesSection("Notifications")}
                     activeOpacity={0.9}
                   >
-                    <LinearGradient colors={["#F3F7F5", "#E4ECE7"]}  style={styles.manageBtn}>
+                    <LinearGradient colors={["#F3F7F5", "#E4ECE7"]} style={styles.manageBtn}>
                       <Text style={styles.manageBtnText} numberOfLines={1}>
                         NOTIFICATIONS
                       </Text>
@@ -930,7 +940,7 @@ export default function HomeScreen() {
                     activeOpacity={0.9}
                   >
                     <LinearGradient
-                      colors={["#E25A56", "#B93A36"]}
+                      colors={["#D96B68", "#B95653"]}
                       style={styles.logoutBtn}
                     >
                       <Text style={styles.logoutBtnText} numberOfLines={1}>
@@ -1042,7 +1052,7 @@ function createStyles(c: ThemeColors) {
     },
 
     webBody: {
-      flex:1,
+      flex: 1,
       flexDirection: "row",
       backgroundColor: c.gray100,
     },
@@ -1061,7 +1071,7 @@ function createStyles(c: ThemeColors) {
       zIndex: 5,
     },
 
-    webSidebarLinks: { marginTop: 6,},
+    webSidebarLinks: { marginTop: 6 },
 
     webNavItem: {
       paddingVertical: WEB_NAV_ITEM_PADDING_V,
@@ -1109,6 +1119,25 @@ function createStyles(c: ThemeColors) {
       alignItems: "flex-start",
     },
     webTwoColItem: { flex: 1 },
+
+    webDashboardLeftColumn: {
+      flex: 1,
+      alignItems: "stretch",
+    },
+
+    webDashboardRightColumn: {
+      flex: 1,
+      alignItems: "stretch",
+    },
+
+    webLeftColumnCard: {
+      width: "100%",
+      marginBottom: 16,
+    },
+
+    webRightColumnCard: {
+      width: "100%",
+    },
 
     // Web image blocks
     bannerContainerWeb: {
@@ -1279,7 +1308,7 @@ function createStyles(c: ThemeColors) {
       alignItems: "center",
       borderRadius: 0,
       padding: 18,
-      marginBottom:7,
+      marginBottom: 7,
     },
 
     availableItemText: {
@@ -1368,7 +1397,7 @@ function createStyles(c: ThemeColors) {
       marginBottom: SCROLL_PADDING_BOTTOM,
       ...(Platform.OS === "web"
         ? {
-          boxShadow: "0px 10px 26px rgba(0, 0, 0, 0.35)"// fixed shadow on web
+            boxShadow: "0px 10px 26px rgba(0, 0, 0, 0.35)"// fixed shadow on web
           }
         : {
             shadowColor: "#000",
@@ -1417,6 +1446,7 @@ function createStyles(c: ThemeColors) {
       padding: 20,
       marginTop: 0,
       marginBottom: 0,
+      width: "100%",
     },
 
     // MOBILE manage rows
@@ -1449,10 +1479,10 @@ function createStyles(c: ThemeColors) {
       paddingHorizontal: 18,
       borderRadius: 6,
       flexDirection: "row",
-      justifyContent: "center",   // centers text
+      justifyContent: "center",
       alignItems: "center",
       backgroundColor: "#D9534F",
-      gap: 8,                     // keeps spacing between text + icon
+      gap: 8,
     },
 
     logoutBtnText: {
