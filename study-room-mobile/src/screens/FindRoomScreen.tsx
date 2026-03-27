@@ -36,7 +36,6 @@ import {
   PAGE_CONTENT_PADDING_H,
   CARD_BORDER_RADIUS,
   BUTTON_BORDER_RADIUS,
-  HEADER_BACK_ICON_SIZE,
   SCROLL_PADDING_BOTTOM,
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
@@ -75,23 +74,27 @@ const getRoomStatus = (
   return isAvailable ? "available" : "occupied";
 };
 
-// Maximum width for large screens
 const MAX_SCREEN_WIDTH = 1400;
 
 type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
 
 function roomSortKey(roomNumber: string) {
-  // handles "108", "110", etc AND weird ones like "B12" safely
   const n = parseInt(roomNumber, 10);
   return Number.isNaN(n) ? Number.POSITIVE_INFINITY : n;
 }
 
-// Match Campus Map building id to API building name (API may use "Academic Research Center" etc.)
-function findBuildingByMapId(buildings: Building[], mapId: MapBuildingId): Building | undefined {
+function findBuildingByMapId(
+  buildings: Building[],
+  mapId: MapBuildingId
+): Building | undefined {
   const nameLower = (s: string) => s.toLowerCase();
   switch (mapId) {
     case "arc":
-      return buildings.find((b) => nameLower(b.name).includes("research") || nameLower(b.name).includes("academic"));
+      return buildings.find(
+        (b) =>
+          nameLower(b.name).includes("research") ||
+          nameLower(b.name).includes("academic")
+      );
     case "stocker":
       return buildings.find((b) => nameLower(b.name).includes("stocker"));
     case "alden":
@@ -111,23 +114,16 @@ export default function FindARoomScreen() {
   const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // const pagePad = width < 480 ? 12 : width < 900 ? 18 : width < 1400 ? 28 : 40;
-  // const usableWidth = Math.max(320, width - pagePad * 2);
-
   const [gridWidth, setGridWidth] = useState(0);
 
-  // ✅ compute layout widths FIRST
   const isWeb = Platform.OS === "web";
 
-  // used to size the web content area like Home Screen
   const webPagePad = width < 480 ? 12 : 0;
   const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
   const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
 
-  // ✅ this is what the grid math should use
   const layoutWidth = isWeb ? contentWidthWeb : width;
 
-  // ✅ now safe to use layoutWidth
   const pagePad =
     layoutWidth < 480 ? 12 :
     layoutWidth < 900 ? 18 :
@@ -138,29 +134,8 @@ export default function FindARoomScreen() {
   const tileMargin = 12;
   const gridSidePad = 16;
 
-  // const numColumns = useMemo(() => {
-  //   const w = usableWidth - gridSidePad * 2;
-  //   if (w < 520) return 2;
-  //   if (w < 820) return 3;
-  //   if (w < 1180) return 4;
-  //   if (w < 1540) return 5;
-  //   return 6;
-  // }, [usableWidth]);
-
-  // const tileSize = useMemo(() => {
-  //   const w = usableWidth - gridSidePad * 2;
-  //   const totalMarginsPerRow = tileMargin * 2 * numColumns;
-  //   const raw = (w - totalMarginsPerRow) / numColumns;
-
-  //   const min = 110;
-  //   const max = 260; 
-  //   const size = Math.max(min, Math.min(raw, max));
-
-  //   return { size, margin: tileMargin };
-  // }, [usableWidth, numColumns]);
-
-    const numColumns = useMemo(() => {
-    const w = gridWidth ? (gridWidth - gridSidePad * 2) : usableWidth;
+  const numColumns = useMemo(() => {
+    const w = gridWidth ? gridWidth - gridSidePad * 2 : usableWidth;
     if (w < 520) return 2;
     if (w < 820) return 3;
     if (w < 1180) return 4;
@@ -169,20 +144,14 @@ export default function FindARoomScreen() {
   }, [gridWidth, usableWidth]);
 
   const tileSize = useMemo(() => {
-    const w = gridWidth ? (gridWidth - gridSidePad * 2) : usableWidth;
-
+    const w = gridWidth ? gridWidth - gridSidePad * 2 : usableWidth;
     const totalMarginsPerRow = tileMargin * 2 * numColumns;
-
-    // ✅ subtract 1px to avoid fractional rounding overflow on web
     const raw = (w - totalMarginsPerRow) / numColumns - 1;
-
     const min = 110;
-    const max = 220; // I’d keep this lower on web
+    const max = 220;
     const size = Math.floor(Math.max(min, Math.min(raw, max)));
-
     return { size, margin: tileMargin };
   }, [gridWidth, usableWidth, numColumns]);
-
 
   const { favorites, addFavorite, removeFavorite } = useFavorites() as {
     favorites: FavoriteItem[];
@@ -197,19 +166,9 @@ export default function FindARoomScreen() {
     null
   );
   const [loading, setLoading] = useState(true);
-
-  // New: toggle between rooms grid and floor plan (per selected building)
   const [viewMode, setViewMode] = useState<"rooms" | "floorPlan">("rooms");
 
-  // const isWeb = Platform.OS === "web";
-
-  // used to size the web content area like Home Screen
-  // const webPagePad = width < 480 ? 12 : 0;
-  // const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
-  // const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
-
-  // const layoutWidth = isWeb ? contentWidthWeb : width;
-
+  const mobileSidePad = isWeb ? 8 : pagePad + 14;
 
   const menuItems: WebMenuItem[] = [
     { name: "Home", route: "Home" },
@@ -221,9 +180,7 @@ export default function FindARoomScreen() {
 
   const suppressTilePressRef = useRef(false);
 
-  // Map building name -> floor plan image (UPDATE THESE FILES to your real PNGs)
   const FLOOR_PLANS: Record<string, any> = {
-    // Example filenames — replace with your actual assets:
     "Stocker Center": require("@/assets/images/stocker_floorplan.png"),
     "Academic Research Center": require("@/assets/images/arc_floorplan.png"),
     "Alden Library": require("@/assets/images/placeholder.png"),
@@ -254,7 +211,6 @@ export default function FindARoomScreen() {
     loadData();
   }, []);
 
-  // When navigated from Campus Map with a building, preselect it (e.g. if buildings already loaded)
   useEffect(() => {
     if (!buildingIdFromMap || buildings.length === 0) return;
     const matched = findBuildingByMapId(buildings, buildingIdFromMap);
@@ -264,21 +220,17 @@ export default function FindARoomScreen() {
   useEffect(() => {
     const loadRooms = async () => {
       if (!selectedBuilding) return;
-
-      // We only need rooms when viewing the grid.
       if (viewMode !== "rooms") return;
 
       try {
-        // const buildingRooms = await buildingsAPI.getRooms(selectedBuilding.id);
-        // setRooms(buildingRooms);
         const buildingRooms = await buildingsAPI.getRooms(selectedBuilding.id);
         const sortedRooms = [...buildingRooms].sort((a, b) => {
           const an = roomSortKey(a.room_number);
           const bn = roomSortKey(b.room_number);
-          // numeric first
           if (an !== bn) return an - bn;
-          // tie-breaker / fallback for non-numeric or equal numeric:
-          return a.room_number.localeCompare(b.room_number, undefined, { numeric: true });
+          return a.room_number.localeCompare(b.room_number, undefined, {
+            numeric: true,
+          });
         });
         setRooms(sortedRooms);
       } catch (error) {
@@ -288,7 +240,6 @@ export default function FindARoomScreen() {
     loadRooms();
   }, [selectedBuilding, viewMode]);
 
-  // When the building changes, default back to the room grid
   useEffect(() => {
     setViewMode("rooms");
   }, [selectedBuilding?.id]);
@@ -331,365 +282,388 @@ export default function FindARoomScreen() {
     }
   };
 
-  const oldUI = (
+  const pageContent = (
     <View
       style={[styles.mainContent, isWeb && styles.webContent]}
       accessibilityLabel="Find a room screen"
     >
       <ScrollView
-        style={{ flex: 1 }}
+        style={{ flex: 1, width: "100%" }}
         contentContainerStyle={{
           alignItems: "center",
           paddingBottom: 40,
-          paddingHorizontal: pagePad,
+          paddingHorizontal: isWeb ? pagePad : 0,
         }}
         keyboardShouldPersistTaps="handled"
         accessibilityLabel="Find a room content"
       >
         <View style={{ width: "100%" }}>
-          {/* Header */}
           <View style={styles.headerWrapper}>
-            <View style={[styles.header, { width: "100%" }]}>
-              <HoverTooltip message="Go back">
-              <TouchableOpacity
-                onPress={() => {
-                  if (navigation.canGoBack()) navigation.goBack();
-                  else navigation.navigate("Home");
-                }}
-                accessibilityRole="button"
-                accessibilityLabel="Go back"
-                accessibilityHint="Returns to the previous screen"
-              >
-                <Ionicons name="arrow-back" size={28} color={colors.primary} />
-              </TouchableOpacity>
-              </HoverTooltip>
-
-              <View style={{ flex: 1, alignItems: "center" }}>
-                <Text style={styles.title} accessibilityRole="header">
+            {isWeb ? (
+              <View style={styles.webHeaderRow}>
+                <Text style={styles.webPageTitle} accessibilityRole="header">
                   FIND A ROOM
                 </Text>
               </View>
-
-              <View style={{ width: 28 }} />
-            </View>
-
-            {/* Subheader row */}
-            <View style={[styles.subHeader, { width: "100%" }]}>
-              <HoverTooltip message="Choose a building">
-              <TouchableOpacity
-                style={styles.dropdownRow}
-                activeOpacity={0.8}
-                onPress={() => setDropdownOpen((v) => !v)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                accessibilityRole="button"
-                accessibilityLabel={`Select building. Currently ${
-                  selectedBuilding?.name ?? "none"
-                }`}
-                accessibilityHint="Opens the building list"
-                accessibilityState={{ expanded: dropdownOpen }}
+            ) : (
+              <LinearGradient
+                colors={["#06442A", "#04301D"]}
+                style={styles.mobileHeaderBar}
               >
-                <Ionicons
-                  name={dropdownOpen ? "chevron-up" : "chevron-down"}
-                  size={22}
-                  color={colors.primary}
-                />
-                <Text style={styles.subHeaderText}>
-                  {selectedBuilding?.name || "Select Building"}
-                </Text>
-              </TouchableOpacity>
-              </HoverTooltip>
-            </View>
-
-            {dropdownOpen && (
-              <View
-                style={[styles.dropdownMenu, { width: "100%" }]}
-                accessibilityLabel="Building options"
-              >
-                {buildings.map((building) => (
+                <HoverTooltip message="Go back">
                   <TouchableOpacity
-                    key={building.id}
-                    style={[
-                      styles.dropdownItem,
-                      selectedBuilding?.id === building.id &&
-                        styles.dropdownSelected,
-                    ]}
                     onPress={() => {
-                      setSelectedBuilding(building);
-                      setDropdownOpen(false);
+                      if (navigation.canGoBack()) navigation.goBack();
+                      else navigation.navigate("Home");
                     }}
                     accessibilityRole="button"
-                    accessibilityLabel={`Select ${building.name}`}
-                    accessibilityState={{
-                      selected: selectedBuilding?.id === building.id,
-                    }}
+                    accessibilityLabel="Go back"
+                    accessibilityHint="Returns to the previous screen"
                   >
-                    <Text
-                      style={[
-                        styles.dropdownText,
-                        selectedBuilding?.id === building.id &&
-                          styles.dropdownTextSelected,
-                      ]}
-                    >
-                      {building.name}
+                    <Ionicons name="arrow-back" size={28} color={colors.white} />
+                  </TouchableOpacity>
+                </HoverTooltip>
+
+                <View style={{ flex: 1, alignItems: "center" }}>
+                  <Text style={styles.mobileHeaderTitle} accessibilityRole="header">
+                    FIND A ROOM
+                  </Text>
+                </View>
+
+                <View style={{ width: 28 }} />
+              </LinearGradient>
+            )}
+
+            <View style={{ width: "100%", paddingHorizontal: mobileSidePad }}>
+              <View style={[styles.subHeader, { width: "100%" }]}>
+                <HoverTooltip message="Choose a building">
+                  <TouchableOpacity
+                    style={styles.dropdownRow}
+                    activeOpacity={0.8}
+                    onPress={() => setDropdownOpen((v) => !v)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Select building. Currently ${
+                      selectedBuilding?.name ?? "none"
+                    }`}
+                    accessibilityHint="Opens the building list"
+                    accessibilityState={{ expanded: dropdownOpen }}
+                  >
+                    <Ionicons
+                      name={dropdownOpen ? "chevron-up" : "chevron-down"}
+                      size={22}
+                      color={colors.primary}
+                    />
+                    <Text style={styles.subHeaderText}>
+                      {selectedBuilding?.name || "Select Building"}
                     </Text>
                   </TouchableOpacity>
-                ))}
+                </HoverTooltip>
               </View>
-            )}
-          </View>
 
-          {/* Toggle button (only when a building is selected) */}
-          {!!selectedBuilding && (
-            <View style={{ width: "100%", marginTop: 8, marginBottom: 8 }}>
-              <TouchableOpacity
-                style={styles.toggleBtn}
-                activeOpacity={0.85}
-                onPress={() =>
-                  setViewMode((m) => (m === "rooms" ? "floorPlan" : "rooms"))
-                }
-                accessibilityRole="button"
-                accessibilityLabel={
-                  viewMode === "rooms"
-                    ? "Show floor plan"
-                    : "Show room grid"
-                }
-                accessibilityHint="Toggles between floor plan and room grid"
-              >
-                <Text style={styles.toggleBtnText}>
-                  {viewMode === "rooms" ? "VIEW FLOOR PLAN" : "VIEW ROOM GRID"}
-                </Text>
-                <Ionicons
-                  name={viewMode === "rooms" ? "map-outline" : "grid-outline"}
-                  size={20}
-                  color={colors.primary}
-                />
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* Main content area */}
-          {viewMode === "floorPlan" ? (
-            <View style={{ width: "100%", marginTop: 6 }}>
-              {selectedFloorPlan ? (
-                <Image
-                  source={selectedFloorPlan}
-                  style={styles.floorPlanImage}
-                  resizeMode="contain"
-                  accessibilityRole="image"
-                  accessibilityLabel={`Floor plan for ${
-                    selectedBuilding?.name ?? "building"
-                  }`}
-                  accessibilityIgnoresInvertColors
-                />
-              ) : (
+              {dropdownOpen && (
                 <View
-                  style={styles.noFloorPlanBox}
-                  accessibilityLabel="No floor plan available"
+                  style={[styles.dropdownMenu, { width: "100%" }]}
+                  accessibilityLabel="Building options"
                 >
-                  <Text style={styles.noFloorPlanText}>
-                    No floor plan available for this building yet.
-                  </Text>
+                  {buildings.map((building) => (
+                    <TouchableOpacity
+                      key={building.id}
+                      style={[
+                        styles.dropdownItem,
+                        selectedBuilding?.id === building.id &&
+                          styles.dropdownSelected,
+                      ]}
+                      onPress={() => {
+                        setSelectedBuilding(building);
+                        setDropdownOpen(false);
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Select ${building.name}`}
+                      accessibilityState={{
+                        selected: selectedBuilding?.id === building.id,
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.dropdownText,
+                          selectedBuilding?.id === building.id &&
+                            styles.dropdownTextSelected,
+                        ]}
+                      >
+                        {building.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               )}
             </View>
-          ) : (
-            <>
-              {/* Room grid */}
-              {/* <View
-                style={[
-                  styles.gridContainer,
-                  {
-                    width: "100%",
-                    paddingHorizontal: gridSidePad,
-                  },
-                ]}
-                accessibilityLabel="Room grid"
-              > */}
-              <View
-                onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}
-                style={[
-                  styles.gridContainer,
-                  {
-                    width: "100%",
-                    paddingHorizontal: gridSidePad,
-                  },
-                ]}
-                accessibilityLabel="Room grid"
-              >
-                {loading ? (
-                  <ActivityIndicator
-                    size="large"
-                    color={colors.white}
-                    style={{ marginVertical: 40 }}
-                    accessibilityLabel="Loading rooms"
-                  />
-                ) : roomItems.length === 0 ? (
-                  <Text
-                    style={{
-                      color: colors.white,
-                      textAlign: "center",
-                      marginVertical: 40,
-                    }}
-                    accessibilityLabel="No rooms found"
-                  >
-                    No rooms found
+          </View>
+
+          <View style={{ width: "100%", paddingHorizontal: mobileSidePad }}>
+            {!!selectedBuilding && (
+              <View style={{ width: "100%", marginTop: 8, marginBottom: 8 }}>
+                <TouchableOpacity
+                  style={styles.toggleBtn}
+                  activeOpacity={0.85}
+                  onPress={() =>
+                    setViewMode((m) => (m === "rooms" ? "floorPlan" : "rooms"))
+                  }
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    viewMode === "rooms"
+                      ? "Show floor plan"
+                      : "Show room grid"
+                  }
+                  accessibilityHint="Toggles between floor plan and room grid"
+                >
+                  <Text style={styles.toggleBtnText}>
+                    {viewMode === "rooms" ? "VIEW FLOOR PLAN" : "VIEW ROOM GRID"}
                   </Text>
-                ) : (
-                  <FlatList
-                    data={roomItems}
-                    numColumns={numColumns}
-                    key={numColumns}
-
-                    removeClippedSubviews={true}
-                    initialNumToRender={24}
-                    maxToRenderPerBatch={24}
-                    windowSize={5}
-
-                    keyExtractor={(item) => item.roomId.toString()}
-                    scrollEnabled={true}
-                    renderItem={({ item }) => {
-                      const favorite = isFavorite(item.roomId);
-
-                      return (
-                        <TouchableOpacity
-                          onPress={() => {
-                            if (suppressTilePressRef.current) {
-                              suppressTilePressRef.current = false;
-                              return;
-                            }
-
-                            navigation.navigate("RoomDetails", {
-                              building:
-                                selectedBuilding?.name ===
-                                "Academic Research Center"
-                                  ? "Academic & Research Center"
-                                  : selectedBuilding?.name || "Unknown",
-                              roomId: item.id,
-                              status: item.status as
-                                | "available"
-                                | "occupied"
-                                | "offline",
-                            });
-                          }}
-                          style={[
-                            styles.roomBox,
-                            {
-                              backgroundColor: getColor(item.status),
-                              width: tileSize.size,
-                              height: tileSize.size,
-                              margin: tileSize.margin,
-                            },
-                          ]}
-                          activeOpacity={0.8}
-                          accessibilityRole="button"
-                          accessibilityLabel={`Room ${item.id}, ${item.status}`}
-                          accessibilityHint="Opens room details"
-                        >
-                          <LinearGradient
-                            colors={[
-                              getColor(item.status),
-                              getColor(item.status) + "CC",
-                            ]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={[
-                              styles.roomBoxInner,
-                              { width: "100%", height: "100%" },
-                            ]}
-                          >
-                            <Text style={styles.roomText}>{item.id}</Text>
-
-                            <TouchableOpacity
-                              style={styles.heartBtn}
-                              activeOpacity={0.85}
-                              onPressIn={() => {
-                                suppressTilePressRef.current = true;
-                              }}
-                              onPress={() => {
-                                toggleFavorite(item);
-                                setTimeout(() => {
-                                  suppressTilePressRef.current = false;
-                                }, 0);
-                              }}
-                              accessibilityRole="button"
-                              accessibilityLabel={
-                                favorite
-                                  ? `Remove room ${item.id} from favorites`
-                                  : `Add room ${item.id} to favorites`
-                              }
-                              accessibilityHint="Toggles favorite"
-                              accessibilityState={{ selected: favorite }}
-                            >
-                              <Ionicons
-                                name={favorite ? "heart" : "heart-outline"}
-                                size={22}
-                                color={favorite ? colors.gray100 : colors.white}
-                              />
-                            </TouchableOpacity>
-                          </LinearGradient>
-                        </TouchableOpacity>
-                      );
-                    }}
-                    contentContainerStyle={{
-                      alignItems: "stretch", // was center
-                      // justifyContent: "center",
-                      width: "100%",
-                    }}
-                    columnWrapperStyle={{
-                      justifyContent: "center", 
-                    }}
+                  <Ionicons
+                    name={viewMode === "rooms" ? "map-outline" : "grid-outline"}
+                    size={20}
+                    color={colors.primary}
                   />
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {viewMode === "floorPlan" ? (
+              <View style={{ width: "100%", marginTop: 6 }}>
+                {selectedFloorPlan ? (
+                  <ScrollView
+                    horizontal
+                    maximumZoomScale={3}
+                    minimumZoomScale={1}
+                    showsHorizontalScrollIndicator={true}
+                    showsVerticalScrollIndicator={true}
+                    contentContainerStyle={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <ScrollView
+                      maximumZoomScale={3}
+                      minimumZoomScale={1}
+                      showsVerticalScrollIndicator={true}
+                      contentContainerStyle={{
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Image
+                        source={selectedFloorPlan}
+                        style={styles.zoomableFloorPlanImage}
+                        resizeMode="contain"
+                        accessibilityRole="image"
+                        accessibilityLabel={`Floor plan for ${
+                          selectedBuilding?.name ?? "building"
+                        }`}
+                        accessibilityIgnoresInvertColors
+                      />
+                    </ScrollView>
+                  </ScrollView>
+                ) : (
+                  <View
+                    style={styles.noFloorPlanBox}
+                    accessibilityLabel="No floor plan available"
+                  >
+                    <Text style={styles.noFloorPlanText}>
+                      No floor plan available for this building yet.
+                    </Text>
+                  </View>
                 )}
               </View>
+            ) : (
+              <>
+                <LinearGradient
+                  colors={["#06442A", "#04301D"]}
+                  onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}
+                  style={[
+                    styles.gridContainer,
+                    {
+                      width: "100%",
+                      paddingHorizontal: gridSidePad,
+                    },
+                  ]}
+                  accessibilityLabel="Room grid"
+                >
+                  {loading ? (
+                    <ActivityIndicator
+                      size="large"
+                      color={colors.white}
+                      style={{ marginVertical: 40 }}
+                      accessibilityLabel="Loading rooms"
+                    />
+                  ) : roomItems.length === 0 ? (
+                    <Text
+                      style={{
+                        color: colors.white,
+                        textAlign: "center",
+                        marginVertical: 40,
+                      }}
+                      accessibilityLabel="No rooms found"
+                    >
+                      No rooms found
+                    </Text>
+                  ) : (
+                    <FlatList
+                      data={roomItems}
+                      numColumns={numColumns}
+                      key={numColumns}
+                      removeClippedSubviews={true}
+                      initialNumToRender={24}
+                      maxToRenderPerBatch={24}
+                      windowSize={5}
+                      keyExtractor={(item) => item.roomId.toString()}
+                      scrollEnabled={false}
+                      renderItem={({ item }) => {
+                        const favorite = isFavorite(item.roomId);
 
-              {/* Legend */}
-              <View
-                style={[styles.legendContainer, { width: "100%" }]}
-                accessibilityLabel="Legend"
-              >
-                <View style={styles.legendRow}>
-                  <LinearGradient
-                    colors={[colors.available, colors.available + "CC"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.legendBox}
-                  />
-                  <Text style={styles.legendText}>AVAILABLE</Text>
-                </View>
+                        return (
+                          <TouchableOpacity
+                            onPress={() => {
+                              if (suppressTilePressRef.current) {
+                                suppressTilePressRef.current = false;
+                                return;
+                              }
 
-                <View style={styles.legendRow}>
-                  <LinearGradient
-                    colors={[colors.occupied, colors.occupied + "CC"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.legendBox}
-                  />
-                  <Text style={styles.legendText}>OCCUPIED</Text>
-                </View>
+                              navigation.navigate("RoomDetails", {
+                                building:
+                                  selectedBuilding?.name === "Academic Research Center"
+                                    ? "ARC"
+                                    : selectedBuilding?.name === "Alden Library"
+                                    ? "Alden Library"
+                                    : "Stocker Center",
+                                roomId: item.id,
+                                status: item.status as
+                                  | "available"
+                                  | "occupied"
+                                  | "offline",
+                              });
+                            }}
+                            style={[
+                              styles.roomBox,
+                              {
+                                backgroundColor: getColor(item.status),
+                                width: tileSize.size,
+                                height: tileSize.size,
+                                margin: tileSize.margin,
+                              },
+                            ]}
+                            activeOpacity={0.8}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Room ${item.id}, ${item.status}`}
+                            accessibilityHint="Opens room details"
+                          >
+                            <LinearGradient
+                              colors={[
+                                "rgba(255,255,255,0.07)",
+                                "rgba(255,255,255,0.025)",
+                                "rgba(0,0,0,0.025)",
+                              ]}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                              style={[
+                                styles.roomBoxInner,
+                                { width: "100%", height: "100%" },
+                              ]}
+                            >
+                              <Text style={styles.roomText}>{item.id}</Text>
 
-                <View style={styles.legendRow}>
-                  <LinearGradient
-                    colors={[colors.offline, colors.offline + "CC"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.legendBox}
-                  />
-                  <Text style={styles.legendText}>ROOM DATA UNAVAILABLE</Text>
+                              <TouchableOpacity
+                                style={styles.heartBtn}
+                                activeOpacity={0.85}
+                                onPressIn={() => {
+                                  suppressTilePressRef.current = true;
+                                }}
+                                onPress={() => {
+                                  toggleFavorite(item);
+                                  setTimeout(() => {
+                                    suppressTilePressRef.current = false;
+                                  }, 0);
+                                }}
+                                accessibilityRole="button"
+                                accessibilityLabel={
+                                  favorite
+                                    ? `Remove room ${item.id} from favorites`
+                                    : `Add room ${item.id} to favorites`
+                                }
+                                accessibilityHint="Toggles favorite"
+                                accessibilityState={{ selected: favorite }}
+                              >
+                                <Ionicons
+                                  name={favorite ? "heart" : "heart-outline"}
+                                  size={22}
+                                  color={favorite ? colors.gray100 : colors.white}
+                                />
+                              </TouchableOpacity>
+                            </LinearGradient>
+                          </TouchableOpacity>
+                        );
+                      }}
+                      contentContainerStyle={{
+                        alignItems: "stretch",
+                        width: "100%",
+                      }}
+                      columnWrapperStyle={{
+                        justifyContent: "center",
+                      }}
+                    />
+                  )}
+                </LinearGradient>
+
+                <View
+                  style={[styles.legendContainer, { width: "100%" }]}
+                  accessibilityLabel="Legend"
+                >
+                  <View style={styles.legendRow}>
+                    <LinearGradient
+                      colors={[colors.available, colors.available + "CC"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.legendBox}
+                    />
+                    <Text style={styles.legendText}>AVAILABLE</Text>
+                  </View>
+
+                  <View style={styles.legendRow}>
+                    <LinearGradient
+                      colors={[colors.occupied, colors.occupied + "CC"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.legendBox}
+                    />
+                    <Text style={styles.legendText}>OCCUPIED</Text>
+                  </View>
+
+                  <View style={styles.legendRow}>
+                    <LinearGradient
+                      colors={[colors.offline, colors.offline + "CC"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.legendBox}
+                    />
+                    <Text style={styles.legendText}>ROOM DATA UNAVAILABLE</Text>
+                  </View>
                 </View>
-              </View>
-            </>
-          )}
+              </>
+            )}
+          </View>
         </View>
       </ScrollView>
     </View>
   );
 
-  // WEB VERSION (adds the same top bar + sidebar as Home Screen)
   if (isWeb) {
     return (
       <View style={styles.webPage} accessibilityLabel="Find a room screen">
-        {/* top bar */}
-        <View style={styles.webTopBar} accessibilityLabel="Top bar">
+        <LinearGradient
+          colors={["#06442A", "#04301D"]}
+          style={styles.webTopBar}
+          accessibilityLabel="Top bar"
+        >
           <Image
             source={require("@/assets/images/bf_logo.png")}
             style={styles.webTopBarLogo}
@@ -701,11 +675,9 @@ export default function FindARoomScreen() {
           <View style={styles.topBarTooltipSlot}>
             <InfoTooltip message="Browse buildings, switch room views, select a room to see details, and press the heart button to save a room." />
           </View>
-        </View>
+        </LinearGradient>
 
-        {/* sidebar + main */}
         <View style={styles.webBody}>
-          {/* Left Sidebar */}
           <View style={styles.webSidebar} accessibilityLabel="Navigation sidebar">
             <View style={styles.webSidebarLinks}>
               {menuItems.map((item) => {
@@ -736,7 +708,6 @@ export default function FindARoomScreen() {
             </View>
           </View>
 
-          {/* Main area */}
           <View style={styles.webMain}>
             <ScrollView
               style={{ flex: 1 }}
@@ -749,8 +720,7 @@ export default function FindARoomScreen() {
               accessibilityLabel="Find a room content"
             >
               <View style={[styles.webContentWrap, { width: contentWidthWeb }]}>
-                {/* page content (same as before, only wrapped for the web frame) */}
-                {oldUI}
+                {pageContent}
               </View>
             </ScrollView>
           </View>
@@ -759,273 +729,338 @@ export default function FindARoomScreen() {
     );
   }
 
-  // Mobile version (unchanged)
-  return oldUI;
+  return pageContent;
 }
-
-const SIDEBAR_WIDTH = 275;
 
 function createStyles(c: ThemeColors) {
   return StyleSheet.create({
-  page: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: c.gray100,
-  },
+    page: {
+      flex: 1,
+      flexDirection: "row",
+      backgroundColor: c.gray100,
+    },
 
-  mainContent: {
-    flex: 1,
-    backgroundColor: c.gray100,
-    paddingTop: 80,
-    paddingHorizontal: PAGE_CONTENT_PADDING_H,
-  },
+    mainContent: {
+      flex: 1,
+      backgroundColor: c.gray100,
+      paddingTop: 0,
+      paddingHorizontal: 0,
+    },
 
-  webContent: {
-    paddingTop: 50,
-    paddingLeft: WEB_CONTENT_PADDING_H,
-    paddingRight: WEB_CONTENT_PADDING_H,
-  },
+    webContent: {
+      paddingTop: 0,
+      paddingLeft: 0,
+      paddingRight: 0,
+    },
 
-  headerWrapper: { width: "100%", alignItems: "center" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 0,
-  },
+    headerWrapper: {
+      width: "100%",
+      alignItems: "center",
+    },
 
-  title: {
-    fontSize: FONT_SIZE_TITLE + 6,
-    fontFamily: FONT_HEADING,
-    color: c.primary,
-    textTransform: "uppercase",
-    textAlign: "center",
-  },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 25,
+    },
 
-  subHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 16,
-    marginBottom: 10,
-  },
+    webHeaderRow: {
+      width: "100%",
+      justifyContent: "flex-start",
+      alignItems: "flex-start",
+      marginTop: 10,
+      marginBottom: 0,
+      paddingLeft: 10,
+    },
 
-  dropdownRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-  },
-  subHeaderText: { fontSize: FONT_SIZE_BODY + 2, color: c.primary, fontFamily: FONT_BODY },
+    webPageTitle: {
+      fontSize: FONT_SIZE_TITLE + 16,
+      fontFamily: FONT_HEADING,
+      color: c.primary,
+      textTransform: "uppercase",
+      textAlign: "left",
+    },
 
-  dropdownMenu: {
-    backgroundColor: c.white,
-    borderRadius: CARD_BORDER_RADIUS,
-    marginBottom: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  dropdownItem: { padding: 10 },
-  dropdownText: { fontSize: FONT_SIZE_BODY, fontFamily: FONT_BODY, color: c.primary },
-  dropdownSelected: { backgroundColor: c.primary },
-  dropdownTextSelected: { color: c.white },
+    mobileHeaderBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      width: "100%",
+      paddingHorizontal: 24,
+      paddingTop: 65,
+      paddingBottom: 22,
+      borderRadius: 0,
+      marginBottom: 8,
+    },
 
-  toggleBtn: {
-    backgroundColor: c.gray100,
-    borderWidth: 1,
-    borderColor: c.primary,
-    borderRadius: BUTTON_BORDER_RADIUS,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  toggleBtnText: {
-    fontFamily: FONT_HEADING,
-    fontSize: FONT_SIZE_CARD_TITLE,
-    color: c.primary,
-    letterSpacing: 0.5,
-  },
+    mobileHeaderTitle: {
+      fontSize: FONT_SIZE_TITLE + 6,
+      fontFamily: FONT_HEADING,
+      color: c.white,
+      textTransform: "uppercase",
+      textAlign: "center",
+    },
 
-  gridContainer: {
-    backgroundColor: c.primary,
-    borderRadius: 0,
-    paddingVertical: 40,
-    justifyContent: "center",
-    alignSelf: "center",
-  },
+    title: {
+      fontSize: FONT_SIZE_TITLE + 6,
+      fontFamily: FONT_HEADING,
+      color: c.primary,
+      textTransform: "uppercase",
+      textAlign: "center",
+    },
 
-  roomBox: {
-    borderRadius: CARD_BORDER_RADIUS,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    position: "relative",
-    overflow: "hidden",
-    transitionDuration: "150ms",
+    subHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: 16,
+      marginBottom: 10,
+    },
 
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    dropdownRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 4,
+    },
 
-  },
+    subHeaderText: {
+      fontSize: FONT_SIZE_BODY + 2,
+      color: c.primary,
+      fontFamily: FONT_BODY,
+    },
 
-  roomBoxInner: {
-    borderRadius: CARD_BORDER_RADIUS,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-  },
+    dropdownMenu: {
+      backgroundColor: c.white,
+      borderRadius: CARD_BORDER_RADIUS,
+      marginBottom: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 5,
+    },
 
-  roomText: {
-    fontSize: FONT_SIZE_SECTION - 2,
-    color: "#000",
-    fontFamily: FONT_BODY,
-  },
+    dropdownItem: { padding: 10 },
 
-  heartBtn: {
-    position: "absolute",
-    top: 6,
-    right: 6,
-    padding: 6,
-    borderRadius: 14,
-  },
+    dropdownText: {
+      fontSize: FONT_SIZE_BODY,
+      fontFamily: FONT_BODY,
+      color: c.primary,
+    },
 
-  floorPlanImage: {
-    width: "100%",
-    height: Platform.OS === "web" ? 650 : 520,
-    alignSelf: "center",
-  },
+    dropdownSelected: { backgroundColor: c.primary },
 
-  noFloorPlanBox: {
-    backgroundColor: c.primary,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    borderRadius: CARD_BORDER_RADIUS,
-    alignItems: "center",
-  },
-  noFloorPlanText: {
-    color: c.white,
-    fontFamily: FONT_BODY,
-    fontSize: FONT_SIZE_BODY,
-    textAlign: "center",
-  },
+    dropdownTextSelected: { color: c.white },
 
-  legendContainer: {
-    marginTop: 24,
-    alignItems: "flex-start",
-    alignSelf: "center",
-  },
-  legendRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  legendBox: { width: 28, height: 28, marginRight: 12, borderRadius: 2 },
-  legendText: {
-    fontSize: FONT_SIZE_CARD_TITLE + 2,
-    fontFamily: FONT_HEADING,
-    color: c.primary,
-  },
+    toggleBtn: {
+      backgroundColor: c.gray100,
+      borderWidth: 1,
+      borderColor: c.primary,
+      borderRadius: BUTTON_BORDER_RADIUS,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    },
 
-  // Web styles (same top bar + sidebar as Home Screen)
-  webPage: {
-    flex: 1,
-    flexDirection: "column",
-    backgroundColor: c.gray100,
-  },
+    toggleBtnText: {
+      fontFamily: FONT_HEADING,
+      fontSize: FONT_SIZE_CARD_TITLE,
+      color: c.primary,
+      letterSpacing: 0.5,
+    },
 
-  webTopBar: {
-    height: WEB_TOPBAR_HEIGHT,
-    backgroundColor: c.darkAccent,
-    width: "100%",
-    justifyContent: "center",
-    paddingLeft: 20,
-    // shadow
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    // android
-    elevation: 10,
-    zIndex: 10,
-  },
+    gridContainer: {
+      borderRadius: 0,
+      paddingVertical: 40,
+      justifyContent: "center",
+      alignSelf: "center",
+    },
 
-  webTopBarLogo: {
-    height: 130,
-    width: 400,
-  },
+    roomBox: {
+      borderRadius: CARD_BORDER_RADIUS,
+      justifyContent: "center",
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: { width: 1, height: 2 },
+      shadowOpacity: 0.18,
+      shadowRadius: 6,
+      position: "relative",
+      overflow: "hidden",
+      transitionDuration: "150ms",
+      borderWidth: 1,
+      borderColor: "rgba(255,255,255,0.14)",
+    },
 
-  topBarTooltipSlot: {
-    position: "absolute",
-    right: 20,
-    top: "50%",
-    transform: [{ translateY: -11 }],
-  },
+    roomBoxInner: {
+      borderRadius: CARD_BORDER_RADIUS,
+      justifyContent: "center",
+      alignItems: "center",
+      position: "relative",
+    },
 
-  webBody: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: c.gray100,
-  },
+    roomText: {
+      fontSize: FONT_SIZE_SECTION - 2,
+      color: "#000",
+      fontFamily: FONT_BODY,
+    },
 
-  // sidebar styles (web only)
-  webSidebar: {
-    width: WEB_SIDEBAR_WIDTH,
-    backgroundColor: c.primary,
-    paddingTop: 0,
-    paddingHorizontal: WEB_SIDEBAR_PADDING_H,
-    shadowColor: "#000",
-    shadowOffset: { width: 6, height: 0 },
-    shadowOpacity: 0.22,
-    shadowRadius: 10,
-    // android
-    elevation: 8,
-    zIndex: 5,
-  },
+    heartBtn: {
+      position: "absolute",
+      top: 6,
+      right: 6,
+      padding: 6,
+      borderRadius: 14,
+    },
 
-  webSidebarHeader: {
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(255,255,255,0.25)",
-    marginBottom: 12,
-  },
+    floorPlanImage: {
+      width: "100%",
+      height: Platform.OS === "web" ? 650 : 520,
+      alignSelf: "center",
+    },
 
-  webSidebarLogo: {
-    width: "100%",
-    height: 80,
-  },
+    noFloorPlanBox: {
+      backgroundColor: c.primary,
+      paddingVertical: 18,
+      paddingHorizontal: 16,
+      borderRadius: CARD_BORDER_RADIUS,
+      alignItems: "center",
+    },
 
-  webSidebarLinks: { marginTop: 6 },
+    noFloorPlanText: {
+      color: c.white,
+      fontFamily: FONT_BODY,
+      fontSize: FONT_SIZE_BODY,
+      textAlign: "center",
+    },
 
-  webNavItem: {
-    paddingVertical: WEB_NAV_ITEM_PADDING_V,
-    paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
-    borderRadius: 2,
-    marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
-  },
-  webNavItemSelected: {
-    backgroundColor: "rgba(255,255,255,0.18)",
-  },
-  webNavText: {
-    color: c.white,
-    fontFamily: FONT_HEADING,
-    fontSize: FONT_SIZE_NAV,
-    letterSpacing: 0.8,
-    textShadowColor: "rgba(0, 0, 0, 0.1)",
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 8,
-  },
-  webNavTextSelected: { color: c.white },
+    legendContainer: {
+      marginTop: 24,
+      alignItems: "flex-start",
+      alignSelf: "center",
+    },
 
-  webMain: { flex: 1, backgroundColor: c.gray100 },
+    legendRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 12,
+    },
 
-  webContentWrap: {
-    paddingTop: WEB_CONTENT_PADDING_TOP,
-    paddingBottom: WEB_CONTENT_PADDING_BOTTOM,
-  },
+    legendBox: {
+      width: 28,
+      height: 28,
+      marginRight: 12,
+      borderRadius: 2,
+    },
+
+    legendText: {
+      fontSize: FONT_SIZE_CARD_TITLE + 2,
+      fontFamily: FONT_HEADING,
+      color: c.primary,
+    },
+
+    webPage: {
+      flex: 1,
+      flexDirection: "column",
+      backgroundColor: c.gray100,
+    },
+
+    webTopBar: {
+      height: WEB_TOPBAR_HEIGHT,
+      width: "100%",
+      justifyContent: "center",
+      paddingLeft: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      elevation: 10,
+      zIndex: 10,
+    },
+
+    webTopBarLogo: {
+      height: 130,
+      width: 400,
+    },
+
+    topBarTooltipSlot: {
+      position: "absolute",
+      right: 20,
+      top: "50%",
+      transform: [{ translateY: -11 }],
+    },
+
+    webBody: {
+      flex: 1,
+      flexDirection: "row",
+      backgroundColor: c.gray100,
+    },
+
+    webSidebar: {
+      width: WEB_SIDEBAR_WIDTH,
+      backgroundColor: c.primary,
+      paddingTop: 0,
+      paddingHorizontal: WEB_SIDEBAR_PADDING_H,
+      shadowColor: "#000",
+      shadowOffset: { width: 6, height: 0 },
+      shadowOpacity: 0.22,
+      shadowRadius: 10,
+      elevation: 8,
+      zIndex: 5,
+    },
+
+    webSidebarHeader: {
+      paddingBottom: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: "rgba(255,255,255,0.25)",
+      marginBottom: 12,
+    },
+
+    webSidebarLogo: {
+      width: "100%",
+      height: 80,
+    },
+
+    webSidebarLinks: { marginTop: 6 },
+
+    webNavItem: {
+      paddingVertical: WEB_NAV_ITEM_PADDING_V,
+      paddingHorizontal: WEB_NAV_ITEM_PADDING_H,
+      borderRadius: 2,
+      marginBottom: WEB_NAV_ITEM_MARGIN_BOTTOM,
+    },
+
+    webNavItemSelected: {
+      backgroundColor: "rgba(255,255,255,0.18)",
+    },
+
+    webNavText: {
+      color: c.white,
+      fontFamily: FONT_HEADING,
+      fontSize: FONT_SIZE_NAV,
+      letterSpacing: 0.8,
+      textShadowColor: "rgba(0, 0, 0, 0.1)",
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 8,
+    },
+
+    webNavTextSelected: { color: c.white },
+
+    webMain: { flex: 1, backgroundColor: c.gray100 },
+
+    webContentWrap: {
+      paddingTop: WEB_CONTENT_PADDING_TOP,
+      paddingBottom: WEB_CONTENT_PADDING_BOTTOM,
+    },
+
+    zoomableFloorPlanImage: {
+      width: Platform.OS === "web" ? 1200 : 900,
+      height: Platform.OS === "web" ? 900 : 700,
+      alignSelf: "center",
+    },
   });
 }
