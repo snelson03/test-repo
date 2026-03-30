@@ -665,11 +665,15 @@ export default function HomeScreen() {
                               No favorites added yet
                             </Text>
                           ) : (
+<<<<<<< ours
 <<<<<<< HEAD
+=======
+>>>>>>> theirs
                             favoriteRoomsLive.map((room: any, idx: number) => {
                               const buildingName = String(
                                 room.building_name ?? room.buildingName ?? ""
                               );
+<<<<<<< ours
 =======
                             favoriteRoomsLive.map((room: any, idx: number) => (
                               <LinearGradient
@@ -685,6 +689,8 @@ export default function HomeScreen() {
                                   {room.room_number}
                                 </Text>
 >>>>>>> f4af27e (add realtime database pull)
+=======
+>>>>>>> theirs
 
                               return (
                                 <LinearGradient
@@ -805,12 +811,16 @@ export default function HomeScreen() {
                   {favoriteRoomsLive.length === 0 ? (
                     <Text style={styles.emptyText}>No favorites added yet</Text>
                   ) : (
+<<<<<<< ours
 <<<<<<< HEAD
                     favoriteRoomsLive.map((room: any) => {
 =======
 <<<<<<< HEAD
                     favoriteRooms.map((room: any) => {
 >>>>>>> f4af27e (add realtime database pull)
+=======
+                    favoriteRoomsLive.map((room: any) => {
+>>>>>>> theirs
                       const buildingName = String(
                         room.building_name ?? room.buildingName ?? ""
                       );
@@ -826,6 +836,7 @@ export default function HomeScreen() {
                           style={styles.favItem}
                         >
                           <Text style={styles.favItemText}>
+<<<<<<< ours
 <<<<<<< HEAD
                             {displayName(buildingName).toUpperCase()}{" "}
                             {room.room_number}
@@ -867,6 +878,10 @@ export default function HomeScreen() {
                             {room.is_available ? "Available" : "Unavailable"}
 >>>>>>> 8faa99b (add realtime database pull)
 >>>>>>> f4af27e (add realtime database pull)
+=======
+                            {displayName(buildingName).toUpperCase()}{" "}
+                            {room.room_number}
+>>>>>>> theirs
                           </Text>
                           <View style={styles.favRight}>
                             <View
