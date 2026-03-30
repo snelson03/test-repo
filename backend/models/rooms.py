@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from db import Base
 
@@ -68,3 +68,16 @@ class RoomAvailabilityUpdate(BaseModel):
     """Model for updating room availability (used by sensors)"""
 
     is_available: bool
+
+
+class RoomAvailabilitySnapshotItem(BaseModel):
+    id: int
+    building_id: int
+    is_available: bool
+
+
+class RoomAvailabilitySnapshot(BaseModel):
+    """Compact payload for polling; includes building_id for client-side aggregates."""
+
+    revision: str
+    rooms: List[RoomAvailabilitySnapshotItem]

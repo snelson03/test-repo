@@ -8,6 +8,7 @@ import AppNavigator from '@/navigation/AppNavigator';
 import { UserProvider } from '@/context/UserContext';
 import { SessionExpiryProvider } from '@/context/SessionExpiryContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
+import { RoomAvailabilityProvider } from '@/context/RoomAvailabilityContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import 'react-native-gesture-handler';
 
@@ -44,7 +45,9 @@ export default function RootLayout() {
       <UserProvider>
         <SessionExpiryProvider>
           <FavoritesProvider>
-            <ThemedApp />
+            <RoomAvailabilityProvider>
+              <ThemedApp />
+            </RoomAvailabilityProvider>
           </FavoritesProvider>
         </SessionExpiryProvider>
       </UserProvider>

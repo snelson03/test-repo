@@ -47,6 +47,7 @@ import { useUser } from "@/context/UserContext";
 import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
+import { useRoomAvailability } from "@/context/RoomAvailabilityContext";
 import { buildingsAPI, authAPI, usersAPI, Room } from "@/utils/api"; // added usersAPI
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/AppNavigator";
@@ -122,7 +123,7 @@ export default function HomeScreen() {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuAnim = useRef(new Animated.Value(0)).current;
 
-  const [favoriteStatusById, setFavoriteStatusById] = useState<Record<number, RoomStatus>>({});
+  const { availabilities: liveAvailabilities } = useRoomAvailability();
 
   const toggleMenu = () => {
     const next = !menuOpen;
@@ -147,13 +148,60 @@ export default function HomeScreen() {
     return name;
   };
 
-  const [rooms, setRooms] = useState<
-    Array<{ name: string; status: string; subtitle: string }>
+  const [buildingMeta, setBuildingMeta] = useState<
+    Array<{ id: number; name: string }>
   >([]);
+  const [buildingRoomIds, setBuildingRoomIds] = useState<
+    Record<number, number[]>
+  >({});
+  const [seedAvailability, setSeedAvailability] = useState<
+    Record<number, boolean>
+  >({});
   const [loading, setLoading] = useState(true);
 
+  const effectiveAvailability = useMemo(
+    () => ({ ...seedAvailability, ...liveAvailabilities }),
+    [seedAvailability, liveAvailabilities],
+  );
+
+  const buildingSummaries = useMemo(() => {
+    return buildingMeta.map((building) => {
+      const ids = buildingRoomIds[building.id] ?? [];
+      const availableCount = ids.filter(
+        (id) => effectiveAvailability[id],
+      ).length;
+
+      let status = "busy";
+      let subtitle = "All rooms full";
+
+      if (availableCount > 0) {
+        status = availableCount >= 5 ? "available" : "almost_filled";
+        subtitle = `${availableCount} room${
+          availableCount === 1 ? "" : "s"
+        } free`;
+      }
+
+      return { name: building.name, status, subtitle };
+    });
+  }, [buildingMeta, buildingRoomIds, effectiveAvailability]);
+
+  const favoriteRoomsLive = useMemo(() => {
+    return favoriteRooms.map((room: any) => {
+      const id = room.id as number | undefined;
+      if (
+        id == null ||
+        !Object.prototype.hasOwnProperty.call(effectiveAvailability, id)
+      ) {
+        return room;
+      }
+      const next = effectiveAvailability[id];
+      if (next === room.is_available) return room;
+      return { ...room, is_available: next };
+    });
+  }, [favoriteRooms, effectiveAvailability]);
+
   // only used for the "No rooms available" message
-  const availableRooms = rooms.filter(
+  const availableRooms = buildingSummaries.filter(
     (room) => room.status === "available" || room.status === "almost_filled"
   );
 
@@ -254,32 +302,29 @@ export default function HomeScreen() {
     loadFavorites();
   }, [buildingNameById, favorites]);
 
-  // Load building data
+  // Load building + room id layout once; live counts come from RoomAvailabilityContext
   useEffect(() => {
     const loadBuildings = async () => {
       try {
         const buildings = await buildingsAPI.getAll();
-        const buildingSummaries = await Promise.all(
-          buildings.map(async (building: any) => {
-            const buildingRooms = await buildingsAPI.getRooms(building.id);
-            const availableCount = buildingRooms.filter(
-              (r: any) => r.is_available
-            ).length;
+        const meta = buildings.map((b: any) => ({
+          id: b.id,
+          name: b.name,
+        }));
+        const roomIds: Record<number, number[]> = {};
+        const seed: Record<number, boolean> = {};
 
-            let status = "busy";
-            let subtitle = "All rooms full";
+        for (const building of buildings) {
+          const buildingRooms = await buildingsAPI.getRooms(building.id);
+          roomIds[building.id] = buildingRooms.map((r: Room) => r.id);
+          for (const r of buildingRooms) {
+            seed[r.id] = r.is_available;
+          }
+        }
 
-            if (availableCount > 0) {
-              status = availableCount >= 5 ? "available" : "almost_filled";
-              subtitle = `${availableCount} room${
-                availableCount === 1 ? "" : "s"
-              } free`;
-            }
-
-            return { name: building.name, status, subtitle };
-          })
-        );
-        setRooms(buildingSummaries);
+        setBuildingMeta(meta);
+        setBuildingRoomIds(roomIds);
+        setSeedAvailability(seed);
       } catch (error) {
         console.error("Failed to load buildings:", error);
       } finally {
@@ -289,33 +334,6 @@ export default function HomeScreen() {
 
     loadBuildings();
   }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadFavoriteStatuses = async () => {
-      try {
-        // one request returns full Room[] for the user's favorites
-        const favRooms = await usersAPI.getFavorites();
-
-        const map: Record<number, RoomStatus> = {};
-        for (const r of favRooms) {
-          map[r.id] = r.is_available ? "available" : "occupied";
-        }
-
-        if (!cancelled) setFavoriteStatusById(map);
-      } catch (e) {
-        // if request fails, don’t crash — just mark unknown as offline
-        if (!cancelled) setFavoriteStatusById({});
-      }
-    };
-
-    loadFavoriteStatuses();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [favorites]);
 
 
   // WEB VERSION
@@ -635,43 +653,52 @@ export default function HomeScreen() {
                             />
                           </View>
 
-                          {favoriteRooms.length === 0 ? (
+                          {favoriteRoomsLive.length === 0 ? (
                             <Text style={styles.emptyText}>
                               No favorites added yet
                             </Text>
                           ) : (
-                            favoriteRooms.map((room: any, idx: number) => (
-                              <LinearGradient
-                                key={String(
-                                  room.id ??
-                                    `${room.building_name}-${room.room_number}-${idx}`
-                                )}
-                                colors={["#0F7046", "#0D6440"]}
-                                style={styles.favItem}
-                              >
-                                <Text style={styles.favItemText}>
-                                  {String(room.building_name ?? "").toUpperCase()}{" "}
-                                  {room.room_number}
-                                </Text>
+                            favoriteRoomsLive.map((room: any, idx: number) => {
+                              const buildingName = String(
+                                room.building_name ?? room.buildingName ?? ""
+                              );
 
-                                <View style={styles.favRight}>
-                                  <View
-                                    style={[
-                                      styles.favstatusDot,
-                                      {
-                                        backgroundColor: room.is_available
-                                          ? colors.available
-                                          : colors.occupied,
-                                      },
-                                    ]}
-                                  />
-
-                                  <Text style={styles.favNumber}>
-                                    {room.is_available ? "Available" : "Unavailable"}
+                              return (
+                                <LinearGradient
+                                  key={String(
+                                    room.id ??
+                                      room.room_id ??
+                                      `${buildingName}-${room.room_number}-${idx}`
+                                  )}
+                                  colors={["#0F7046", "#0D6440"]}
+                                  style={styles.favItem}
+                                >
+                                  <Text style={styles.favItemText}>
+                                    {displayName(buildingName).toUpperCase()}{" "}
+                                    {room.room_number}
                                   </Text>
-                                </View>
-                              </LinearGradient>
-                            ))
+
+                                  <View style={styles.favRight}>
+                                    <View
+                                      style={[
+                                        styles.favstatusDot,
+                                        {
+                                          backgroundColor: room.is_available
+                                            ? colors.available
+                                            : colors.occupied,
+                                        },
+                                      ]}
+                                    />
+
+                                    <Text style={styles.favNumber}>
+                                      {room.is_available
+                                        ? "Available"
+                                        : "Unavailable"}
+                                    </Text>
+                                  </View>
+                                </LinearGradient>
+                              );
+                            })
                           )}
                         </LinearGradient>
                       </View>
@@ -752,27 +779,28 @@ export default function HomeScreen() {
                     <Feather name="heart" size={22} color={colors.white} />
                   </View>
 
-                  {favoriteRooms.length === 0 ? (
+                  {favoriteRoomsLive.length === 0 ? (
                     <Text style={styles.emptyText}>No favorites added yet</Text>
                   ) : (
-                    favoriteRooms.map((room: any) => {
+                    favoriteRoomsLive.map((room: any) => {
                       const buildingName = String(
                         room.building_name ?? room.buildingName ?? ""
                       );
-                      const roomStatus = room.is_available ? "available" : "occupied";
 
                       return (
                         <LinearGradient
                           key={String(
-                            room.id ?? room.room_id ?? `${buildingName}-${room.room_number}`
+                            room.id ??
+                              room.room_id ??
+                              `${buildingName}-${room.room_number}`
                           )}
                           colors={["#0F7046", "#0D6440"]}
                           style={styles.favItem}
                         >
                           <Text style={styles.favItemText}>
-                            {displayName(buildingName).toUpperCase()} {room.room_number}
+                            {displayName(buildingName).toUpperCase()}{" "}
+                            {room.room_number}
                           </Text>
-
                           <View style={styles.favRight}>
                             <View
                               style={[
@@ -787,21 +815,6 @@ export default function HomeScreen() {
                             <Text style={styles.favNumber}>
                               {room.is_available ? "Available" : "Unavailable"}
                             </Text>
-
-                            <TouchableOpacity
-                              onPress={() =>
-                                navigation.navigate("RoomDetails", {
-                                  building: normalizeBuildingForRoomDetails(buildingName),
-                                  roomId: String(room.room_number),
-                                  status: roomStatus,
-                                })
-                              }
-                              style={styles.favoriteDetailsBtn}
-                              accessibilityRole="button"
-                              accessibilityLabel={`Open details for ${buildingName} room ${room.room_number}`}
-                            >
-                              <Ionicons name="arrow-forward-circle" size={22} color={colors.white} />
-                            </TouchableOpacity>
                           </View>
                         </LinearGradient>
                       );

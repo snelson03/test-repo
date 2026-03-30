@@ -1,6 +1,7 @@
 // Favorites Screen File
 // matches the same web sidebar/top bar and mobile green header pattern
 import React, { useState, useMemo } from "react";
+import { useRoomAvailability } from "@/context/RoomAvailabilityContext";
 import {
   View,
   Text,
@@ -51,6 +52,7 @@ interface FavoriteRoom {
   name: string;
   status?: string;
   tstatus?: string;
+  roomId?: number;
 }
 
 type MenuRoute =
@@ -77,6 +79,8 @@ export default function FavoritesScreen() {
     favorites: FavoriteRoom[];
     removeFavorite: (name: string) => void;
   };
+
+  const { availabilities: liveAvailabilities } = useRoomAvailability();
 
   const [editMode, setEditMode] = useState(false);
 
@@ -148,22 +152,36 @@ export default function FavoritesScreen() {
     return null;
   };
 
+  const liveStatusForFavorite = (item: FavoriteRoom): string => {
+    const rid = item.roomId;
+    if (
+      rid != null &&
+      Object.prototype.hasOwnProperty.call(liveAvailabilities, rid)
+    ) {
+      return liveAvailabilities[rid] ? "available" : "occupied";
+    }
+    return item.status === "available"
+      ? "available"
+      : item.status === "occupied"
+        ? "occupied"
+        : "offline";
+  };
+
   const handleRoomPress = (item: FavoriteRoom) => {
     if (editMode) return;
 
     const parsed = parseFavoriteRoom(item.name);
     if (!parsed) return;
 
-    const roomStatus =
-      item.status === "available"
-        ? "available"
-        : item.status === "occupied"
-        ? "occupied"
-        : "offline";
+    const roomStatus = liveStatusForFavorite(item) as
+      | "available"
+      | "occupied"
+      | "offline";
 
     navigation.navigate("RoomDetails", {
       building: parsed.building,
       roomId: parsed.roomId,
+      roomDbId: item.roomId,
       status: roomStatus,
     } as never);
   };
@@ -186,12 +204,9 @@ export default function FavoritesScreen() {
         </View>
       ) : (
         favorites.map((item: FavoriteRoom) => {
-          const statusLabel =
-            item.status === "available"
-              ? "available"
-              : item.status === "occupied"
-              ? "occupied"
-              : "offline";
+          const statusLabel = liveStatusForFavorite(item);
+          const statusTitle =
+            statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1);
 
           return (
             <TouchableOpacity
@@ -213,7 +228,7 @@ export default function FavoritesScreen() {
                   <View
                     style={[
                       styles.statusDot,
-                      { backgroundColor: getStatusColor(item.status) },
+                      { backgroundColor: getStatusColor(statusLabel) },
                     ]}
                     accessibilityRole="image"
                     accessibilityLabel={`Status indicator: ${statusLabel}`}
@@ -221,9 +236,9 @@ export default function FavoritesScreen() {
 
                   <Text
                     style={styles.statusText}
-                    accessibilityLabel={`Status ${item.tstatus ?? statusLabel}`}
+                    accessibilityLabel={`Status ${statusTitle}`}
                   >
-                    {item.tstatus ?? statusLabel.toUpperCase()}
+                    {statusTitle}
                   </Text>
 
                   {editMode && (

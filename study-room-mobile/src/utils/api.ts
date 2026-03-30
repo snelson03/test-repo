@@ -267,3 +267,65 @@ export const roomsAPI = {
     return apiRequest<Room>(`/rooms/${roomId}`);
   },
 };
+
+export type RoomAvailabilitySnapshotItem = {
+  id: number;
+  building_id: number;
+  is_available: boolean;
+};
+
+export type RoomAvailabilitySnapshotResult =
+  | { unchanged: true; revision: string }
+  | {
+      unchanged: false;
+      revision: string;
+      rooms: RoomAvailabilitySnapshotItem[];
+    };
+
+/** Lightweight poll for all room availability; sends If-None-Match to receive 304 when nothing changed. */
+export async function fetchRoomAvailabilitySnapshot(
+  lastRevision: string | null,
+): Promise<RoomAvailabilitySnapshotResult> {
+  const token = await getAuthToken();
+  if (!token) {
+    throw new Error("Not authenticated");
+  }
+
+  const headers: HeadersInit = {
+    Accept: "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+  if (lastRevision) {
+    headers["If-None-Match"] = lastRevision;
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/rooms/availability-snapshot`,
+    { headers },
+  );
+
+  if (response.status === 304) {
+    if (!lastRevision) {
+      throw new Error("304 without cached revision");
+    }
+    return { unchanged: true, revision: lastRevision };
+  }
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      await removeAuthToken();
+      onSessionExpired?.();
+    }
+    const error = await response
+      .json()
+      .catch(() => ({ detail: "An error occurred" }));
+    throw new Error(error.detail || `HTTP error! status: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return {
+    unchanged: false,
+    revision: data.revision as string,
+    rooms: data.rooms as RoomAvailabilitySnapshotItem[],
+  };
+}
