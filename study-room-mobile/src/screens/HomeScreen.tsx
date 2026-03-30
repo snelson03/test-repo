@@ -634,38 +634,47 @@ export default function HomeScreen() {
                               No favorites added yet
                             </Text>
                           ) : (
-                            favoriteRoomsLive.map((room: any, idx: number) => (
-                              <LinearGradient
-                                key={String(
-                                  room.id ??
-                                    `${room.building_name}-${room.room_number}-${idx}`
-                                )}
-                                colors={["#0F7046", "#0D6440"]}
-                                style={styles.favItem}
-                              >
-                                <Text style={styles.favItemText}>
-                                  {String(room.building_name ?? "").toUpperCase()}{" "}
-                                  {room.room_number}
-                                </Text>
+                            favoriteRoomsLive.map((room: any, idx: number) => {
+                              const buildingName = String(
+                                room.building_name ?? room.buildingName ?? ""
+                              );
 
-                                <View style={styles.favRight}>
-                                  <View
-                                    style={[
-                                      styles.favstatusDot,
-                                      {
-                                        backgroundColor: room.is_available
-                                          ? colors.available
-                                          : colors.occupied,
-                                      },
-                                    ]}
-                                  />
-
-                                  <Text style={styles.favNumber}>
-                                    {room.is_available ? "Available" : "Unavailable"}
+                              return (
+                                <LinearGradient
+                                  key={String(
+                                    room.id ??
+                                      room.room_id ??
+                                      `${buildingName}-${room.room_number}-${idx}`
+                                  )}
+                                  colors={["#0F7046", "#0D6440"]}
+                                  style={styles.favItem}
+                                >
+                                  <Text style={styles.favItemText}>
+                                    {displayName(buildingName).toUpperCase()}{" "}
+                                    {room.room_number}
                                   </Text>
-                                </View>
-                              </LinearGradient>
-                            ))
+
+                                  <View style={styles.favRight}>
+                                    <View
+                                      style={[
+                                        styles.favstatusDot,
+                                        {
+                                          backgroundColor: room.is_available
+                                            ? colors.available
+                                            : colors.occupied,
+                                        },
+                                      ]}
+                                    />
+
+                                    <Text style={styles.favNumber}>
+                                      {room.is_available
+                                        ? "Available"
+                                        : "Unavailable"}
+                                    </Text>
+                                  </View>
+                                </LinearGradient>
+                              );
+                            })
                           )}
                         </LinearGradient>
                       </View>
@@ -749,43 +758,43 @@ export default function HomeScreen() {
                   {favoriteRoomsLive.length === 0 ? (
                     <Text style={styles.emptyText}>No favorites added yet</Text>
                   ) : (
-                    favoriteRoomsLive.map((room) => (
-                      <LinearGradient
-                        key={String(
-                          (room as any).id ??
-                            (room as any).room_id ??
-                            `${(room as any).building_name}-${room.room_number}`
-                        )}
-                        colors={["#0F7046", "#0D6440"]}
-                        style={styles.favItem}
-                      >
-                        <Text style={styles.favItemText}>
-                          {displayName(
-                            String(
-                              (room as any).building_name ??
-                                (room as any).buildingName ??
-                                ""
-                            )
-                          ).toUpperCase()}{" "}
-                          {room.room_number}
-                        </Text>
-                        <View style={styles.favRight}>
-                          <View
-                            style={[
-                              styles.favstatusDot,
-                              {
-                                backgroundColor: room.is_available
-                                  ? colors.available
-                                  : colors.occupied,
-                              },
-                            ]}
-                          />
-                          <Text style={styles.favNumber}>
-                            {room.is_available ? "Available" : "Unavailable"}
+                    favoriteRoomsLive.map((room: any) => {
+                      const buildingName = String(
+                        room.building_name ?? room.buildingName ?? ""
+                      );
+
+                      return (
+                        <LinearGradient
+                          key={String(
+                            room.id ??
+                              room.room_id ??
+                              `${buildingName}-${room.room_number}`
+                          )}
+                          colors={["#0F7046", "#0D6440"]}
+                          style={styles.favItem}
+                        >
+                          <Text style={styles.favItemText}>
+                            {displayName(buildingName).toUpperCase()}{" "}
+                            {room.room_number}
                           </Text>
-                        </View>
-                      </LinearGradient>
-                    ))
+                          <View style={styles.favRight}>
+                            <View
+                              style={[
+                                styles.favstatusDot,
+                                {
+                                  backgroundColor: room.is_available
+                                    ? colors.available
+                                    : colors.occupied,
+                                },
+                              ]}
+                            />
+                            <Text style={styles.favNumber}>
+                              {room.is_available ? "Available" : "Unavailable"}
+                            </Text>
+                          </View>
+                        </LinearGradient>
+                      );
+                    })
                   )}
                 </LinearGradient>
               </View>
