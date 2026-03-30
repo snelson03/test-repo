@@ -48,7 +48,10 @@ import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryConte
 import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
 import { buildingsAPI, authAPI, usersAPI, Room } from "@/utils/api"; // added usersAPI
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "@/navigation/AppNavigator";
 import InfoTooltip from "@/components/InfoTooltip";
+import HoverTooltip from "@/components/HoverTooltip";
 
 
 // describes what each favorite looks like for type safety
@@ -84,7 +87,8 @@ function roomStatusColor(s: RoomStatus, colors: any) {
 }
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   useRegisterSessionExpiryNavigation();
   const { user } = useUser();
   const { colors } = useTheme();
@@ -179,6 +183,17 @@ export default function HomeScreen() {
   ) => {
     (navigation as any).navigate("Preferences", { section });
   };
+
+  const normalizeBuildingForRoomDetails = (buildingName: string) => {
+  if (buildingName === "Academic Research Center") {
+      return "Academic & Research Center";
+    }
+    return buildingName as
+      | "Stocker Center"
+      | "Academic & Research Center"
+      | "Alden Library";
+  };
+
   // get building names for favorites
   useEffect(() => {
     const loadBuildingNames = async () => {
@@ -731,43 +746,57 @@ export default function HomeScreen() {
                   {favoriteRooms.length === 0 ? (
                     <Text style={styles.emptyText}>No favorites added yet</Text>
                   ) : (
-                    favoriteRooms.map((room) => (
-                      <LinearGradient
-                        key={String(
-                          (room as any).id ??
-                            (room as any).room_id ??
-                            `${(room as any).building_name}-${room.room_number}`
-                        )}
-                        colors={["#0F7046", "#0D6440"]}
-                        style={styles.favItem}
-                      >
-                        <Text style={styles.favItemText}>
-                          {displayName(
-                            String(
-                              (room as any).building_name ??
-                                (room as any).buildingName ??
-                                ""
-                            )
-                          ).toUpperCase()}{" "}
-                          {room.room_number}
-                        </Text>
-                        <View style={styles.favRight}>
-                          <View
-                            style={[
-                              styles.favstatusDot,
-                              {
-                                backgroundColor: room.is_available
-                                  ? colors.available
-                                  : colors.occupied,
-                              },
-                            ]}
-                          />
-                          <Text style={styles.favNumber}>
-                            {room.is_available ? "Available" : "Unavailable"}
+                    favoriteRooms.map((room: any) => {
+                      const buildingName = String(
+                        room.building_name ?? room.buildingName ?? ""
+                      );
+                      const roomStatus = room.is_available ? "available" : "occupied";
+
+                      return (
+                        <LinearGradient
+                          key={String(
+                            room.id ?? room.room_id ?? `${buildingName}-${room.room_number}`
+                          )}
+                          colors={["#0F7046", "#0D6440"]}
+                          style={styles.favItem}
+                        >
+                          <Text style={styles.favItemText}>
+                            {displayName(buildingName).toUpperCase()} {room.room_number}
                           </Text>
-                        </View>
-                      </LinearGradient>
-                    ))
+
+                          <View style={styles.favRight}>
+                            <View
+                              style={[
+                                styles.favstatusDot,
+                                {
+                                  backgroundColor: room.is_available
+                                    ? colors.available
+                                    : colors.occupied,
+                                },
+                              ]}
+                            />
+                            <Text style={styles.favNumber}>
+                              {room.is_available ? "Available" : "Unavailable"}
+                            </Text>
+
+                            <TouchableOpacity
+                              onPress={() =>
+                                navigation.navigate("RoomDetails", {
+                                  building: normalizeBuildingForRoomDetails(buildingName),
+                                  roomId: String(room.room_number),
+                                  status: roomStatus,
+                                })
+                              }
+                              style={styles.favoriteDetailsBtn}
+                              accessibilityRole="button"
+                              accessibilityLabel={`Open details for ${buildingName} room ${room.room_number}`}
+                            >
+                              <Ionicons name="arrow-forward-circle" size={22} color={colors.white} />
+                            </TouchableOpacity>
+                          </View>
+                        </LinearGradient>
+                      );
+                    })
                   )}
                 </LinearGradient>
               </View>
@@ -1176,6 +1205,12 @@ function createStyles(c: ThemeColors) {
       textShadowColor: "rgba(0, 0, 0, 200)",
       textShadowOffset: { width: 2, height: 2 },
       textShadowRadius: 10,
+    },
+
+    favoriteDetailsBtn: {
+      marginLeft: 10,
+      alignItems: "center",
+      justifyContent: "center",
     },
 
     // Mobile styles
