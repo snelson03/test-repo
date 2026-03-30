@@ -103,9 +103,17 @@ export default function CampusMapScreen() {
   // Cross-platform zoom state
   const mobileDefaultZoom = 1.4;
   const webDefaultZoom = 1;
+
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 3;
+
   const [zoom, setZoom] = useState<number>(
     Platform.OS === "web" ? webDefaultZoom : mobileDefaultZoom
   );
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+
+  const panX = useRef(new Animated.Value(0)).current;
+  const panY = useRef(new Animated.Value(0)).current;
 
   // Show/hide the key
   const [showLegend, setShowLegend] = useState<boolean>(true);
@@ -128,7 +136,7 @@ export default function CampusMapScreen() {
       address: "61 Oxbow Trail, Athens, OH 45701",
       image: require("../assets/images/arc.png"),
       pinX: 0.135,
-      pinY: 0.08,
+      pinY: 0.2,
       pinColor: "#E53935", // red
     },
     {
@@ -137,7 +145,7 @@ export default function CampusMapScreen() {
       address: "28 West Green Dr, Athens, OH 45701",
       image: require("../assets/images/stocker.png"),
       pinX: 0.087,
-      pinY: 0.137,
+      pinY: 0.237,
       pinColor: "#FB8C00", // orange
     },
     {
@@ -146,7 +154,7 @@ export default function CampusMapScreen() {
       address: "30 Park Pl, Athens, OH 45701",
       image: require("../assets/images/alden.png"),
       pinX: 0.483,
-      pinY: 0.41,
+      pinY: 0.43,
       pinColor: "#1E88E5", // blue
     },
   ];
@@ -163,49 +171,76 @@ export default function CampusMapScreen() {
   const clamp = (v: number, min: number, max: number) =>
     Math.max(min, Math.min(max, v));
 
-  const setZoomSafe = (next: number) => setZoom(clamp(next, 1, 3));
+  const setZoomSafe = (next: number) => {
+  const clampedZoom = clamp(next, MIN_ZOOM, MAX_ZOOM);
+  setZoom(clampedZoom);
 
-  // lock the map to container height and only scale horizontally
-  const baseHeight = mapHeight;
-  const baseWidth = baseHeight * MAP_ASPECT_RATIO;
+  const bounds = getPanBounds(clampedZoom);
+  const nextX = clamp(pan.x, bounds.minX, bounds.maxX);
+  const nextY = clamp(pan.y, bounds.minY, bounds.maxY);
 
-  const contentWidth = baseWidth * zoom;
-  const contentHeight = mapHeight;
+  setPan({ x: nextX, y: nextY });
+  panX.setValue(nextX);
+  panY.setValue(nextY);
+};
+
+  // Match React Native Image resizeMode="cover"
+  const viewportAspect =
+    viewportWidth > 0 ? viewportWidth / mapHeight : MAP_ASPECT_RATIO;
+
+  let baseWidth = 0;
+  let baseHeight = 0;
+
+  if (viewportAspect > MAP_ASPECT_RATIO) {
+    // viewport is wider than the image aspect, so cover is width-driven
+    baseWidth = viewportWidth;
+    baseHeight = viewportWidth / MAP_ASPECT_RATIO;
+  } else {
+    // viewport is taller/narrower, so cover is height-driven
+    baseHeight = mapHeight;
+    baseWidth = mapHeight * MAP_ASPECT_RATIO;
+  }
+
+  const contentWidth = baseWidth;
+  const contentHeight = baseHeight;
 
   const pinPositions: Record<string, { x: number; y: number }> = {};
   if (baseWidth > 0 && baseHeight > 0) {
     buildings.forEach((b) => {
       pinPositions[b.id] = {
-        x: baseWidth * b.pinX * zoom,
+        x: baseWidth * b.pinX,
         y: baseHeight * b.pinY,
       };
     });
   }
 
   const zoomToBuilding = (buildingId: string) => {
-    const pin = pinPositions[buildingId];
-    const scrollX: any = mapScrollXRef.current;
+    const building = buildingById[buildingId];
+    if (!building || viewportWidth <= 0) return;
 
-    if (!pin || !scrollX || viewportWidth <= 0 || baseHeight <= 0) return;
+    const pinXPos = baseWidth * building.pinX;
+    const pinYPos = baseHeight * building.pinY;
 
-    // Scroll main view so the map is visible (mobile)
-    if (!isWide) {
-      scrollViewMainRef.current?.scrollTo({ y: 0, animated: true });
-    }
+    const scaledX = pinXPos * zoom;
+    const scaledY = pinYPos * zoom;
 
-    const viewportW = viewportWidth;
+    const targetX = viewportWidth / 2 - scaledX;
+    const targetY = mapHeight / 2 - scaledY;
 
-    const targetX = clamp(
-      pin.x - viewportW / 2,
-      0,
-      Math.max(0, contentWidth - viewportW)
-    );
+    const bounds = getPanBounds(zoom);
 
-    try {
-      scrollX.scrollTo({ x: targetX, animated: true });
-    } catch (e) {
-      // prevents platform-specific scroll responder issues from crashing
-    }
+    const nextX = clamp(targetX, bounds.minX, bounds.maxX);
+    const nextY = clamp(targetY, bounds.minY, bounds.maxY);
+
+    setPan({ x: nextX, y: nextY });
+    Animated.spring(panX, {
+      toValue: nextX,
+      useNativeDriver: true,
+    }).start();
+    Animated.spring(panY, {
+      toValue: nextY,
+      useNativeDriver: true,
+    }).start();
   };
 
   // Double-tap: first tap selects/zooms, second tap within 400ms navigates to Find a Room
@@ -276,6 +311,73 @@ export default function CampusMapScreen() {
   // two-column sizing
   const leftColFlex = isWide ? 2.2 : undefined;
   const rightColFlex = isWide ? 1 : undefined;
+
+const getPanBounds = (nextZoom: number) => {
+  const scaledWidth = baseWidth * nextZoom;
+  const scaledHeight = baseHeight * nextZoom;
+
+  const maxOffsetX = Math.max(0, (scaledWidth - viewportWidth) / 2);
+  const maxOffsetY = Math.max(0, (scaledHeight - mapHeight) / 2);
+
+  return {
+    minX: -maxOffsetX,
+    maxX: maxOffsetX,
+    minY: -maxOffsetY,
+    maxY: maxOffsetY,
+  };
+};
+
+  const panStart = useRef({ x: 0, y: 0 });
+
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+
+        onPanResponderGrant: () => {
+          panStart.current = pan;
+        },
+
+        onPanResponderMove: (_, gesture) => {
+          const bounds = getPanBounds(zoom);
+
+          const nextX = clamp(
+            panStart.current.x + gesture.dx,
+            bounds.minX,
+            bounds.maxX
+          );
+          const nextY = clamp(
+            panStart.current.y + gesture.dy,
+            bounds.minY,
+            bounds.maxY
+          );
+
+          panX.setValue(nextX);
+          panY.setValue(nextY);
+        },
+
+        onPanResponderRelease: (_, gesture) => {
+          const bounds = getPanBounds(zoom);
+
+          const nextX = clamp(
+            panStart.current.x + gesture.dx,
+            bounds.minX,
+            bounds.maxX
+          );
+          const nextY = clamp(
+            panStart.current.y + gesture.dy,
+            bounds.minY,
+            bounds.maxY
+          );
+
+          setPan({ x: nextX, y: nextY });
+          panX.setValue(nextX);
+          panY.setValue(nextY);
+        },
+      }),
+    [pan, zoom, viewportWidth, mapHeight, baseWidth, baseHeight]
+  );
 
   const screenContent = (
     <ScrollView
@@ -402,120 +504,82 @@ export default function CampusMapScreen() {
                 </View>
 
                 {/* horizontal only pan */}
-                <ScrollView
-                  ref={mapScrollXRef}
-                  style={{ width: "100%", height: "100%" }}
-                  horizontal
-                  bounces={false}
-                  showsHorizontalScrollIndicator={true}
-                  contentContainerStyle={{
-                    minWidth: "100%",
-                    height: "100%",
-                    alignItems: "flex-start",
-                    justifyContent: "flex-start",
-                  }}
-                  accessibilityLabel="Map horizontal pan"
+                <View
+                  style={{ width: "100%", height: "100%", overflow: "hidden" }}
+                  accessibilityLabel="Map pan and zoom viewport"
                 >
-                  <View
+                  <Animated.View
+                    {...panResponder.panHandlers}
                     style={[
                       styles.mapInner,
                       {
-                        width: contentWidth,
-                        height: contentHeight,
+                        width: baseWidth,
+                        height: baseHeight,
+                        transform: [
+                          { translateX: panX },
+                          { translateY: panY },
+                          { scale: zoom },
+                        ],
+                        ...(Platform.OS === "web" ? ({ transformOrigin: "top left" } as any) : {}),
                       },
                     ]}
-                    accessibilityLabel="Map content container"
                   >
-                    <View
-                      style={[
-                        styles.mapScaledLayer,
-                        {
-                          width: contentWidth,
-                          height: contentHeight,
-                        },
-                      ]}
-                      accessibilityLabel="Scaled map layer"
-                    >
-                      <Image
-                        source={require("../assets/images/map.jpeg")}
-                        style={styles.mapImage}
-                        resizeMode="cover"
-                        accessibilityRole="image"
-                        accessibilityLabel="Campus map image"
-                        accessibilityIgnoresInvertColors
-                      />
+                    <Image
+                      source={require("../assets/images/map.jpeg")}
+                      style={styles.mapImage}
+                      resizeMode="cover"
+                      accessibilityRole="image"
+                      accessibilityLabel="Campus map image"
+                      accessibilityIgnoresInvertColors
+                    />
 
-                      {/* PINS */}
-                      {viewportWidth > 0 &&
-                        buildings.map((b) => {
-                          const pin = pinPositions[b.id];
-                          if (!pin) return null;
+                    {buildings.map((b) => {
+                      const pinX = baseWidth * b.pinX;
+                      const pinY = baseHeight * b.pinY;
+                      const isSelected = selectedBuildingId === b.id;
 
-                          const isSelected = selectedBuildingId === b.id;
+                      const pulseScale = pulseAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.7, 1.6],
+                      });
 
-                          const pulseScale = pulseAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0.7, 1.6],
-                          });
+                      const pulseOpacity = pulseAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.8, 0],
+                      });
 
-                          const pulseOpacity = pulseAnim.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [0.8, 0],
-                          });
+                      return (
+                        <TouchableOpacity
+                          key={b.id}
+                          style={[styles.pin, { left: pinX - 11, top: pinY - 22 }]}
+                          onPress={() => handlePinPress(b.id)}
+                          activeOpacity={0.9}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Map pin: ${b.name}`}
+                        >
+                          <View style={styles.pinContainer}>
+                            {isSelected && <Text style={styles.pinLabel}>{b.name}</Text>}
 
-                          return (
-                            <TouchableOpacity
-                              key={b.id}
-                              style={[styles.pin, { left: pin.x - 11, top: pin.y - 22 }]}
-                              onPress={() => handlePinPress(b.id)}
-                              activeOpacity={0.9}
-                              accessibilityRole="button"
-                              accessibilityLabel={`Map pin: ${b.name}`}
-                              accessibilityHint="Tap once to center this building. Tap twice quickly to open Find a Room for this building."
-                              accessibilityState={{ selected: isSelected }}
-                            >
-                              <View
-                                style={styles.pinContainer}
-                                accessibilityLabel={`Pin container for ${b.name}`}
-                              >
-                                {isSelected && (
-                                  <Text
-                                    style={styles.pinLabel}
-                                    accessibilityLabel={`Selected building: ${b.name}`}
-                                  >
-                                    {b.name}
-                                  </Text>
-                                )}
+                            {isSelected && (
+                              <Animated.View
+                                style={[
+                                  styles.pulseRing,
+                                  {
+                                    backgroundColor: b.pinColor,
+                                    transform: [{ scale: pulseScale }],
+                                    opacity: pulseOpacity,
+                                  },
+                                ]}
+                              />
+                            )}
 
-                                {isSelected && (
-                                  <Animated.View
-                                    style={[
-                                      styles.pulseRing,
-                                      {
-                                        backgroundColor: b.pinColor,
-                                        transform: [{ scale: pulseScale }],
-                                        opacity: pulseOpacity,
-                                      },
-                                    ]}
-                                    accessibilityElementsHidden
-                                    importantForAccessibility="no"
-                                  />
-                                )}
-
-                                <Ionicons
-                                  name="location-sharp"
-                                  size={22}
-                                  color={b.pinColor}
-                                  accessibilityElementsHidden
-                                  importantForAccessibility="no"
-                                />
-                              </View>
-                            </TouchableOpacity>
-                          );
-                        })}
-                    </View>
-                  </View>
-                </ScrollView>
+                            <Ionicons name="location-sharp" size={22} color={b.pinColor} />
+                          </View>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </Animated.View>
+                </View>
 
                 {/* Legend (pins + ping effect) */}
                 {showLegend && (
