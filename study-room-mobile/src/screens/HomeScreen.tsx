@@ -49,7 +49,10 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useRoomAvailability } from "@/context/RoomAvailabilityContext";
 import { buildingsAPI, authAPI, usersAPI, Room } from "@/utils/api"; // added usersAPI
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "@/navigation/AppNavigator";
 import InfoTooltip from "@/components/InfoTooltip";
+import HoverTooltip from "@/components/HoverTooltip";
 
 
 // describes what each favorite looks like for type safety
@@ -85,7 +88,8 @@ function roomStatusColor(s: RoomStatus, colors: any) {
 }
 
 export default function HomeScreen() {
-  const navigation = useNavigation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   useRegisterSessionExpiryNavigation();
   const { user } = useUser();
   const { colors } = useTheme();
@@ -227,6 +231,17 @@ export default function HomeScreen() {
   ) => {
     (navigation as any).navigate("Preferences", { section });
   };
+
+  const normalizeBuildingForRoomDetails = (buildingName: string) => {
+  if (buildingName === "Academic Research Center") {
+      return "Academic & Research Center";
+    }
+    return buildingName as
+      | "Stocker Center"
+      | "Academic & Research Center"
+      | "Alden Library";
+  };
+
   // get building names for favorites
   useEffect(() => {
     const loadBuildingNames = async () => {
@@ -456,61 +471,70 @@ export default function HomeScreen() {
                 <View style={styles.webTwoColRow} accessibilityLabel="Cards row">
                   <View style={styles.webDashboardLeftColumn}>
                     {/* Available Now */}
-                    <View
-                      style={[styles.webLeftColumnCard, styles.cardShadow]}
+                    <TouchableOpacity
+                      style={styles.webLeftColumnCard}
+                      onPress={() => navigation.navigate("CampusMap" as never)}
+                      activeOpacity={0.9}
+                      accessibilityRole="button"
                       accessibilityLabel="Available now"
+                      accessibilityHint="Opens the Campus Map screen"
                     >
-                      <LinearGradient
-                        colors={["#06442A", "#04301D"]}
-                        style={styles.availableNowCard}
+                      <View
+                        style={styles.cardShadow}
+                        accessibilityLabel="Available now"
                       >
-                        <View style={styles.availableHeader}>
-                          <Text style={styles.availableTitle}>AVAILABLE NOW</Text>
-                          <Ionicons
-                            name="location-sharp"
-                            size={22}
-                            color={colors.white}
-                            accessibilityElementsHidden
-                            importantForAccessibility="no"
-                          />
-                        </View>
+                        <LinearGradient
+                          colors={["#06442A", "#04301D"]}
+                          style={styles.availableNowCard}
+                        >
+                          <View style={styles.availableHeader}>
+                            <Text style={styles.availableTitle}>AVAILABLE NOW</Text>
+                            <Ionicons
+                              name="location-sharp"
+                              size={22}
+                              color={colors.white}
+                              accessibilityElementsHidden
+                              importantForAccessibility="no"
+                            />
+                          </View>
 
-                        {loading ? (
-                          <Text style={styles.loadingText}>Loading...</Text>
-                        ) : availableRooms.length === 0 ? (
-                          <Text style={styles.noAvailableText}>
-                            No rooms available right now
-                          </Text>
-                        ) : (
-                          availableRooms.map((room) => (
-                            <LinearGradient
-                              key={room.name}
-                              colors={["#0F7046", "#0D6440"]}
-                              style={styles.availableItem}
-                              accessibilityLabel={`${room.name}, ${room.subtitle}`}
-                            >
-                              <Text style={styles.availableItemText}>{room.name}</Text>
-                              <View style={styles.availableRight}>
-                                <View
-                                  style={[
-                                    styles.availableStatusDot,
-                                    {
-                                      backgroundColor:
-                                        room.status === "available"
-                                          ? colors.available
-                                          : colors.occupied,
-                                    },
-                                  ]}
-                                />
-                                <Text style={styles.availableSubtitle}>
-                                  {room.subtitle}
-                                </Text>
-                              </View>
-                            </LinearGradient>
-                          ))
-                        )}
-                      </LinearGradient>
-                    </View>
+                          {loading ? (
+                            <Text style={styles.loadingText}>Loading...</Text>
+                          ) : availableRooms.length === 0 ? (
+                            <Text style={styles.noAvailableText}>
+                              No rooms available right now
+                            </Text>
+                          ) : (
+                            availableRooms.map((room) => (
+                              <LinearGradient
+                                key={room.name}
+                                colors={["#0F7046", "#0D6440"]}
+                                style={styles.availableItem}
+                                accessibilityLabel={`${room.name}, ${room.subtitle}`}
+                              >
+                                <Text style={styles.availableItemText}>{room.name}</Text>
+                                <View style={styles.availableRight}>
+                                  <View
+                                    style={[
+                                      styles.availableStatusDot,
+                                      {
+                                        backgroundColor:
+                                          room.status === "available"
+                                            ? colors.available
+                                            : colors.occupied,
+                                      },
+                                    ]}
+                                  />
+                                  <Text style={styles.availableSubtitle}>
+                                    {room.subtitle}
+                                  </Text>
+                                </View>
+                              </LinearGradient>
+                            ))
+                          )}
+                        </LinearGradient>
+                      </View>
+                    </TouchableOpacity>
 
                     {/* WEB: Manage row */}
                     <View style={styles.webLeftColumnCard}>
@@ -848,11 +872,11 @@ export default function HomeScreen() {
             {/* Available Now Section */}
             <TouchableOpacity
               style={styles.cardShadow}
-              onPress={() => !menuOpen && navigation.navigate("FindRoom" as never)}
+              onPress={() => !menuOpen && navigation.navigate("CampusMap" as never)}
               activeOpacity={0.9}
               accessibilityRole="button"
               accessibilityLabel="Available now"
-              accessibilityHint="Opens the Find a Room screen"
+              accessibilityHint="Opens the Campus Map screen"
             >
               <LinearGradient
                 colors={["#06442A", "#04301D"]}style={styles.availableNowCard}>
@@ -1203,6 +1227,12 @@ function createStyles(c: ThemeColors) {
       textShadowColor: "rgba(0, 0, 0, 200)",
       textShadowOffset: { width: 2, height: 2 },
       textShadowRadius: 10,
+    },
+
+    favoriteDetailsBtn: {
+      marginLeft: 10,
+      alignItems: "center",
+      justifyContent: "center",
     },
 
     // Mobile styles
