@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+import hashlib
+
+from fastapi import APIRouter, HTTPException, Depends, status, Header, Response
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from models.rooms import (
@@ -6,6 +8,8 @@ from models.rooms import (
     RoomUpdate,
     RoomResponse,
     RoomAvailabilityUpdate,
+    RoomAvailabilitySnapshot,
+    RoomAvailabilitySnapshotItem,
     Room as RoomModel,
 )
 from models.buildings import Building as BuildingModel
@@ -14,6 +18,62 @@ from models.users import User as UserModel
 from db import get_db
 
 router = APIRouter()
+
+
+def _normalize_if_none_match(value: Optional[str]) -> Optional[str]:
+    if value is None or value == "":
+        return None
+    v = value.strip()
+    if v.startswith("W/"):
+        v = v[2:].strip()
+    if len(v) >= 2 and v[0] == '"' and v[-1] == '"':
+        v = v[1:-1]
+    return v or None
+
+
+@router.get(
+    "/availability-snapshot",
+    response_model=RoomAvailabilitySnapshot,
+    responses={304: {"description": "Not Modified"}},
+)
+async def get_availability_snapshot(
+    response: Response,
+    if_none_match: Optional[str] = Header(None, alias="If-None-Match"),
+    current_user: UserModel = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Minimal room availability for polling. Send If-None-Match with previous revision for 304 when unchanged."""
+    rows = (
+        db.query(
+            RoomModel.id,
+            RoomModel.building_id,
+            RoomModel.is_available,
+        )
+        .order_by(RoomModel.id)
+        .all()
+    )
+    parts = [
+        f"{rid}:{bid}:{1 if avail else 0}" for rid, bid, avail in rows
+    ]
+    payload = "|".join(parts)
+    revision = hashlib.sha256(payload.encode()).hexdigest()
+
+    client_rev = _normalize_if_none_match(if_none_match)
+    if client_rev is not None and client_rev == revision:
+        return Response(status_code=304)
+
+    response.headers["Cache-Control"] = "private, no-cache"
+    return RoomAvailabilitySnapshot(
+        revision=revision,
+        rooms=[
+            RoomAvailabilitySnapshotItem(
+                id=rid,
+                building_id=bid,
+                is_available=avail,
+            )
+            for rid, bid, avail in rows
+        ],
+    )
 
 
 @router.get("", response_model=List[RoomResponse])

@@ -3,6 +3,7 @@
 // Uses the same web top bar and sidebar pattern as the Favorites page and the same mobile green header style.
 
 import React, { useMemo } from "react";
+import { useRoomAvailability } from "@/context/RoomAvailabilityContext";
 import {
   View,
   Text,
@@ -66,6 +67,7 @@ type RoomDetailsScreenRouteProp = {
     building: IncomingBuildingName;
     roomId: string;
     status: RoomStatus;
+    roomDbId?: number;
   };
 };
 
@@ -144,9 +146,21 @@ export default function RoomDetailsScreen() {
   useRegisterSessionExpiryNavigation();
 
   const route = useRoute() as unknown as RoomDetailsScreenRouteProp;
-  const { building: rawBuilding, roomId, status } = route.params;
+  const { building: rawBuilding, roomId, status, roomDbId } = route.params;
+
+  const { availabilities: liveAvailabilities } = useRoomAvailability();
 
   const building = normalizeBuildingName(rawBuilding);
+
+  const liveStatus: RoomStatus = useMemo(() => {
+    if (
+      roomDbId != null &&
+      Object.prototype.hasOwnProperty.call(liveAvailabilities, roomDbId)
+    ) {
+      return liveAvailabilities[roomDbId] ? "available" : "occupied";
+    }
+    return status;
+  }, [roomDbId, liveAvailabilities, status]);
 
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
@@ -209,7 +223,7 @@ export default function RoomDetailsScreen() {
     }
   };
 
-  const statusMeta = getStatusMeta(status);
+  const statusMeta = getStatusMeta(liveStatus);
 
   const toMapId = (b: CanonicalBuildingName) => {
     if (b === "Stocker Center") return "stocker";

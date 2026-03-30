@@ -44,6 +44,10 @@ import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList, MapBuildingId } from "@/navigation/AppNavigator";
 import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
+import {
+  mergeRoomAvailability,
+  useRoomAvailability,
+} from "@/context/RoomAvailabilityContext";
 import { buildingsAPI } from "@/utils/api";
 import type { Building, Room } from "@/utils/api";
 import InfoTooltip from "@/components/InfoTooltip";
@@ -180,6 +184,8 @@ export default function FindARoomScreen() {
 
   const suppressTilePressRef = useRef(false);
 
+  const { availabilities: liveAvailabilities } = useRoomAvailability();
+
   const FLOOR_PLANS: Record<string, any> = {
     "Stocker Center": require("@/assets/images/stocker_floorplan.png"),
     "Academic Research Center": require("@/assets/images/arc_floorplan.png"),
@@ -255,7 +261,12 @@ export default function FindARoomScreen() {
     }
   };
 
-  const roomItems: RoomItem[] = rooms.map((room) => ({
+  const roomsLive = useMemo(
+    () => rooms.map((r) => mergeRoomAvailability(r, liveAvailabilities)),
+    [rooms, liveAvailabilities],
+  );
+
+  const roomItems: RoomItem[] = roomsLive.map((room) => ({
     id: room.room_number,
     status: getRoomStatus(room.is_available),
     roomId: room.id,
@@ -537,6 +548,7 @@ export default function FindARoomScreen() {
                                     ? "Alden Library"
                                     : "Stocker Center",
                                 roomId: item.id,
+                                roomDbId: item.roomId,
                                 status: item.status as
                                   | "available"
                                   | "occupied"

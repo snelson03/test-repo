@@ -28,6 +28,8 @@ export type RootStackParamList = {
   RoomDetails: {
     building: 'Stocker Center' | 'ARC' | 'Alden Library';
     roomId: string;
+    /** Database room id for live availability on the details screen */
+    roomDbId?: number;
     status: 'available' | 'occupied' | 'offline';
   };
 };
