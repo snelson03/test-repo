@@ -1,4 +1,3 @@
-// app/_layout.tsx
 import React, { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
@@ -10,6 +9,8 @@ import { SessionExpiryProvider } from '@/context/SessionExpiryContext';
 import { FavoritesProvider } from '@/context/FavoritesContext';
 import { RoomAvailabilityProvider } from '@/context/RoomAvailabilityContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { requestNotificationPermission } from '@/utils/notifications';
+import { useRoomAvailabilityNotifications } from '@/hooks/useRoomAvailabilityNotifications';
 import 'react-native-gesture-handler';
 
 // Prevent splash screen from auto-hiding before fonts are loaded
@@ -18,6 +19,15 @@ SplashScreen.preventAutoHideAsync();
 function ThemedApp() {
   const { isDark } = useTheme();
   const pathname = usePathname();
+
+  console.log('THEMED APP IS RUNNING');
+
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
+
+  useRoomAvailabilityNotifications();
+
   return (
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />

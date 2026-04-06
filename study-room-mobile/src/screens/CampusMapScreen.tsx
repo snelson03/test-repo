@@ -941,7 +941,7 @@ function createStyles(c: ThemeColors) {
       width: "100%",
       justifyContent: "flex-start",
       alignItems: "flex-start",
-      marginTop: 25,
+      marginTop: 35,
       marginBottom: 8,
       paddingLeft: 8,
     },
