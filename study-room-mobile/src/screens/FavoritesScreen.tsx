@@ -31,6 +31,7 @@ import {
   WEB_CONTENT_PADDING_TOP,
   WEB_CONTENT_PADDING_BOTTOM,
   WEB_SIDEBAR_PADDING_H,
+  WEB_DESKTOP_LAYOUT_MIN_WIDTH,
   PAGE_CONTENT_PADDING_H,
   CARD_PADDING,
   CARD_MARGIN_BOTTOM,
@@ -84,8 +85,9 @@ export default function FavoritesScreen() {
 
   const [editMode, setEditMode] = useState(false);
 
-  const isWeb = Platform.OS === "web";
   const { width } = useWindowDimensions();
+  const isWebDesktop =
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
   const webPagePad = width < 480 ? 12 : 0;
   const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
@@ -100,10 +102,10 @@ export default function FavoritesScreen() {
   ];
 
   const displayFavName = (name: string) => {
-    if (!isWeb && name.startsWith("Academic Research Center")) {
+    if (!isWebDesktop && name.startsWith("Academic Research Center")) {
       return name.replace("Academic Research Center", "ARC");
     }
-    if (!isWeb && name.startsWith("Stocker Center")) {
+    if (!isWebDesktop && name.startsWith("Stocker Center")) {
       return name.replace("Stocker Center", "Stocker");
     }
     return name;
@@ -261,7 +263,7 @@ export default function FavoritesScreen() {
         })
       )}
 
-    {!isWeb && (
+    {!isWebDesktop && (
       <View style={styles.mobileNoteCard}>
         <Text style={styles.mobileNoteTitle}>LIVE ROOM UPDATES</Text>
         <Text style={styles.mobileNoteText}>{rightSideMessage}</Text>
@@ -272,10 +274,10 @@ export default function FavoritesScreen() {
 
   const screenContent = (
     <View
-      style={[styles.container, isWeb && styles.webContent]}
+      style={[styles.container, isWebDesktop && styles.webContent]}
       accessibilityLabel="Favorites screen"
     >
-      {isWeb ? (
+      {isWebDesktop ? (
         <>
           <View style={styles.webSplitLayout}>
             <View style={styles.webLeftPane}>
@@ -327,7 +329,7 @@ export default function FavoritesScreen() {
     </View>
   );
 
-  if (isWeb) {
+  if (isWebDesktop) {
     return (
       <View style={styles.webPage} accessibilityLabel="Favorites screen">
         <LinearGradient

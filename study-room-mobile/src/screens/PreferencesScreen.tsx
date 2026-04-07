@@ -14,6 +14,7 @@ import {
   TextInput,
   Platform,
   Image,
+  useWindowDimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons, Feather } from "@expo/vector-icons";
@@ -34,6 +35,7 @@ import {
   WEB_NAV_ITEM_MARGIN_BOTTOM,
   WEB_CONTENT_PADDING_H,
   WEB_SIDEBAR_PADDING_H,
+  WEB_DESKTOP_LAYOUT_MIN_WIDTH,
   PAGE_CONTENT_PADDING_H,
   CARD_PADDING,
   CARD_BORDER_RADIUS,
@@ -102,7 +104,9 @@ export default function PreferencesScreen() {
 
   const route = useRoute<RouteProp<RootStackParamList, "Preferences">>();
   const { colors, mode, setMode } = useTheme();
-  const isWeb = Platform.OS === "web";
+  const { width } = useWindowDimensions();
+  const isWebDesktop =
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
   const menuItems = [
     { name: "Home", route: "Home" as const },
@@ -272,10 +276,10 @@ export default function PreferencesScreen() {
 
   const mainContent = (
     <View
-      style={[styles.container, isWeb && styles.webContent]}
+      style={[styles.container, isWebDesktop && styles.webContent]}
       accessibilityLabel="Preferences content"
     >
-      {isWeb ? (
+      {isWebDesktop ? (
         <View style={styles.webHeaderRow}>
           <Text style={styles.webPageTitle} accessibilityRole="header">
             PREFERENCES
@@ -313,7 +317,7 @@ export default function PreferencesScreen() {
       <View
         style={[
           styles.contentArea,
-          { paddingHorizontal: isWeb ? 0 : PAGE_CONTENT_PADDING_H },
+          { paddingHorizontal: isWebDesktop ? 0 : PAGE_CONTENT_PADDING_H },
         ]}
       >
         <View style={styles.subHeader}>
@@ -374,7 +378,7 @@ export default function PreferencesScreen() {
           style={styles.contentScroll}
           contentContainerStyle={[
             styles.scrollContent,
-            isWeb && styles.scrollContentWeb,
+            isWebDesktop && styles.scrollContentWeb,
           ]}
           keyboardShouldPersistTaps="handled"
           accessibilityLabel="Preferences options"
@@ -1019,7 +1023,7 @@ export default function PreferencesScreen() {
     </View>
   );
 
-  if (isWeb) {
+  if (isWebDesktop) {
     return (
       <View style={styles.webPage} accessibilityLabel="Preferences screen">
         <LinearGradient

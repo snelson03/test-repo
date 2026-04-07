@@ -38,6 +38,7 @@ import {
   WEB_CONTENT_PADDING_TOP,
   WEB_CONTENT_PADDING_BOTTOM,
   WEB_SIDEBAR_PADDING_H,
+  WEB_DESKTOP_LAYOUT_MIN_WIDTH,
   PAGE_CONTENT_PADDING_H,
   CARD_PADDING,
   CARD_BORDER_RADIUS,
@@ -164,8 +165,9 @@ export default function RoomDetailsScreen() {
 
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web";
-  const styles = useMemo(() => createStyles(colors, isWeb), [colors, isWeb]);
+  const isWebDesktop =
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
+  const styles = useMemo(() => createStyles(colors, isWebDesktop), [colors, isWebDesktop]);
 
   const webPagePad = width < 480 ? 12 : 0;
   const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
@@ -195,13 +197,13 @@ export default function RoomDetailsScreen() {
   const floor = getFloorFromRoom(roomId);
 
   // shorten long building names on mobile so they fit better
-  const displayBuildingName = !isWeb
-  ? building === "Academic & Research Center"
-    ? "ARC"
-    : building === "Stocker Center"
-    ? "Stocker"
-    : building
-  : building;
+  const displayBuildingName = !isWebDesktop
+    ? building === "Academic & Research Center"
+      ? "ARC"
+      : building === "Stocker Center"
+        ? "Stocker"
+        : building
+    : building;
 
   const getStatusMeta = (stat: RoomStatus) => {
     switch (stat) {
@@ -309,7 +311,7 @@ export default function RoomDetailsScreen() {
   const MapButton = (
     <ShadowWrap style={styles.mapButtonWrap}>
       <TouchableOpacity
-        style={isWeb ? styles.webMapButton : styles.mobileMapButton}
+        style={isWebDesktop ? styles.webMapButton : styles.mobileMapButton}
         onPress={() =>
           navigation.navigate("CampusMap", {
             selectedBuildingId: toMapId(building),
@@ -324,15 +326,15 @@ export default function RoomDetailsScreen() {
           accessibilityElementsHidden
         />
 
-        <Text style={isWeb ? styles.webMapButtonText : styles.mobileMapButtonText}>
+        <Text style={isWebDesktop ? styles.webMapButtonText : styles.mobileMapButtonText}>
           VIEW ON MAP
         </Text>
 
         <Ionicons
           name="location-sharp"
-          size={isWeb ? 22 : 24}
+          size={isWebDesktop ? 22 : 24}
           color={colors.white}
-          style={isWeb ? styles.webMapIcon : undefined}
+          style={isWebDesktop ? styles.webMapIcon : undefined}
           accessibilityElementsHidden
           importantForAccessibility="no"
         />
@@ -390,7 +392,7 @@ export default function RoomDetailsScreen() {
     </GrayCard>
   );
 
-  if (!isWeb) {
+  if (!isWebDesktop) {
     return (
       <View style={styles.mobilePage} accessibilityLabel="Room details screen">
         <LinearGradient
@@ -521,10 +523,10 @@ export default function RoomDetailsScreen() {
   );
 }
 
-function createStyles(c: ThemeColors, isWeb: boolean) {
+function createStyles(c: ThemeColors, isWebDesktop: boolean) {
   return StyleSheet.create({
     shadowWrap: {
-      borderRadius: isWeb ? CARD_BORDER_RADIUS : 0,
+      borderRadius: isWebDesktop ? CARD_BORDER_RADIUS : 0,
       marginBottom: 18,
       backgroundColor: "transparent",
       shadowColor: "#000",
@@ -538,7 +540,7 @@ function createStyles(c: ThemeColors, isWeb: boolean) {
       marginTop: 34,
       marginBottom: 0,
       alignSelf: "center",
-      width: isWeb ? undefined : "100%",
+      width: isWebDesktop ? undefined : "100%",
       borderRadius: CARD_BORDER_RADIUS,
     },
 
@@ -615,13 +617,13 @@ function createStyles(c: ThemeColors, isWeb: boolean) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "flex-end",
-      minWidth: isWeb ? 120 : 110,
+      minWidth: isWebDesktop ? 120 : 110,
       marginLeft: 12,
     },
 
     buildingNameInline: {
       fontFamily: FONT_HEADING,
-      fontSize: isWeb ? FONT_SIZE_SECTION + 4 : FONT_SIZE_SECTION + 2,
+      fontSize: isWebDesktop ? FONT_SIZE_SECTION + 4 : FONT_SIZE_SECTION + 2,
       color: c.white,
       letterSpacing: 0.4,
     },
@@ -635,20 +637,20 @@ function createStyles(c: ThemeColors, isWeb: boolean) {
 
     statusText: {
       fontFamily: FONT_BODY,
-      fontSize: isWeb ? FONT_SIZE_BODY + 3 : FONT_SIZE_BODY + 1,
+      fontSize: isWebDesktop ? FONT_SIZE_BODY + 3 : FONT_SIZE_BODY + 1,
       color: c.white,
       textAlign: "left",
     },
 
     infoBox: {
-      paddingVertical: isWeb ? 22 : SPACE_MD,
-      paddingHorizontal: isWeb ? 22 : CARD_PADDING - 2,
+      paddingVertical: isWebDesktop ? 22 : SPACE_MD,
+      paddingHorizontal: isWebDesktop ? 22 : CARD_PADDING - 2,
       borderRadius: CARD_BORDER_RADIUS,
     },
 
     sectionTitle: {
       fontFamily: FONT_HEADING,
-      fontSize: isWeb ? FONT_SIZE_SECTION + 4 : FONT_SIZE_SECTION,
+      fontSize: isWebDesktop ? FONT_SIZE_SECTION + 4 : FONT_SIZE_SECTION,
       color: c.primary,
       marginBottom: SPACE_MD,
     },
@@ -657,7 +659,7 @@ function createStyles(c: ThemeColors, isWeb: boolean) {
       fontFamily: FONT_BODY,
       fontWeight: "700",
       color: c.primary,
-      fontSize: isWeb ? FONT_SIZE_BODY + 4 : FONT_SIZE_BODY,
+      fontSize: isWebDesktop ? FONT_SIZE_BODY + 4 : FONT_SIZE_BODY,
       marginBottom: 4,
     },
 
@@ -665,28 +667,28 @@ function createStyles(c: ThemeColors, isWeb: boolean) {
       fontFamily: FONT_BODY,
       fontWeight: "400",
       color: c.primary,
-      fontSize: isWeb ? FONT_SIZE_BODY + 2 : FONT_SIZE_BODY - 1,
-      lineHeight: isWeb ? 34 : 25,
+      fontSize: isWebDesktop ? FONT_SIZE_BODY + 2 : FONT_SIZE_BODY - 1,
+      lineHeight: isWebDesktop ? 34 : 25,
     },
 
     boldText: {
       fontFamily: FONT_BODY,
       fontWeight: "700",
       color: c.primary,
-      fontSize: isWeb ? FONT_SIZE_BODY + 4 : FONT_SIZE_BODY,
+      fontSize: isWebDesktop ? FONT_SIZE_BODY + 4 : FONT_SIZE_BODY,
       marginBottom: 4,
     },
 
     subText: {
       fontFamily: FONT_BODY,
       color: c.primary,
-      fontSize: isWeb ? FONT_SIZE_BODY + 2 : FONT_SIZE_BODY - 1,
-      lineHeight: isWeb ? 34 : 25,
+      fontSize: isWebDesktop ? FONT_SIZE_BODY + 2 : FONT_SIZE_BODY - 1,
+      lineHeight: isWebDesktop ? 34 : 25,
     },
 
     floorPlanWrapper: {
       width: "100%",
-      aspectRatio: isWeb ? 1.45 : 1.2,
+      aspectRatio: isWebDesktop ? 1.45 : 1.2,
       borderRadius: CARD_BORDER_RADIUS,
       overflow: "hidden",
       backgroundColor: c.white,

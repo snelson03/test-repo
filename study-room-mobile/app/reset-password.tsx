@@ -32,6 +32,7 @@ import {
   LABEL_MARGIN_BOTTOM,
   SPACE_LG,
   SPACE_SM,
+  WEB_DESKTOP_LAYOUT_MIN_WIDTH,
 } from "@/constants/typography";
 
 import { useTheme } from "@/context/ThemeContext";
@@ -49,7 +50,8 @@ export default function ResetPasswordPage() {
   const token = typeof params.token === "string" ? params.token : "";
 
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web";
+  const isWebDesktop =
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
   const webMaxWidth = 480;
   const webCardWidth = Math.min(width - 40, webMaxWidth);
@@ -102,16 +104,16 @@ export default function ResetPasswordPage() {
     <ScrollView
       contentContainerStyle={[
         styles.container,
-        isWeb && styles.containerWeb,
+        isWebDesktop && styles.containerWeb,
       ]}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={isWeb ? { width: webCardWidth } : undefined}>
+      <View style={isWebDesktop ? { width: webCardWidth } : undefined}>
         {/* Logo */}
         <Animated.View style={{ opacity: fadeAnim }}>
           <Image
             source={require("@/assets/images/bf_logo.png")}
-            style={[styles.logo, isWeb && styles.logoWeb]}
+            style={[styles.logo, isWebDesktop && styles.logoWeb]}
             resizeMode="contain"
           />
         </Animated.View>

@@ -39,6 +39,7 @@ import {
   CARD_BORDER_RADIUS,
   SPACE_LG,
   SPACE_SM,
+  WEB_DESKTOP_LAYOUT_MIN_WIDTH,
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
@@ -55,7 +56,8 @@ export default function CreateAccountScreen() {
 
   // used for web sizing so the form doesn't stretch across the whole screen
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web";
+  const isWebDesktop =
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
   // form fields
   const [name, setName] = useState("");
@@ -129,16 +131,16 @@ export default function CreateAccountScreen() {
     <ScrollView
       contentContainerStyle={[
         styles.scrollContent,
-        isWeb && styles.scrollContentWeb, // only apply these changes on web
+        isWebDesktop && styles.scrollContentWeb,
       ]}
       style={{ flex: 1, backgroundColor: colors.primary }}
       keyboardShouldPersistTaps="handled"
       accessibilityLabel="Create account screen"
     >
       {/* on web, wrap the content in a fixed-width container so it doesn’t stretch */}
-      <View style={isWeb ? { width: webCardWidth } : undefined}>
+      <View style={isWebDesktop ? { width: webCardWidth } : undefined}>
         <View
-          style={[styles.container, isWeb && styles.containerWeb]}
+          style={[styles.container, isWebDesktop && styles.containerWeb]}
           accessibilityLabel="Create account form"
         >
           {/* Logo */}
@@ -262,7 +264,7 @@ export default function CreateAccountScreen() {
             accessibilityLabel="Return to login"
             accessibilityHint="Goes back to the login screen"
           >
-            <Text style={[styles.returnText, isWeb && styles.returnTextWeb]}>
+            <Text style={[styles.returnText, isWebDesktop && styles.returnTextWeb]}>
               Return to Login
             </Text>
           </TouchableOpacity>

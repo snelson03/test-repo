@@ -39,6 +39,7 @@ import {
   LABEL_MARGIN_BOTTOM,
   SPACE_LG,
   SPACE_SM,
+  WEB_DESKTOP_LAYOUT_MIN_WIDTH,
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { useUser } from "@/context/UserContext";
@@ -61,7 +62,8 @@ export default function LoginScreen() {
 
   // used for web sizing so it can be centered and not stretched across the screen
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web";
+  const isWebDesktop =
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
   // form fields
   const [email, setEmail] = useState("");
@@ -136,14 +138,14 @@ export default function LoginScreen() {
     <ScrollView
       contentContainerStyle={[
         styles.container,
-        isWeb && styles.containerWeb, // only apply these changes on web
+        isWebDesktop && styles.containerWeb,
       ]}
       keyboardShouldPersistTaps="handled"
       accessibilityLabel="Login screen"
     >
       {/* on web, wrap the content in a fixed-width container so it doesn’t stretch */}
       <View
-        style={isWeb ? { width: webCardWidth } : undefined}
+        style={isWebDesktop ? { width: webCardWidth } : undefined}
         accessibilityLabel="Login form"
       >
         {/* Logo */}
@@ -153,7 +155,7 @@ export default function LoginScreen() {
         >
           <Image
             source={require("@/assets/images/bf_logo.png")}
-            style={[styles.logo, isWeb && styles.logoWeb]} // only adjust logo sizing on web
+            style={[styles.logo, isWebDesktop && styles.logoWeb]}
             resizeMode="contain"
             accessibilityRole="image"
             accessibilityLabel="Bobcat Finder logo"

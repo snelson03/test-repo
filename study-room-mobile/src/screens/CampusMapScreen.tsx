@@ -34,6 +34,7 @@ import {
   WEB_NAV_ITEM_MARGIN_BOTTOM,
   WEB_CONTENT_PADDING_H,
   WEB_SIDEBAR_PADDING_H,
+  WEB_DESKTOP_LAYOUT_MIN_WIDTH,
   PAGE_CONTENT_PADDING_H,
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
@@ -67,7 +68,6 @@ export default function CampusMapScreen() {
   useRegisterSessionExpiryNavigation();
 
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const scrollViewMainRef = useRef<ScrollView | null>(null);
 
@@ -78,8 +78,13 @@ export default function CampusMapScreen() {
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
 
-  // sidebar only on web
-  const isWeb = Platform.OS === "web";
+  const isWebDesktop =
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
+
+  const styles = useMemo(
+    () => createStyles(colors, isWebDesktop),
+    [colors, isWebDesktop],
+  );
   const menuItems = [
     { name: "Home", route: "Home" as const },
     { name: "Find a Room", route: "FindRoom" as const },
@@ -108,7 +113,9 @@ export default function CampusMapScreen() {
   const MAX_ZOOM = 3;
 
   const [zoom, setZoom] = useState<number>(
-    Platform.OS === "web" ? webDefaultZoom : mobileDefaultZoom
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH
+      ? webDefaultZoom
+      : mobileDefaultZoom
   );
   const [pan, setPan] = useState({ x: 0, y: 0 });
 
@@ -166,7 +173,7 @@ export default function CampusMapScreen() {
   }, [buildings]);
 
   // taller map for web and bigger on mobile
-  const mapHeight = isWide ? (isWeb ? 650 : 930) : 430;
+  const mapHeight = isWide ? (isWebDesktop ? 650 : 930) : 430;
 
   const clamp = (v: number, min: number, max: number) =>
     Math.max(min, Math.min(max, v));
@@ -390,7 +397,7 @@ const getPanBounds = (nextZoom: number) => {
       }}
       accessibilityLabel="Campus map content"
     >
-      {isWeb && (
+      {isWebDesktop && (
         <View style={styles.webHeaderRow}>
           <Text style={styles.webPageTitle}>CAMPUS MAP</Text>
         </View>
@@ -472,7 +479,9 @@ const getPanBounds = (nextZoom: number) => {
                     <TouchableOpacity
                       style={styles.zoomBtn}
                       onPress={() =>
-                        setZoomSafe(isWeb ? webDefaultZoom : mobileDefaultZoom)
+                        setZoomSafe(
+                          isWebDesktop ? webDefaultZoom : mobileDefaultZoom,
+                        )
                       }
                       activeOpacity={0.85}
                       accessibilityRole="button"
@@ -656,7 +665,7 @@ const getPanBounds = (nextZoom: number) => {
                               accessibilityHint="Opens Find a Room filtered to this building"
                             >
                               <Text style={styles.takeMeThereText}>
-                                {Platform.OS === "web" ? "TAKE ME THERE" : "SEE ROOMS"}
+                                {isWebDesktop ? "TAKE ME THERE" : "SEE ROOMS"}
                               </Text>
                             </TouchableOpacity>
                           </HoverTooltip>
@@ -752,7 +761,7 @@ const getPanBounds = (nextZoom: number) => {
     </ScrollView>
   );
 
-  if (!isWeb) {
+  if (!isWebDesktop) {
     return (
       <View style={{ flex: 1 }}>
         {/* MOBILE HEADER */}
@@ -848,7 +857,7 @@ const getPanBounds = (nextZoom: number) => {
   );
 }
 
-function createStyles(c: ThemeColors) {
+function createStyles(c: ThemeColors, isWebDesktop: boolean) {
   return StyleSheet.create({
     // Web styles
     webPage: {
@@ -1078,8 +1087,8 @@ function createStyles(c: ThemeColors) {
     legend: {
       position: "absolute",
       left: 15,
-      right: Platform.OS === "web" ? 110 : 15,
-      bottom: Platform.OS === "web" ? 25 : 10,
+      right: isWebDesktop ? 110 : 15,
+      bottom: isWebDesktop ? 25 : 10,
       zIndex: 20,
       backgroundColor: "rgba(5, 71, 42, 0.75)",
       borderWidth: 1.5,
@@ -1128,8 +1137,8 @@ function createStyles(c: ThemeColors) {
     legendRowWrap: {
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: Platform.OS === "web" ? "space-between" : "flex-start",
-      gap: Platform.OS === "web" ? 10 : 6,
+      justifyContent: isWebDesktop ? "space-between" : "flex-start",
+      gap: isWebDesktop ? 10 : 6,
     },
 
     legendItemMain: {
@@ -1147,7 +1156,7 @@ function createStyles(c: ThemeColors) {
       borderRadius: 6,
       alignItems: "center",
       justifyContent: "center",
-      marginLeft: Platform.OS === "web" ? 0 : -67,
+      marginLeft: isWebDesktop ? 0 : -67,
     },
 
     takeMeThereText: {
@@ -1169,7 +1178,7 @@ function createStyles(c: ThemeColors) {
       elevation: 12,
       borderRadius: 0,
       overflow: "visible",
-      ...(Platform.OS === "web"
+      ...(isWebDesktop
         ? {
             boxShadow: "0px 14px 30px rgba(0, 0, 0, 0.22)",
           }

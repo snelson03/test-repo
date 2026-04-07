@@ -33,6 +33,7 @@ import {
   WEB_CONTENT_PADDING_BOTTOM,
   WEB_CONTENT_PADDING_H,
   WEB_SIDEBAR_PADDING_H,
+  WEB_DESKTOP_LAYOUT_MIN_WIDTH,
   PAGE_CONTENT_PADDING_H,
   CARD_PADDING,
   CARD_MARGIN_BOTTOM,
@@ -95,10 +96,10 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const name = (user as any)?.name ?? "User";
 
-  const isWeb = Platform.OS === "web";
-  const styles = useMemo(() => createStyles(colors), [colors]);
-
   const { width, height } = useWindowDimensions();
+  const isWebDesktop =
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const pagePad = PAGE_CONTENT_PADDING_H;
 
   const [favoriteRooms, setFavoriteRooms] = useState<Room[]>([]); // real time favorites data
@@ -110,7 +111,8 @@ export default function HomeScreen() {
   >({});
 
   // Web content width accounts for sidebar and max width
-  const webAvailable = width - WEB_SIDEBAR_WIDTH - pagePad * 2;
+  const webAvailable =
+    width - (isWebDesktop ? WEB_SIDEBAR_WIDTH : 0) - pagePad * 2;
   const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
 
   const { favorites } = useFavorites() as {
@@ -142,7 +144,7 @@ export default function HomeScreen() {
   });
   // just ARC on IOS to fix formatting issue
   const displayName = (name: string) => {
-    if (Platform.OS !== "web" && name === "Academic Research Center") {
+    if (!isWebDesktop && name === "Academic Research Center") {
       return "ARC";
     }
     return name;
@@ -336,8 +338,8 @@ export default function HomeScreen() {
   }, []);
 
 
-  // WEB VERSION
-  if (isWeb) {
+  // Desktop web: sidebar + top bar. Narrow web uses the mobile layout below.
+  if (isWebDesktop) {
     return (
       <View style={styles.webPage} accessibilityLabel="Home screen">
         {/* top bar */}

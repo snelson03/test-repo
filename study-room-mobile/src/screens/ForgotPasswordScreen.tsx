@@ -33,6 +33,7 @@ import {
   LABEL_MARGIN_BOTTOM,
   SPACE_LG,
   SPACE_SM,
+  WEB_DESKTOP_LAYOUT_MIN_WIDTH,
 } from "@/constants/typography";
 import { useTheme } from "@/context/ThemeContext";
 import { RootStackParamList } from "@/navigation/AppNavigator";
@@ -49,7 +50,8 @@ export default function ForgotPasswordScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web";
+  const isWebDesktop =
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -97,13 +99,13 @@ export default function ForgotPasswordScreen() {
     <ScrollView
       contentContainerStyle={[
         styles.container,
-        isWeb && styles.containerWeb,
+        isWebDesktop && styles.containerWeb,
       ]}
       keyboardShouldPersistTaps="handled"
       accessibilityLabel="Forgot password screen"
     >
       <View
-        style={isWeb ? { width: webCardWidth } : undefined}
+        style={isWebDesktop ? { width: webCardWidth } : undefined}
         accessibilityLabel="Forgot password form"
       >
         <Animated.View
@@ -112,7 +114,7 @@ export default function ForgotPasswordScreen() {
         >
           <Image
             source={require("@/assets/images/bf_logo.png")}
-            style={[styles.logo, isWeb && styles.logoWeb]}
+            style={[styles.logo, isWebDesktop && styles.logoWeb]}
             resizeMode="contain"
             accessibilityRole="image"
             accessibilityLabel="Bobcat Finder logo"

@@ -33,6 +33,7 @@ import {
   WEB_CONTENT_PADDING_BOTTOM,
   WEB_CONTENT_PADDING_H,
   WEB_SIDEBAR_PADDING_H,
+  WEB_DESKTOP_LAYOUT_MIN_WIDTH,
   PAGE_CONTENT_PADDING_H,
   CARD_BORDER_RADIUS,
   BUTTON_BORDER_RADIUS,
@@ -116,17 +117,17 @@ export default function FindARoomScreen() {
   const buildingIdFromMap = route.params?.buildingIdFromMap;
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
-  const styles = useMemo(() => createStyles(colors), [colors]);
+  const isWebDesktop =
+    Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
+  const styles = useMemo(() => createStyles(colors, isWebDesktop), [colors, isWebDesktop]);
 
   const [gridWidth, setGridWidth] = useState(0);
-
-  const isWeb = Platform.OS === "web";
 
   const webPagePad = width < 480 ? 12 : 0;
   const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
   const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
 
-  const layoutWidth = isWeb ? contentWidthWeb : width;
+  const layoutWidth = isWebDesktop ? contentWidthWeb : width;
 
   const pagePad =
     layoutWidth < 480 ? 12 :
@@ -172,7 +173,7 @@ export default function FindARoomScreen() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<"rooms" | "floorPlan">("rooms");
 
-  const mobileSidePad = isWeb ? 8 : pagePad + 14;
+  const mobileSidePad = isWebDesktop ? 8 : pagePad + 14;
 
   const menuItems: WebMenuItem[] = [
     { name: "Home", route: "Home" },
@@ -295,7 +296,7 @@ export default function FindARoomScreen() {
 
   const pageContent = (
     <View
-      style={[styles.mainContent, isWeb && styles.webContent]}
+      style={[styles.mainContent, isWebDesktop && styles.webContent]}
       accessibilityLabel="Find a room screen"
     >
       <ScrollView
@@ -303,14 +304,14 @@ export default function FindARoomScreen() {
         contentContainerStyle={{
           alignItems: "center",
           paddingBottom: 40,
-          paddingHorizontal: isWeb ? pagePad : 0,
+          paddingHorizontal: isWebDesktop ? pagePad : 0,
         }}
         keyboardShouldPersistTaps="handled"
         accessibilityLabel="Find a room content"
       >
         <View style={{ width: "100%" }}>
           <View style={styles.headerWrapper}>
-            {isWeb ? (
+            {isWebDesktop ? (
               <View style={styles.webHeaderRow}>
                 <Text style={styles.webPageTitle} accessibilityRole="header">
                   FIND A ROOM
@@ -668,7 +669,7 @@ export default function FindARoomScreen() {
     </View>
   );
 
-  if (isWeb) {
+  if (isWebDesktop) {
     return (
       <View style={styles.webPage} accessibilityLabel="Find a room screen">
         <LinearGradient
@@ -744,7 +745,7 @@ export default function FindARoomScreen() {
   return pageContent;
 }
 
-function createStyles(c: ThemeColors) {
+function createStyles(c: ThemeColors, isWebDesktop: boolean) {
   return StyleSheet.create({
     page: {
       flex: 1,
@@ -931,7 +932,7 @@ function createStyles(c: ThemeColors) {
 
     floorPlanImage: {
       width: "100%",
-      height: Platform.OS === "web" ? 650 : 520,
+      height: isWebDesktop ? 650 : 520,
       alignSelf: "center",
     },
 
@@ -1070,8 +1071,8 @@ function createStyles(c: ThemeColors) {
     },
 
     zoomableFloorPlanImage: {
-      width: Platform.OS === "web" ? 1200 : 900,
-      height: Platform.OS === "web" ? 900 : 700,
+      width: isWebDesktop ? 1200 : 900,
+      height: isWebDesktop ? 900 : 700,
       alignSelf: "center",
     },
   });

@@ -62,6 +62,8 @@ export const INPUT_MARGIN_BOTTOM = 16;
 export const LABEL_MARGIN_BOTTOM = 6;
 
 // Web layout (shared with screens)
+/** Viewport width at or above this uses desktop web chrome (sidebar + top bar). Below uses the same layout as native mobile. */
+export const WEB_DESKTOP_LAYOUT_MIN_WIDTH = 900;
 export const WEB_SIDEBAR_WIDTH = 220;
 export const WEB_TOPBAR_HEIGHT = 170;
 export const WEB_NAV_ITEM_PADDING_V = 14;
