@@ -1156,7 +1156,7 @@ function createStyles(c: ThemeColors, isWebDesktop: boolean) {
       borderRadius: 6,
       alignItems: "center",
       justifyContent: "center",
-      marginLeft: isWebDesktop ? 0 : -67,
+      marginLeft: 0,
     },
 
     takeMeThereText: {
