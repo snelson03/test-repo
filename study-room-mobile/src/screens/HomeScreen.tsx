@@ -338,13 +338,8 @@ export default function HomeScreen() {
   }, []);
 
 
-<<<<<<< HEAD
   // Desktop web: sidebar + top bar. Narrow web uses the mobile layout below.
   if (isWebDesktop) {
-=======
-  // WEB VERSION
-  if (isWeb) {
->>>>>>> f4af27e (add realtime database pull)
     return (
       <View style={styles.webPage} accessibilityLabel="Home screen">
         {/* top bar */}
@@ -665,32 +660,10 @@ export default function HomeScreen() {
                               No favorites added yet
                             </Text>
                           ) : (
-<<<<<<< ours
-<<<<<<< HEAD
-=======
->>>>>>> theirs
                             favoriteRoomsLive.map((room: any, idx: number) => {
                               const buildingName = String(
                                 room.building_name ?? room.buildingName ?? ""
                               );
-<<<<<<< ours
-=======
-                            favoriteRoomsLive.map((room: any, idx: number) => (
-                              <LinearGradient
-                                key={String(
-                                  room.id ??
-                                    `${room.building_name}-${room.room_number}-${idx}`
-                                )}
-                                colors={["#0F7046", "#0D6440"]}
-                                style={styles.favItem}
-                              >
-                                <Text style={styles.favItemText}>
-                                  {String(room.building_name ?? "").toUpperCase()}{" "}
-                                  {room.room_number}
-                                </Text>
->>>>>>> f4af27e (add realtime database pull)
-=======
->>>>>>> theirs
 
                               return (
                                 <LinearGradient
@@ -811,16 +784,7 @@ export default function HomeScreen() {
                   {favoriteRoomsLive.length === 0 ? (
                     <Text style={styles.emptyText}>No favorites added yet</Text>
                   ) : (
-<<<<<<< ours
-<<<<<<< HEAD
                     favoriteRoomsLive.map((room: any) => {
-=======
-<<<<<<< HEAD
-                    favoriteRooms.map((room: any) => {
->>>>>>> f4af27e (add realtime database pull)
-=======
-                    favoriteRoomsLive.map((room: any) => {
->>>>>>> theirs
                       const buildingName = String(
                         room.building_name ?? room.buildingName ?? ""
                       );
@@ -836,52 +800,8 @@ export default function HomeScreen() {
                           style={styles.favItem}
                         >
                           <Text style={styles.favItemText}>
-<<<<<<< ours
-<<<<<<< HEAD
                             {displayName(buildingName).toUpperCase()}{" "}
                             {room.room_number}
-=======
-                            {displayName(buildingName).toUpperCase()} {room.room_number}
-=======
-                    favoriteRoomsLive.map((room) => (
-                      <LinearGradient
-                        key={String(
-                          (room as any).id ??
-                            (room as any).room_id ??
-                            `${(room as any).building_name}-${room.room_number}`
-                        )}
-                        colors={["#0F7046", "#0D6440"]}
-                        style={styles.favItem}
-                      >
-                        <Text style={styles.favItemText}>
-                          {displayName(
-                            String(
-                              (room as any).building_name ??
-                                (room as any).buildingName ??
-                                ""
-                            )
-                          ).toUpperCase()}{" "}
-                          {room.room_number}
-                        </Text>
-                        <View style={styles.favRight}>
-                          <View
-                            style={[
-                              styles.favstatusDot,
-                              {
-                                backgroundColor: room.is_available
-                                  ? colors.available
-                                  : colors.occupied,
-                              },
-                            ]}
-                          />
-                          <Text style={styles.favNumber}>
-                            {room.is_available ? "Available" : "Unavailable"}
->>>>>>> 8faa99b (add realtime database pull)
->>>>>>> f4af27e (add realtime database pull)
-=======
-                            {displayName(buildingName).toUpperCase()}{" "}
-                            {room.room_number}
->>>>>>> theirs
                           </Text>
                           <View style={styles.favRight}>
                             <View
