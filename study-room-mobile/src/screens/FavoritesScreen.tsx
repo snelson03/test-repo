@@ -1,5 +1,4 @@
-// Favorites Screen File
-// matches the same web sidebar/top bar and mobile green header pattern
+// Displays and manages user's favorite rooms with live availability updates
 import React, { useState, useMemo } from "react";
 import { useRoomAvailability } from "@/context/RoomAvailabilityContext";
 import {
@@ -49,6 +48,7 @@ import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryConte
 import InfoTooltip from "@/components/InfoTooltip";
 import HoverTooltip from "@/components/HoverTooltip";
 
+// Type definition for a favorited room item
 interface FavoriteRoom {
   name: string;
   status?: string;
@@ -71,6 +71,7 @@ export default function FavoritesScreen() {
     "Favorites"
   >;
 
+  // Navigation setup for Favorites screen
   const navigation = useNavigation<FavoritesNavProp>();
   useRegisterSessionExpiryNavigation();
 
@@ -86,10 +87,13 @@ export default function FavoritesScreen() {
   const [editMode, setEditMode] = useState(false);
 
   const { width } = useWindowDimensions();
+
+  // Determines layout (desktop vs mobile)
   const isWebDesktop =
     Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
   const webPagePad = width < 480 ? 12 : 0;
+  // Calculates usable content width for desktop layout
   const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
   const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
 
@@ -111,10 +115,12 @@ export default function FavoritesScreen() {
     return name;
   };
 
+  // Toggles edit mode (enables deleting favorites)
   const toggleEdit = () => {
     setEditMode((prev) => !prev);
   };
 
+  // Handles back navigation safely
   const handleGoBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -123,13 +129,14 @@ export default function FavoritesScreen() {
     }
   };
 
+  // Returns color based on room status
   const getStatusColor = (status?: string) => {
     if (status === "available") return colors.available;
     if (status === "occupied") return colors.occupied;
     return colors.offline;
   };
 
-  // this pulls the building and room number out of the favorite card name
+  // Extracts building name and room ID from formatted favorite string
   const parseFavoriteRoom = (name: string) => {
     const trimmed = name.trim();
 
@@ -154,6 +161,7 @@ export default function FavoritesScreen() {
     return null;
   };
 
+  // Determines current status using live availability data if available
   const liveStatusForFavorite = (item: FavoriteRoom): string => {
     const rid = item.roomId;
     if (
@@ -169,6 +177,7 @@ export default function FavoritesScreen() {
         : "offline";
   };
 
+  // Handles tapping a favorite room (navigates to RoomDetails unless editing)
   const handleRoomPress = (item: FavoriteRoom) => {
     if (editMode) return;
 
@@ -188,9 +197,11 @@ export default function FavoritesScreen() {
     } as never);
   };
 
+  // Informational message shown alongside favorites list
   const rightSideMessage =
     "Get live updates on your favorite rooms and quickly check availability before you head out.";
 
+  {/* Scrollable list of favorite rooms */}
   const favoritesList = (
     <ScrollView
       contentContainerStyle={styles.listContainer}
@@ -199,12 +210,14 @@ export default function FavoritesScreen() {
     >
       {favorites.length === 0 ? (
         <View
+          {/* Empty state when no favorites exist */}
           style={styles.emptyState}
           accessibilityLabel="No favorites message"
         >
           <Text style={styles.emptyMessage}>No favorites added yet.</Text>
         </View>
       ) : (
+        
         favorites.map((item: FavoriteRoom) => {
           const statusLabel = liveStatusForFavorite(item);
           const statusTitle =
@@ -243,6 +256,7 @@ export default function FavoritesScreen() {
                     {statusTitle}
                   </Text>
 
+                  {/* Delete button (only visible in edit mode) */}
                   {editMode && (
                     <HoverTooltip message="Remove favorite">
                       <TouchableOpacity
@@ -263,6 +277,7 @@ export default function FavoritesScreen() {
         })
       )}
 
+    /* Mobile-only informational note */}
     {!isWebDesktop && (
       <View style={styles.mobileNoteCard}>
         <Text style={styles.mobileNoteTitle}>LIVE ROOM UPDATES</Text>
@@ -272,14 +287,17 @@ export default function FavoritesScreen() {
     </ScrollView>
   );
 
+  {/* Main screen layout container */}
   const screenContent = (
     <View
       style={[styles.container, isWebDesktop && styles.webContent]}
       accessibilityLabel="Favorites screen"
     >
+      {/* Desktop layout with split view */}
       {isWebDesktop ? (
         <>
           <View style={styles.webSplitLayout}>
+            {/* Left pane: favorites list */}
             <View style={styles.webLeftPane}>
               <View style={styles.webHeaderRow}>
                 <Text style={styles.webPageTitle} accessibilityRole="header">
@@ -315,6 +333,7 @@ export default function FavoritesScreen() {
               {favoritesList}
             </View>
 
+            {/* Right pane: informational message */}
             <View style={styles.webRightPane}>
               <View style={styles.webNoteCard}>
                 <Text style={styles.webNoteTitle}>LIVE ROOM UPDATES</Text>
@@ -329,6 +348,7 @@ export default function FavoritesScreen() {
     </View>
   );
 
+  {/* Desktop layout with sidebar and top navigation */}
   if (isWebDesktop) {
     return (
       <View style={styles.webPage} accessibilityLabel="Favorites screen">
@@ -456,6 +476,7 @@ export default function FavoritesScreen() {
   );
 }
 
+// Style definitions for Favorites screen layout and components
 function createStyles(c: ThemeColors) {
   return StyleSheet.create({
     mobilePage: {

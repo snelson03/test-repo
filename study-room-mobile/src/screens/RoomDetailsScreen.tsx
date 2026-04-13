@@ -1,6 +1,4 @@
-// Room Details Screen file
-// Displays detailed info about a selected room such as location, restrictions, and floor plan.
-// Uses the same web top bar and sidebar pattern as the Favorites page and the same mobile green header style.
+// Displays detailed information for a selected room including status, location, restrictions, and floor plan
 
 import React, { useMemo } from "react";
 import { useRoomAvailability } from "@/context/RoomAvailabilityContext";
@@ -52,8 +50,10 @@ import { useTheme } from "@/context/ThemeContext";
 import InfoTooltip from "@/components/InfoTooltip";
 import HoverTooltip from "@/components/HoverTooltip";
 
+// Supported canonical building names used internally
 type CanonicalBuildingName = "Stocker Center" | "Academic & Research Center";
 
+// Possible incoming building name formats from navigation
 type IncomingBuildingName =
   | "Stocker Center"
   | "Academic & Research Center"
@@ -61,8 +61,10 @@ type IncomingBuildingName =
   | "ARC"
   | "Alden Library";
 
+// Room availability status values
 type RoomStatus = "available" | "occupied" | "offline";
 
+// Route parameters passed into this screen
 type RoomDetailsScreenRouteProp = {
   params: {
     building: IncomingBuildingName;
@@ -72,6 +74,7 @@ type RoomDetailsScreenRouteProp = {
   };
 };
 
+// Defines highlight box overlay for floor plan visualization
 type HighlightBox = {
   left: DimensionValue;
   top: DimensionValue;
@@ -88,11 +91,13 @@ type MenuRoute =
 
 const MAX_SCREEN_WIDTH = 1400;
 
+// Maps buildings to their respective floor plan images
 const FLOOR_PLAN_IMAGES: Record<CanonicalBuildingName, ImageSourcePropType> = {
   "Stocker Center": require("@/assets/images/stocker_floorplan.png"),
   "Academic & Research Center": require("@/assets/images/arc_floorplan.png"),
 };
 
+// Coordinates for highlighting specific rooms on floor plans
 const ROOM_HIGHLIGHTS: Record<string, HighlightBox> = {
   "Stocker Center-102": { left: "49.5%", top: "63.3%", width: "6.2%", height: "8.6%" },
   "Stocker Center-104": { left: "49.4%", top: "55.1%", width: "6.3%", height: "8.2%" },
@@ -120,6 +125,7 @@ const ROOM_HIGHLIGHTS: Record<string, HighlightBox> = {
   "Academic & Research Center-217": { left: "52%", top: "18%", width: "8%", height: "7%" },
 };
 
+// Normalizes various building name formats into a canonical form
 function normalizeBuildingName(name: string): CanonicalBuildingName {
   const value = name.trim().toLowerCase();
 
@@ -131,6 +137,7 @@ function normalizeBuildingName(name: string): CanonicalBuildingName {
   return "Stocker Center";
 }
 
+// Extracts floor number from room ID and converts to readable format
 function getFloorFromRoom(id: string): string {
   const floorNum = parseInt(id.charAt(0), 10);
 
@@ -142,17 +149,22 @@ function getFloorFromRoom(id: string): string {
 }
 
 export default function RoomDetailsScreen() {
+  // Navigation setup for Room Details screen
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // Registers navigation for session expiry handling
   useRegisterSessionExpiryNavigation();
 
   const route = useRoute() as unknown as RoomDetailsScreenRouteProp;
+  // Extracts parameters passed from previous screen
   const { building: rawBuilding, roomId, status, roomDbId } = route.params;
 
+  // Accesses live room availability data from context
   const { availabilities: liveAvailabilities } = useRoomAvailability();
 
   const building = normalizeBuildingName(rawBuilding);
 
+  // Resolves current room status using live data when available
   const liveStatus: RoomStatus = useMemo(() => {
     if (
       roomDbId != null &&
@@ -165,14 +177,17 @@ export default function RoomDetailsScreen() {
 
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
+  // Determines responsive layout (desktop vs mobile)
   const isWebDesktop =
     Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
   const styles = useMemo(() => createStyles(colors, isWebDesktop), [colors, isWebDesktop]);
 
   const webPagePad = width < 480 ? 12 : 0;
   const webAvailable = width - WEB_SIDEBAR_WIDTH - webPagePad * 2;
+  // Calculates max content width for desktop layout
   const contentWidthWeb = Math.min(webAvailable, MAX_SCREEN_WIDTH);
 
+  // Static building metadata for display
   const buildingInfo: Record<
     CanonicalBuildingName,
     { address: string; restrictions: string }
@@ -192,11 +207,12 @@ export default function RoomDetailsScreen() {
     restrictions: "Restrictions unavailable",
   };
 
+  // Retrieves floor plan image and highlight box for current room
   const floorPlanImage = FLOOR_PLAN_IMAGES[building];
   const roomHighlight = ROOM_HIGHLIGHTS[`${building}-${roomId}`];
   const floor = getFloorFromRoom(roomId);
 
-  // shorten long building names on mobile so they fit better
+  // Formats building name for display (shortened on mobile)
   const displayBuildingName = !isWebDesktop
     ? building === "Academic & Research Center"
       ? "ARC"
@@ -205,6 +221,7 @@ export default function RoomDetailsScreen() {
         : building
     : building;
 
+  // Maps status to UI label and color
   const getStatusMeta = (stat: RoomStatus) => {
     switch (stat) {
       case "available":
@@ -227,11 +244,13 @@ export default function RoomDetailsScreen() {
 
   const statusMeta = getStatusMeta(liveStatus);
 
+  // Converts building name to map identifier
   const toMapId = (b: CanonicalBuildingName) => {
     if (b === "Stocker Center") return "stocker";
     return "arc";
   };
 
+  // Handles safe back navigation
   const handleGoBack = () => {
     if (navigation.canGoBack()) {
       navigation.goBack();
@@ -240,6 +259,7 @@ export default function RoomDetailsScreen() {
     }
   };
 
+  // Sidebar navigation items for desktop layout
   const menuItems: { name: string; route: MenuRoute }[] = [
     { name: "Home", route: "Home" },
     { name: "Find a Room", route: "FindRoom" },
@@ -248,6 +268,7 @@ export default function RoomDetailsScreen() {
     { name: "Preferences", route: "Preferences" },
   ];
 
+  // Wrapper component adding consistent shadow styling
   const ShadowWrap = ({
     children,
     style,

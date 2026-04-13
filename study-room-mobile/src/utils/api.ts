@@ -1,7 +1,8 @@
+// Central API layer handling authentication, user data, buildings, rooms, and availability polling
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 
-
+// Returns default API base URL depending on platform (Android emulator vs production)
 const getDefaultApiBaseUrl = () => {
   if (Platform.OS === "android") {
     return "http://10.0.2.2:8000/api/v1";
@@ -10,10 +11,11 @@ const getDefaultApiBaseUrl = () => {
   return "https://unconsentaneous-unconscientious-sutton.ngrok-free.dev/api/v1";
 };
 
+// Base URL for all API requests (env override supported)
 const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL || getDefaultApiBaseUrl();
 
-// Types matching backend models
+// User model matching backend schema
 export interface User {
   id: number;
   email: string;
@@ -24,7 +26,7 @@ export interface User {
   email_verified: boolean;
   created_at?: string;
 }
-
+// Building model from backend
 export interface Building {
   id: number;
   name: string;
@@ -33,7 +35,7 @@ export interface Building {
   created_at?: string;
   updated_at?: string;
 }
-
+// Room model including availability and metadata
 export interface Room {
   id: number;
   building_id: number;
@@ -45,7 +47,7 @@ export interface Room {
   updated_at?: string;
   building?: Building;
 }
-
+// Auth token response from backend
 export interface TokenResponse {
   access_token: string;
   token_type: string;
@@ -69,6 +71,7 @@ async function removeAuthToken(): Promise<void> {
 // Called when the server returns 401 (e.g. session expired). App can register
 // a handler to clear user state and navigate to Login.
 let onSessionExpired: (() => void) | null = null;
+// Registers handler for session expiration events
 export function setOnSessionExpired(handler: (() => void) | null): void {
   onSessionExpired = handler;
 }
@@ -84,6 +87,7 @@ async function apiRequest<T>(
     ...options.headers,
   };
 
+  // Attach auth token if available
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
@@ -93,6 +97,7 @@ async function apiRequest<T>(
     headers,
   });
 
+  // Handles API errors and triggers logout on 401
   if (!response.ok) {
     if (response.status === 401) {
       // Unauthorized / session expired - clear token and trigger app logout
@@ -108,7 +113,7 @@ async function apiRequest<T>(
   return response.json();
 }
 
-// Auth API
+// Authentication-related API calls (signup, login, password reset)
 export const authAPI = {
   async signup(
     email: string,
@@ -268,12 +273,14 @@ export const roomsAPI = {
   },
 };
 
+// Represents a lightweight snapshot of room availability
 export type RoomAvailabilitySnapshotItem = {
   id: number;
   building_id: number;
   is_available: boolean;
 };
 
+// Result format for availability polling (supports caching via revision)
 export type RoomAvailabilitySnapshotResult =
   | { unchanged: true; revision: string }
   | {
@@ -282,7 +289,7 @@ export type RoomAvailabilitySnapshotResult =
       rooms: RoomAvailabilitySnapshotItem[];
     };
 
-/** Lightweight poll for all room availability; sends If-None-Match to receive 304 when nothing changed. */
+// Lightweight poll for all room availability; sends If-None-Match to receive 304 when nothing changed.
 export async function fetchRoomAvailabilitySnapshot(
   lastRevision: string | null,
 ): Promise<RoomAvailabilitySnapshotResult> {
@@ -295,6 +302,7 @@ export async function fetchRoomAvailabilitySnapshot(
     Accept: "application/json",
     Authorization: `Bearer ${token}`,
   };
+  // Sends last known revision to avoid unnecessary data transfer
   if (lastRevision) {
     headers["If-None-Match"] = lastRevision;
   }
@@ -304,6 +312,7 @@ export async function fetchRoomAvailabilitySnapshot(
     { headers },
   );
 
+  // Handles case where data has not changed (HTTP 304)
   if (response.status === 304) {
     if (!lastRevision) {
       throw new Error("304 without cached revision");
@@ -322,6 +331,7 @@ export async function fetchRoomAvailabilitySnapshot(
     throw new Error(error.detail || `HTTP error! status: ${response.status}`);
   }
 
+  // Parses updated availability data when changes exist
   const data = await response.json();
   return {
     unchanged: false,

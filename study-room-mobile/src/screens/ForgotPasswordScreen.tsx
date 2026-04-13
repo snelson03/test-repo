@@ -1,3 +1,4 @@
+// Screen for requesting a password reset via email with validation and API call
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import {
   View,
@@ -41,23 +42,28 @@ import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryConte
 import { authAPI } from "@/utils/api";
 
 export default function ForgotPasswordScreen() {
+  // Navigation setup for returning to login or other screens
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   useRegisterSessionExpiryNavigation();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
+  // Controls fade-in animation for logo
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const { width } = useWindowDimensions();
+  // Determines responsive layout (desktop vs mobile)
   const isWebDesktop =
     Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
+  // Stores user input and UI state
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Runs fade-in animation on mount
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -66,15 +72,17 @@ export default function ForgotPasswordScreen() {
     }).start();
   }, []);
 
+  // Handles validation and password reset request
   const handleReset = async () => {
     setError("");
     setSuccess("");
 
+    // Validate email input
     if (!email.trim()) {
       setError("Please enter your email.");
       return;
     }
-
+    // Enforce Ohio University email requirement
     if (!email.endsWith("@ohio.edu")) {
       setError("You must use an @ohio.edu email.");
       return;
@@ -83,6 +91,7 @@ export default function ForgotPasswordScreen() {
     setLoading(true);
 
     try {
+      // Calls backend API to send reset email
       await authAPI.requestPasswordReset(email.toLowerCase());
       setSuccess("Password reset instructions have been sent to your email.");
     } catch (err: any) {
@@ -92,6 +101,7 @@ export default function ForgotPasswordScreen() {
     }
   };
 
+  // Limits form width on desktop for better readability
   const webMaxWidth = 480;
   const webCardWidth = Math.min(width - 40, webMaxWidth);
 

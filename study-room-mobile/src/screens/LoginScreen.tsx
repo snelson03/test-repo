@@ -1,6 +1,4 @@
-// Login Screen – authentication using AsyncStorage accounts
-// user must enter correct username and password saved locally to enter the app,
-// account can be created by clicking create account
+// Login screen handling authentication, validation, and user session initialization
 
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import {
@@ -47,15 +45,16 @@ import { RootStackParamList } from "@/navigation/AppNavigator";
 import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
 import { authAPI } from "@/utils/api";
 
-// navigation
+// Navigation setup for login flow
 export default function LoginScreen() {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // Registers navigation for session expiry handling
   useRegisterSessionExpiryNavigation();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // used for the fade in on the logo
+  // Controls fade-in animation for logo
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const { setUserForLogin } = useUser(); // load user into context
@@ -71,9 +70,10 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // auto-login if already signed in
+  // Checks existing authentication token and logs user in automatically
   useEffect(() => {
     async function checkLogin() {
+      // Attempts to load current user if token is valid
       const isAuth = await authAPI.isAuthenticated();
       if (isAuth) {
         try {
@@ -82,7 +82,7 @@ export default function LoginScreen() {
           await setUserForLogin(user.email);
           navigation.navigate("Home" as never);
         } catch (error) {
-          // Token invalid, clear it
+          // Clears invalid session if token is expired or invalid
           await authAPI.logout();
         }
       }
@@ -90,7 +90,7 @@ export default function LoginScreen() {
     checkLogin();
   }, []);
 
-  // fade in animation
+  // Runs fade-in animation on mount
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -99,15 +99,17 @@ export default function LoginScreen() {
     }).start();
   }, []);
 
-  // Login logic using real API
+  // Handles validation, authentication, and navigation on login
   const handleLogin = async () => {
     setError("");
 
+    // Validate required fields
     if (!email.trim() || !password.trim()) {
       setError("Please enter both email and password.");
       return;
     }
 
+    // Enforce Ohio University email requirement
     if (!email.endsWith("@ohio.edu")) {
       setError("You must use an @ohio.edu email.");
       return;
@@ -116,9 +118,10 @@ export default function LoginScreen() {
     setLoading(true);
 
     try {
+      // Authenticate user via API
       await authAPI.signin(email.toLowerCase(), password);
 
-      // Load user data into context
+      // Store user in global context and navigate to home screen
       await setUserForLogin(email.toLowerCase());
 
       setLoading(false);
@@ -129,7 +132,7 @@ export default function LoginScreen() {
     }
   };
 
-  // web layout helper: keep the login area at a reasonable width on desktop
+ // Limits login form width on desktop for better usability
   const webMaxWidth = 480;
   const webCardWidth = Math.min(width - 40, webMaxWidth); // leaves some padding on the sides
 

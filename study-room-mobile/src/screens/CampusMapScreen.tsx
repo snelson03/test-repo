@@ -1,6 +1,4 @@
-// This screen shows the campus map that includes zoom and pins at the three selected buildings
-// implements auto zoom when a pin is pressed and pulsing animation on selected pin
-// added color coded buildings and  key inside map
+// Main screen component for displaying an interactive campus map with zoom, pan, and building selection
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -62,7 +60,7 @@ type BuildingWithPin = {
 export default function CampusMapScreen() {
   const router = useRouter();
 
-  // typed navigation (so we can pass params to FindRoom)
+  // Navigation setup for routing between screens (e.g., FindRoom)
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   useRegisterSessionExpiryNavigation();
@@ -71,13 +69,13 @@ export default function CampusMapScreen() {
 
   const scrollViewMainRef = useRef<ScrollView | null>(null);
 
-  // horizontal-only map pan
+  // Reference for horizontal scroll (reserved for potential future use)
   const mapScrollXRef = useRef<ScrollView | null>(null);
 
   const route = useRoute() as any;
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
-
+  // Determines responsive layout (mobile vs desktop)
   const isWebDesktop =
     Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
@@ -99,13 +97,13 @@ export default function CampusMapScreen() {
 
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
-  // Measure the map viewport width
+  // Tracks viewport width to correctly scale and position the map
   const [viewportWidth, setViewportWidth] = useState<number>(0);
 
-  // Use the real image aspect ratio here
+  // Fixed aspect ratio of the map image used for scaling calculations
   const MAP_ASPECT_RATIO = 1536 / 960;
 
-  // Cross-platform zoom state
+  // Default zoom differs between mobile and desktop for better UX
   const mobileDefaultZoom = 1.4;
   const webDefaultZoom = 1;
 
@@ -122,9 +120,10 @@ export default function CampusMapScreen() {
   const panX = useRef(new Animated.Value(0)).current;
   const panY = useRef(new Animated.Value(0)).current;
 
-  // Show/hide the key
+  // Controls visibility of the map legend (building key)
   const [showLegend, setShowLegend] = useState<boolean>(true);
 
+  // Starts pulsing animation for selected building pin
   const startPulse = () => {
     pulseAnim.setValue(0);
     Animated.loop(
@@ -136,6 +135,7 @@ export default function CampusMapScreen() {
     ).start();
   };
 
+  // Static building metadata including map coordinates and display info
   const buildings: BuildingWithPin[] = [
     {
       id: "arc",
@@ -166,18 +166,21 @@ export default function CampusMapScreen() {
     },
   ];
 
+  // Creates quick lookup map for buildings by ID
   const buildingById = useMemo(() => {
     const m: Record<string, BuildingWithPin> = {};
     buildings.forEach((b) => (m[b.id] = b));
     return m;
   }, [buildings]);
 
-  // taller map for web and bigger on mobile
+  // Adjusts map height based on screen size and layout
   const mapHeight = isWide ? (isWebDesktop ? 650 : 930) : 430;
 
+  // Utility function to keep values within bounds
   const clamp = (v: number, min: number, max: number) =>
     Math.max(min, Math.min(max, v));
 
+  // Updates zoom while ensuring pan stays within valid bounds
   const setZoomSafe = (next: number) => {
   const clampedZoom = clamp(next, MIN_ZOOM, MAX_ZOOM);
   setZoom(clampedZoom);
@@ -191,10 +194,11 @@ export default function CampusMapScreen() {
   panY.setValue(nextY);
 };
 
-  // Match React Native Image resizeMode="cover"
+  // Calculates scaling so map behaves like "cover" (fills viewport without distortion)
   const viewportAspect =
     viewportWidth > 0 ? viewportWidth / mapHeight : MAP_ASPECT_RATIO;
 
+  // Base dimensions of map before zoom is applied
   let baseWidth = 0;
   let baseHeight = 0;
 
@@ -211,6 +215,7 @@ export default function CampusMapScreen() {
   const contentWidth = baseWidth;
   const contentHeight = baseHeight;
 
+  // Precomputes pixel positions for building pins
   const pinPositions: Record<string, { x: number; y: number }> = {};
   if (baseWidth > 0 && baseHeight > 0) {
     buildings.forEach((b) => {
@@ -221,6 +226,7 @@ export default function CampusMapScreen() {
     });
   }
 
+  // Centers the map on a selected building and animates pan movement
   const zoomToBuilding = (buildingId: string) => {
     const building = buildingById[buildingId];
     if (!building || viewportWidth <= 0) return;
@@ -254,6 +260,7 @@ export default function CampusMapScreen() {
   const lastTapRef = useRef<{ buildingId: string; at: number } | null>(null);
   const DOUBLE_TAP_MS = 400;
 
+  // Handles map pin interaction (select vs navigate on double tap)
   const handlePinPress = (buildingId: string) => {
     const now = Date.now();
     const last = lastTapRef.current;
@@ -278,6 +285,7 @@ export default function CampusMapScreen() {
     zoomToBuilding(buildingId);
   };
 
+  // Handles selection from legend or building list
   const handleSelectBuilding = (buildingId: string) => {
     setSelectedBuildingId(buildingId);
     startPulse();
@@ -290,13 +298,13 @@ export default function CampusMapScreen() {
   };
 
   useEffect(() => {
-    // When zoom changes, keep selected building centered
+    // Keeps selected building centered when zoom level changes
     if (selectedBuildingId) {
       setTimeout(() => zoomToBuilding(selectedBuildingId), 0);
     }
   }, [zoom, selectedBuildingId]);
 
-  // take directly to building when clicked on room details
+  // Auto-focuses map when navigated with a selected building parameter
   useEffect(() => {
     const id = route?.params?.selectedBuildingId as string | undefined;
     if (!id) return;
@@ -315,11 +323,12 @@ export default function CampusMapScreen() {
 
   const framePad = isWide ? 10 : 18;
 
-  // two-column sizing
+  // Controls layout proportions for desktop split view
   const leftColFlex = isWide ? 2.2 : undefined;
   const rightColFlex = isWide ? 1 : undefined;
 
-const getPanBounds = (nextZoom: number) => {
+  // Calculates allowable pan range based on zoom and viewport size
+  const getPanBounds = (nextZoom: number) => {
   const scaledWidth = baseWidth * nextZoom;
   const scaledHeight = baseHeight * nextZoom;
 
@@ -336,6 +345,7 @@ const getPanBounds = (nextZoom: number) => {
 
   const panStart = useRef({ x: 0, y: 0 });
 
+  // Enables drag-to-pan interaction with boundary constraints
   const panResponder = useMemo(
     () =>
       PanResponder.create({
@@ -403,7 +413,7 @@ const getPanBounds = (nextZoom: number) => {
         </View>
       )}
 
-      {/* Wide layout = row, Mobile = column */}
+      {/* Responsive layout: row for desktop, column for mobile */}
       <View
         style={[
           styles.mainRow,
@@ -417,7 +427,7 @@ const getPanBounds = (nextZoom: number) => {
         ]}
         accessibilityLabel="Campus map main layout"
       >
-        {/* LEFT: MAP */}
+        {/* Left panel: interactive map */}
         <View
           style={[styles.leftCol, isWide && { flex: leftColFlex }]}
           accessibilityLabel="Map section"
@@ -426,13 +436,13 @@ const getPanBounds = (nextZoom: number) => {
             style={[styles.mapWrapper, isWide && { marginBottom: 0 }]}
             accessibilityLabel="Map wrapper"
           >
-            {/* Uniform green frame */}
+            {/* Decorative frame around map */}
             <LinearGradient
               colors={["#06442A", "#04301D"]}
               style={[styles.mapFrame, { padding: framePad }]}
               accessibilityLabel="Map frame"
             >
-              {/* Map viewport */}
+              {/* Viewport container that clips and sizes the map */}
               <LinearGradient
                 colors={["#0F7046", "#0D6440"]}
                 start={{ x: 0, y: 0 }}
@@ -447,7 +457,7 @@ const getPanBounds = (nextZoom: number) => {
                 onLayout={(e) => setViewportWidth(e.nativeEvent.layout.width)}
                 accessibilityLabel="Map viewport"
               >
-                {/* Zoom controls (web + mobile) */}
+                {/* Zoom + legend controls */}
                 <View style={styles.zoomControls} accessibilityLabel="Map controls">
                   <HoverTooltip message="Zoom in">
                     <TouchableOpacity
@@ -492,7 +502,7 @@ const getPanBounds = (nextZoom: number) => {
                     </TouchableOpacity>
                   </HoverTooltip>
 
-                  {/* Key toggle */}
+                  {/* Toggle visibility of legend */}
                   <HoverTooltip message={showLegend ? "Hide legend" : "Show legend"}>
                     <TouchableOpacity
                       style={styles.zoomBtn}
@@ -512,7 +522,7 @@ const getPanBounds = (nextZoom: number) => {
                   </HoverTooltip>
                 </View>
 
-                {/* horizontal only pan */}
+                {/* Container handling pan + zoom transformations */}
                 <View
                   style={{ width: "100%", height: "100%", overflow: "hidden" }}
                   accessibilityLabel="Map pan and zoom viewport"
@@ -590,7 +600,7 @@ const getPanBounds = (nextZoom: number) => {
                   </Animated.View>
                 </View>
 
-                {/* Legend (pins + ping effect) */}
+                {/* Legend for building pins with selection + navigation actions */}
                 {showLegend && (
                   <View style={styles.legend} accessibilityLabel="Map legend">
                     {buildings.map((b) => {
@@ -679,7 +689,7 @@ const getPanBounds = (nextZoom: number) => {
           </View>
         </View>
 
-        {/* RIGHT (or BELOW on mobile): BUILDINGS */}
+        {/* Right panel (or below on mobile): building details */}
         <View
           style={[
             styles.rightCol,
@@ -764,7 +774,7 @@ const getPanBounds = (nextZoom: number) => {
   if (!isWebDesktop) {
     return (
       <View style={{ flex: 1 }}>
-        {/* MOBILE HEADER */}
+        {/* Mobile header with back navigation */}
         <LinearGradient
           colors={["#06442A", "#04301D"]}
           style={styles.mobileHeaderBar}
@@ -789,10 +799,10 @@ const getPanBounds = (nextZoom: number) => {
     );
   }
 
-  // WEB ONLY: use the same top bar + sidebar layout as HomeScreen
+  // Desktop layout with shared top bar and sidebar navigation
   return (
     <View style={styles.webPage} accessibilityLabel="Campus map screen">
-      {/* top bar */}
+      {/* Top navigation bar with branding and info tooltip */}
       <LinearGradient
         colors={["#06442A", "#04301D"]}
         style={styles.webTopBar}
@@ -811,7 +821,7 @@ const getPanBounds = (nextZoom: number) => {
         </View>
       </LinearGradient>
 
-      {/* sidebar + main */}
+      {/* Sidebar navigation + main content area */}
       <View style={styles.webBody} accessibilityLabel="Web layout">
         {/* Left Sidebar */}
         <View style={styles.webSidebar} accessibilityLabel="Navigation sidebar">
@@ -859,7 +869,7 @@ const getPanBounds = (nextZoom: number) => {
 
 function createStyles(c: ThemeColors, isWebDesktop: boolean) {
   return StyleSheet.create({
-    // Web styles
+    // Styles for desktop layout components
     webPage: {
       flex: 1,
       flexDirection: "column",

@@ -1,4 +1,4 @@
-// Find a Room screen file
+// Displays rooms by building with live availability, favorites, and floor plan view
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
@@ -54,6 +54,7 @@ import type { Building, Room } from "@/utils/api";
 import InfoTooltip from "@/components/InfoTooltip";
 import HoverTooltip from "@/components/HoverTooltip";
 
+// Represents a room tile displayed in the grid
 interface RoomItem {
   id: string;
   status: "occupied" | "available" | "offline";
@@ -61,6 +62,7 @@ interface RoomItem {
   buildingId: number;
 }
 
+// Represents a favorited room entry
 interface FavoriteItem {
   name: string;
   status?: string;
@@ -68,11 +70,13 @@ interface FavoriteItem {
   roomId?: number;
 }
 
+// Navigation menu item for sidebar
 interface WebMenuItem {
   name: string;
   route: MenuRoute;
 }
 
+// Converts boolean availability into UI status label
 const getRoomStatus = (
   isAvailable: boolean
 ): "available" | "occupied" | "offline" => {
@@ -83,11 +87,13 @@ const MAX_SCREEN_WIDTH = 1400;
 
 type MenuRoute = "Home" | "FindRoom" | "CampusMap" | "Favorites" | "Preferences";
 
+// Generates sort key for room numbers (numeric-first sorting)
 function roomSortKey(roomNumber: string) {
   const n = parseInt(roomNumber, 10);
   return Number.isNaN(n) ? Number.POSITIVE_INFINITY : n;
 }
 
+// Matches map building IDs to actual building data from API
 function findBuildingByMapId(
   buildings: Building[],
   mapId: MapBuildingId
@@ -110,6 +116,7 @@ function findBuildingByMapId(
 }
 
 export default function FindARoomScreen() {
+  // Navigation setup for Find Room screen
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   useRegisterSessionExpiryNavigation();
@@ -117,10 +124,12 @@ export default function FindARoomScreen() {
   const buildingIdFromMap = route.params?.buildingIdFromMap;
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
+  // Determines responsive layout (desktop vs mobile)
   const isWebDesktop =
     Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
   const styles = useMemo(() => createStyles(colors, isWebDesktop), [colors, isWebDesktop]);
 
+  // Tracks width of grid container for responsive layout
   const [gridWidth, setGridWidth] = useState(0);
 
   const webPagePad = width < 480 ? 12 : 0;
@@ -139,6 +148,7 @@ export default function FindARoomScreen() {
   const tileMargin = 12;
   const gridSidePad = 16;
 
+  // Calculates number of columns based on available width
   const numColumns = useMemo(() => {
     const w = gridWidth ? gridWidth - gridSidePad * 2 : usableWidth;
     if (w < 520) return 2;
@@ -148,6 +158,7 @@ export default function FindARoomScreen() {
     return 6;
   }, [gridWidth, usableWidth]);
 
+  // Calculates tile size dynamically for responsive grid
   const tileSize = useMemo(() => {
     const w = gridWidth ? gridWidth - gridSidePad * 2 : usableWidth;
     const totalMarginsPerRow = tileMargin * 2 * numColumns;
@@ -165,12 +176,15 @@ export default function FindARoomScreen() {
   };
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  // Stores building and room data from API
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  // Currently selected building
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(
     null
   );
   const [loading, setLoading] = useState(true);
+  // Controls whether showing room grid or floor plan
   const [viewMode, setViewMode] = useState<"rooms" | "floorPlan">("rooms");
 
   const mobileSidePad = isWebDesktop ? 8 : pagePad + 14;
@@ -187,6 +201,7 @@ export default function FindARoomScreen() {
 
   const { availabilities: liveAvailabilities } = useRoomAvailability();
 
+  // Maps building names to floor plan images
   const FLOOR_PLANS: Record<string, any> = {
     "Stocker Center": require("@/assets/images/stocker_floorplan.png"),
     "Academic Research Center": require("@/assets/images/arc_floorplan.png"),
@@ -196,6 +211,7 @@ export default function FindARoomScreen() {
   const selectedFloorPlan =
     selectedBuilding?.name ? FLOOR_PLANS[selectedBuilding.name] : null;
 
+    // Loads building data and selects initial building
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -218,12 +234,14 @@ export default function FindARoomScreen() {
     loadData();
   }, []);
 
+  // Updates selected building when coming from map navigation
   useEffect(() => {
     if (!buildingIdFromMap || buildings.length === 0) return;
     const matched = findBuildingByMapId(buildings, buildingIdFromMap);
     if (matched) setSelectedBuilding(matched);
   }, [buildingIdFromMap, buildings]);
 
+  // Loads rooms for selected building and sorts them
   useEffect(() => {
     const loadRooms = async () => {
       if (!selectedBuilding) return;
@@ -247,10 +265,12 @@ export default function FindARoomScreen() {
     loadRooms();
   }, [selectedBuilding, viewMode]);
 
+  // Resets view to room grid when building changes
   useEffect(() => {
     setViewMode("rooms");
   }, [selectedBuilding?.id]);
 
+  // Returns color for room status
   const getColor = (status: string) => {
     switch (status) {
       case "occupied":
@@ -262,11 +282,13 @@ export default function FindARoomScreen() {
     }
   };
 
+  // Merges API data with live availability updates
   const roomsLive = useMemo(
     () => rooms.map((r) => mergeRoomAvailability(r, liveAvailabilities)),
     [rooms, liveAvailabilities],
   );
 
+  // Converts room data into UI-friendly format
   const roomItems: RoomItem[] = roomsLive.map((room) => ({
     id: room.room_number,
     status: getRoomStatus(room.is_available),
@@ -274,9 +296,11 @@ export default function FindARoomScreen() {
     buildingId: room.building_id,
   }));
 
+  // Checks if a room is already in favorites
   const isFavorite = (roomId: number) =>
     favorites.some((f: FavoriteItem) => f.roomId === roomId);
 
+  // Adds or removes a room from favorites
   const toggleFavorite = (room: RoomItem) => {
     const buildingName = selectedBuilding?.name || "Unknown";
     const roomName = `${buildingName} ${room.id}`;
@@ -294,6 +318,7 @@ export default function FindARoomScreen() {
     }
   };
 
+  {/* Main screen content container */}
   const pageContent = (
     <View
       style={[styles.mainContent, isWebDesktop && styles.webContent]}
@@ -310,6 +335,7 @@ export default function FindARoomScreen() {
         accessibilityLabel="Find a room content"
       >
         <View style={{ width: "100%" }}>
+          {/* Screen header (desktop or mobile variant) */}
           <View style={styles.headerWrapper}>
             {isWebDesktop ? (
               <View style={styles.webHeaderRow}>
@@ -745,6 +771,7 @@ export default function FindARoomScreen() {
   return pageContent;
 }
 
+// Style definitions for Find Room screen
 function createStyles(c: ThemeColors, isWebDesktop: boolean) {
   return StyleSheet.create({
     page: {
