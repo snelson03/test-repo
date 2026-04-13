@@ -210,7 +210,6 @@ export default function FavoritesScreen() {
     >
       {favorites.length === 0 ? (
         <View
-          {/* Empty state when no favorites exist */}
           style={styles.emptyState}
           accessibilityLabel="No favorites message"
         >
@@ -277,7 +276,7 @@ export default function FavoritesScreen() {
         })
       )}
 
-    /* Mobile-only informational note */}
+    {/* Mobile-only informational note */}
     {!isWebDesktop && (
       <View style={styles.mobileNoteCard}>
         <Text style={styles.mobileNoteTitle}>LIVE ROOM UPDATES</Text>
