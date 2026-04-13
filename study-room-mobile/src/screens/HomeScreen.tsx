@@ -1,5 +1,4 @@
-// Home Screen layout file
-// formattingfor IOS and web
+// Main dashboard screen showing favorites, available rooms, and navigation entry points
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   View,
@@ -56,7 +55,7 @@ import InfoTooltip from "@/components/InfoTooltip";
 import HoverTooltip from "@/components/HoverTooltip";
 
 
-// describes what each favorite looks like for type safety
+// Type definition for a favorited room item used in UI and API mapping
 interface FavoriteItem {
   name: string;
   status?: string;
@@ -76,12 +75,14 @@ type MenuRoute =
 
 type RoomStatus = "available" | "occupied" | "offline";
 
+// Converts internal room status to user-friendly label
 function roomStatusLabel(s: RoomStatus) {
   if (s === "available") return "Available";
   if (s === "occupied") return "Occupied";
   return "Offline";
 }
 
+// Returns UI color based on room availability state
 function roomStatusColor(s: RoomStatus, colors: any) {
   if (s === "available") return colors.available;
   if (s === "occupied") return colors.occupied;
@@ -89,6 +90,7 @@ function roomStatusColor(s: RoomStatus, colors: any) {
 }
 
 export default function HomeScreen() {
+  // Navigation setup for switching between app screens
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   useRegisterSessionExpiryNavigation();
@@ -97,15 +99,17 @@ export default function HomeScreen() {
   const name = (user as any)?.name ?? "User";
 
   const { width, height } = useWindowDimensions();
+  // Determines if layout should use desktop web layout vs mobile layout
   const isWebDesktop =
     Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
   const styles = useMemo(() => createStyles(colors), [colors]);
   const pagePad = PAGE_CONTENT_PADDING_H;
 
-  const [favoriteRooms, setFavoriteRooms] = useState<Room[]>([]); // real time favorites data
-  // mobile content
+  // Stores user's favorite rooms with live availability updates
+  const [favoriteRooms, setFavoriteRooms] = useState<Room[]>([]); 
+  // Mobile content
   const contentWidthMobile = width;
-  // get correct building name for favorites
+  // Maps building IDs to names for displaying favorites correctly
   const [buildingNameById, setBuildingNameById] = useState<
     Record<string, string>
   >({});
@@ -121,12 +125,13 @@ export default function HomeScreen() {
     removeFavorite: (name: string) => void;
   };
 
-  // Mobile Menu
+  // Controls mobile dropdown menu open/close state and animation
   const [menuOpen, setMenuOpen] = useState(false);
   const menuAnim = useRef(new Animated.Value(0)).current;
 
   const { availabilities: liveAvailabilities } = useRoomAvailability();
 
+  // Animates mobile menu sliding in/out vertically
   const toggleMenu = () => {
     const next = !menuOpen;
     setMenuOpen(next);
@@ -161,11 +166,13 @@ export default function HomeScreen() {
   >({});
   const [loading, setLoading] = useState(true);
 
+  // Combines initial API data with live updates from sensors/context
   const effectiveAvailability = useMemo(
     () => ({ ...seedAvailability, ...liveAvailabilities }),
     [seedAvailability, liveAvailabilities],
   );
 
+  // Builds summary of each building (available rooms + status text)
   const buildingSummaries = useMemo(() => {
     return buildingMeta.map((building) => {
       const ids = buildingRoomIds[building.id] ?? [];
@@ -187,6 +194,7 @@ export default function HomeScreen() {
     });
   }, [buildingMeta, buildingRoomIds, effectiveAvailability]);
 
+  // Updates favorite rooms with live availability changes
   const favoriteRoomsLive = useMemo(() => {
     return favoriteRooms.map((room: any) => {
       const id = room.id as number | undefined;
@@ -202,12 +210,12 @@ export default function HomeScreen() {
     });
   }, [favoriteRooms, effectiveAvailability]);
 
-  // only used for the "No rooms available" message
+  // Only used for the "No rooms available" message
   const availableRooms = buildingSummaries.filter(
     (room) => room.status === "available" || room.status === "almost_filled"
   );
 
-  // menu items
+  // Menu items
   const menuItems: { name: string; route: MenuRoute }[] = [
     { name: "Home", route: "Home" },
     { name: "Find a Room", route: "FindRoom" },
@@ -216,18 +224,20 @@ export default function HomeScreen() {
     { name: "Preferences", route: "Preferences" },
   ];
 
+  // Logs user out and resets navigation stack to prevent back navigation
   const handleLogout = async () => {
     try {
       await authAPI.logout();
     } finally {
-      // reset navigation back to Login so you can't go "Back" into the app
+      // Reset navigation back to Login so you can't go "Back" into the app
       (navigation as any).reset({
         index: 0,
         routes: [{ name: "Login" }],
       });
     }
   };
-  // automatically jump to correct preferences section when clicked on hoome screen
+  
+  // Navigates directly to a specific Preferences section
   const goToPreferencesSection = (
     section: "Account" | "Groups" | "Notifications"
   ) => {
@@ -244,7 +254,7 @@ export default function HomeScreen() {
       | "Alden Library";
   };
 
-  // get building names for favorites
+  // Loads building metadata and builds ID -> name mapping
   useEffect(() => {
     const loadBuildingNames = async () => {
       try {
@@ -262,9 +272,7 @@ export default function HomeScreen() {
 
     loadBuildingNames();
   }, []);
-  // load favorites data
-  // updates status when screens switch
-  // load favorites data (and attach building_name)
+  // Loads user favorites and normalizes API response structure
   useEffect(() => {
     const loadFavorites = async () => {
       try {
@@ -338,7 +346,7 @@ export default function HomeScreen() {
   }, []);
 
 
-  // Desktop web: sidebar + top bar. Narrow web uses the mobile layout below.
+  // Desktop layout: sidebar navigation + dashboard panels
   if (isWebDesktop) {
     return (
       <View style={styles.webPage} accessibilityLabel="Home screen">
@@ -738,7 +746,7 @@ export default function HomeScreen() {
             { width: contentWidthMobile, alignSelf: "center" },
           ]}
         >
-          {/* Header style setup */}
+          {/* App header with logo and tooltip info */}
           <LinearGradient
             colors={["#06442A", "#04301D"]}
             style={styles.header}
@@ -755,14 +763,14 @@ export default function HomeScreen() {
             </View>
           </LinearGradient>
 
-          {/* Welcome message style setup */}
+          {/* Displays personalized welcome message */}
           <View style={styles.welcome}>
             <Text style={styles.welcome} accessibilityRole="header">
               Welcome Back, {name}!
             </Text>
           </View>
 
-          {/* Favorites moved to the top but aligned with the rest of the cards */}
+          {/* Favorites section (top priority content for quick access) */}
           <View style={styles.favoritesTopContainer}>
             <TouchableOpacity
               onPress={() =>
@@ -827,7 +835,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Find a Room Banner style setup */}
+          {/* Navigation banner to Find Room screen */}
           <TouchableOpacity
             onPress={() => !menuOpen && navigation.navigate("FindRoom" as never)}
             accessibilityRole="button"
@@ -848,7 +856,7 @@ export default function HomeScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* Campus Map style setup*/}
+          {/* Navigation banner to Campus Map screen */}
           <TouchableOpacity
             onPress={() => !menuOpen && navigation.navigate("CampusMap" as never)}
             accessibilityRole="button"
@@ -869,9 +877,9 @@ export default function HomeScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* Room Cards + Favorites style setup */}
+          {/* Main content cards including availability and management actions */}
           <View style={styles.cardsContainer} accessibilityLabel="Cards">
-            {/* Available Now Section */}
+            {/* Displays buildings with currently available rooms */}
             <TouchableOpacity
               style={styles.cardShadow}
               onPress={() => !menuOpen && navigation.navigate("CampusMap" as never)}
@@ -935,7 +943,7 @@ export default function HomeScreen() {
               </LinearGradient>
             </TouchableOpacity>
 
-            {/* Manage quick buttons (mobile) */}
+            {/* Quick access buttons for account, groups, notifications, and logout */}
             <View style={[styles.cardShadow, { marginVertical: 0 }]}>
               <LinearGradient
                 colors={["#0F7046", "#0D6440"]}
@@ -1069,7 +1077,7 @@ export default function HomeScreen() {
 
 function createStyles(c: ThemeColors) {
   return StyleSheet.create({
-    // Web styles
+    // Styles for desktop web layout components
     webPage: {
       flex: 1,
       flexDirection: "column",
@@ -1237,7 +1245,7 @@ function createStyles(c: ThemeColors) {
       justifyContent: "center",
     },
 
-    // Mobile styles
+    // Styles for mobile layout components
     container: { flex: 1, backgroundColor: c.gray100 },
 
     header: {
