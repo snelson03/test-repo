@@ -1,7 +1,4 @@
-// Preferences Screen File
-// Implements the Preferences page where users can manage notifications, account info, and groups.
-// includes dropdown navigation, saving user name globally, and persistent storage using AsyncStorage.
-// Includes web and mobile formatting
+// Preferences screen for managing notifications, account info, groups, and appearance with persistent storage
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -67,10 +64,12 @@ type NotificationType = "allRooms" | "favoritesOnly" | "buildingSpecific";
 type NotificationMethod = "email" | "sms";
 type ScheduleChoice = "standard" | "alwaysOn" | "custom";
 
+// Pads numbers for time formatting (e.g., 9 -> "09")
 function pad2(n: number) {
   return n < 10 ? `0${n}` : `${n}`;
 }
 
+// Generates time options for scheduling (e.g., every 15 minutes)
 function buildTimes(stepMinutes = 15) {
   const items: string[] = [];
   for (let h = 0; h < 24; h++) {
@@ -83,6 +82,7 @@ function buildTimes(stepMinutes = 15) {
   return items;
 }
 
+// Converts time string to minutes for comparison logic
 function timeToMinutes(t: string) {
   const [hm, ap] = t.split(" ");
   const [hStr, mStr] = hm.split(":");
@@ -99,15 +99,18 @@ export default function PreferencesScreen() {
     "Preferences"
   >;
 
+  // Navigation setup for Preferences screen
   const navigation = useNavigation<PreferencesNavProp>();
   useRegisterSessionExpiryNavigation();
 
   const route = useRoute<RouteProp<RootStackParamList, "Preferences">>();
   const { colors, mode, setMode } = useTheme();
   const { width } = useWindowDimensions();
+  // Determines responsive layout (desktop vs mobile)
   const isWebDesktop =
     Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
+  // Sidebar navigation items for desktop layout
   const menuItems = [
     { name: "Home", route: "Home" as const },
     { name: "Find a Room", route: "FindRoom" as const },
@@ -116,11 +119,14 @@ export default function PreferencesScreen() {
     { name: "Preferences", route: "Preferences" as const },
   ];
 
+  // Tracks active preferences section (Notifications, Account, etc.)
   const [activeCategory, setActiveCategory] = useState<PrefCategory>(
     "Notifications"
   );
+  // Controls dropdown menu visibility for selecting sections
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // Syncs selected section when navigating with parameters
   useEffect(() => {
     const section = (route.params as any)?.section as PrefCategory | undefined;
 
@@ -130,20 +136,24 @@ export default function PreferencesScreen() {
     if (section === "Appearance") setActiveCategory("Appearance");
   }, [route.params]);
 
+  // Notification configuration state
   const [notificationType, setNotificationType] =
     useState<NotificationType>("allRooms");
   const [method, setMethod] = useState<NotificationMethod>("email");
   const [scheduleChoice, setScheduleChoice] =
     useState<ScheduleChoice>("custom");
 
+  // Stores temporary input values for modal-based settings
   const [customInputs, setCustomInputs] = useState({
     favoritesOnly: "",
     buildingSpecific: "",
     customSchedule: "",
   });
 
+  // Accesses user data and update/logout functions
   const { user, updateUserField, logoutUser } = useUser();
 
+  // Predefined available groups
   const AVAILABLE_GROUPS = useMemo(
     () => [
       "Computer Science",
@@ -155,6 +165,7 @@ export default function PreferencesScreen() {
     ],
     []
   );
+  // Stores user's joined groups
   const [groups, setGroups] = useState<string[]>(["Computer Science"]);
   const [newGroup, setNewGroup] = useState("");
 
@@ -178,6 +189,7 @@ export default function PreferencesScreen() {
   const [customStart, setCustomStart] = useState<string>("9:00 AM");
   const [customEnd, setCustomEnd] = useState<string>("5:00 PM");
 
+  // Controls modal visibility and type (favorites, buildings, schedule)
   const openModal = (
     type: "favoritesOnly" | "buildingSpecific" | "customSchedule"
   ) => {
@@ -190,12 +202,14 @@ export default function PreferencesScreen() {
     setModalVisible(true);
   };
 
+  // Resets modal state on close
   const closeModal = () => {
     setModalVisible(false);
     setTempText("");
     setModalType("");
   };
 
+  // Adds a new group if valid and not already joined
   const addGroup = () => {
     if (!newGroup.trim()) return;
     if (!AVAILABLE_GROUPS.includes(newGroup.trim())) return;
@@ -204,10 +218,12 @@ export default function PreferencesScreen() {
     setNewGroup("");
   };
 
+  // Removes a group from user's list
   const removeGroup = (groupToRemove: string) => {
     setGroups(groups.filter((g) => g !== groupToRemove));
   };
 
+  // Saves preferences to persistent storage
   const savePreferences = async () => {
     try {
       const data = {
@@ -226,6 +242,7 @@ export default function PreferencesScreen() {
     }
   };
 
+  // Loads preferences from storage on startup
   const loadPreferences = async () => {
     try {
       const saved = await AsyncStorage.getItem("preferences");
@@ -248,10 +265,12 @@ export default function PreferencesScreen() {
     }
   };
 
+  // Loads saved preferences on mount
   useEffect(() => {
     loadPreferences();
   }, []);
 
+  // Automatically saves preferences when relevant state changes
   useEffect(() => {
     savePreferences();
   }, [
@@ -265,6 +284,7 @@ export default function PreferencesScreen() {
     mode,
   ]);
 
+  // Available preference sections
   const categories: PrefCategory[] = [
     "Notifications",
     "Account",
@@ -274,11 +294,13 @@ export default function PreferencesScreen() {
 
   const styles = useMemo(() => createStyles(colors), [colors]);
 
+  {/* Main preferences content container */}
   const mainContent = (
     <View
       style={[styles.container, isWebDesktop && styles.webContent]}
       accessibilityLabel="Preferences content"
     >
+      {/* Responsive header (desktop vs mobile) */}
       {isWebDesktop ? (
         <View style={styles.webHeaderRow}>
           <Text style={styles.webPageTitle} accessibilityRole="header">

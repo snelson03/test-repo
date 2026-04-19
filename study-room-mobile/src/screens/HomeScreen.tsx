@@ -48,7 +48,7 @@ import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryConte
 import { LinearGradient } from "expo-linear-gradient";
 import { useFavorites } from "@/context/FavoritesContext";
 import { useRoomAvailability } from "@/context/RoomAvailabilityContext";
-import { buildingsAPI, authAPI, usersAPI, Room } from "@/utils/api"; // added usersAPI
+import { buildingsAPI, authAPI, usersAPI, Room } from "@/utils/api";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/AppNavigator";
 import InfoTooltip from "@/components/InfoTooltip";

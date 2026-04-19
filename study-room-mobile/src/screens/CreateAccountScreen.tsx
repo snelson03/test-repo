@@ -1,7 +1,4 @@
-// Create Account Screen
-// Allows new users to make an account and saves it locally to AsyncStorage
-// Account credentials can then be used on login screen to enter the app
-// authentication not implemented yet, email does not have to be valid
+// Screen for creating a new user account, validating input, and registering via API
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
@@ -54,12 +51,12 @@ export default function CreateAccountScreen() {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // used for web sizing so the form doesn't stretch across the whole screen
+  // Determines layout constraints for desktop vs mobile
   const { width } = useWindowDimensions();
   const isWebDesktop =
     Platform.OS === "web" && width >= WEB_DESKTOP_LAYOUT_MIN_WIDTH;
 
-  // form fields
+  // Controlled input state for account creation form
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,14 +64,14 @@ export default function CreateAccountScreen() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // refs for better screen reader + keyboard flow (minimal, no UI changes)
+  // Input refs to improve keyboard navigation and accessibility flow
   const nameRef = useRef<TextInput>(null);
   const emailRef = useRef<TextInput>(null);
   const passwordRef = useRef<TextInput>(null);
   const confirmRef = useRef<TextInput>(null);
   const phoneRef = useRef<TextInput>(null);
 
-  // fade logo in
+  // Fades in logo on initial render
   useEffect(() => {
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -83,18 +80,19 @@ export default function CreateAccountScreen() {
     }).start();
   }, []);
 
-  // checks that all fields are filled out and passwords match
+  // Handles validation, account creation, auto-login, and navigation
   const handleCreate = async () => {
+    // Validate required fields
     if (!name.trim() || !email.trim() || !password.trim() || !confirm.trim()) {
       Alert.alert("Missing Information", "Please fill out all required fields.");
       return;
     }
-
+    // Enforce Ohio University email requirement
     if (!email.endsWith("@ohio.edu")) {
       Alert.alert("Invalid Email", "You must use an @ohio.edu email.");
       return;
     }
-
+    // Ensure passwords match
     if (password !== confirm) {
       Alert.alert("Password Mismatch", "Passwords do not match.");
       return;
@@ -113,6 +111,7 @@ export default function CreateAccountScreen() {
       await setUserForLogin(email.toLowerCase());
 
       setLoading(false);
+      // Navigate to Home screen after successful account creation
       Alert.alert("Success", "Account created successfully!", [
         { text: "OK", onPress: () => navigation.navigate("Home" as never) },
       ]);
@@ -122,12 +121,12 @@ export default function CreateAccountScreen() {
     }
   };
 
-  // web layout helper: keep the form at a reasonable width on desktop
+  // Limits form width on desktop for better readability
   const webMaxWidth = 520;
   const webCardWidth = Math.min(width - 40, webMaxWidth); // leaves some padding on the sides
 
   return (
-    // ScrollView is still used so it works on smaller screens and with the keyboard
+    // Scroll container to support smaller screens and keyboard interaction
     <ScrollView
       contentContainerStyle={[
         styles.scrollContent,
@@ -137,13 +136,13 @@ export default function CreateAccountScreen() {
       keyboardShouldPersistTaps="handled"
       accessibilityLabel="Create account screen"
     >
-      {/* on web, wrap the content in a fixed-width container so it doesn’t stretch */}
+      {/* Constrains layout width on desktop */}
       <View style={isWebDesktop ? { width: webCardWidth } : undefined}>
         <View
           style={[styles.container, isWebDesktop && styles.containerWeb]}
           accessibilityLabel="Create account form"
         >
-          {/* Logo */}
+          {/* App logo with fade-in animation */}
           <Animated.View style={{ opacity: fadeAnim }}>
             <Image
               source={require("@/assets/images/bf_logo.png")}
@@ -155,7 +154,7 @@ export default function CreateAccountScreen() {
             />
           </Animated.View>
 
-          {/* Header */}
+          {/* Screen title */}
           <Text style={styles.header} accessibilityRole="header">
             CREATE ACCOUNT
           </Text>
