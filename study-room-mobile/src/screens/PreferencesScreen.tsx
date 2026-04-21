@@ -1,4 +1,7 @@
-// Preferences screen for managing notifications, account info, groups, and appearance with persistent storage
+// Preferences Screen File
+// Implements the Preferences page where users can manage notifications, account info, and groups.
+// Includes dropdown navigation, saving user name globally, and persistent storage using AsyncStorage.
+// Includes web and mobile formatting
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -7,7 +10,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Modal,
   TextInput,
   Platform,
   Image,
@@ -48,50 +50,11 @@ import { useUser } from "@/context/UserContext";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "@/navigation/AppNavigator";
 import { useRegisterSessionExpiryNavigation } from "@/context/SessionExpiryContext";
-import { useFavorites } from "@/context/FavoritesContext";
 import InfoTooltip from "@/components/InfoTooltip";
 import HoverTooltip from "@/components/HoverTooltip";
 import { LinearGradient } from "expo-linear-gradient";
 
-interface FavoriteItem {
-  name: string;
-  status?: string;
-  tstatus?: string;
-}
-
 type PrefCategory = "Notifications" | "Account" | "Groups" | "Appearance";
-type NotificationType = "allRooms" | "favoritesOnly" | "buildingSpecific";
-type NotificationMethod = "email" | "sms";
-type ScheduleChoice = "standard" | "alwaysOn" | "custom";
-
-// Pads numbers for time formatting (e.g., 9 -> "09")
-function pad2(n: number) {
-  return n < 10 ? `0${n}` : `${n}`;
-}
-
-// Generates time options for scheduling (e.g., every 15 minutes)
-function buildTimes(stepMinutes = 15) {
-  const items: string[] = [];
-  for (let h = 0; h < 24; h++) {
-    for (let m = 0; m < 60; m += stepMinutes) {
-      const hour12 = ((h + 11) % 12) + 1;
-      const ampm = h < 12 ? "AM" : "PM";
-      items.push(`${hour12}:${pad2(m)} ${ampm}`);
-    }
-  }
-  return items;
-}
-
-// Converts time string to minutes for comparison logic
-function timeToMinutes(t: string) {
-  const [hm, ap] = t.split(" ");
-  const [hStr, mStr] = hm.split(":");
-  let h = parseInt(hStr, 10);
-  const m = parseInt(mStr, 10);
-  const isPM = ap === "PM";
-  if (h === 12) h = 0;
-  return (isPM ? h + 12 : h) * 60 + m;
-}
 
 export default function PreferencesScreen() {
   type PreferencesNavProp = NativeStackNavigationProp<
@@ -136,21 +99,6 @@ export default function PreferencesScreen() {
     if (section === "Appearance") setActiveCategory("Appearance");
   }, [route.params]);
 
-  // Notification configuration state
-  const [notificationType, setNotificationType] =
-    useState<NotificationType>("allRooms");
-  const [method, setMethod] = useState<NotificationMethod>("email");
-  const [scheduleChoice, setScheduleChoice] =
-    useState<ScheduleChoice>("custom");
-
-  // Stores temporary input values for modal-based settings
-  const [customInputs, setCustomInputs] = useState({
-    favoritesOnly: "",
-    buildingSpecific: "",
-    customSchedule: "",
-  });
-
-  // Accesses user data and update/logout functions
   const { user, updateUserField, logoutUser } = useUser();
 
   // Predefined available groups
@@ -165,49 +113,13 @@ export default function PreferencesScreen() {
     ],
     []
   );
-  // Stores user's joined groups
+
   const [groups, setGroups] = useState<string[]>(["Computer Science"]);
   const [newGroup, setNewGroup] = useState("");
-
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalType, setModalType] = useState<
-    "" | "favoritesOnly" | "buildingSpecific" | "customSchedule"
-  >("");
-  const [tempText, setTempText] = useState("");
   const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
-  const { favorites } = useFavorites() as { favorites: FavoriteItem[] };
-  const [selectedFavorites, setSelectedFavorites] = useState<FavoriteItem[]>([]);
-
-  const BUILDINGS = useMemo(
-    () => ["ARC", "Alden Library", "Stocker Center", "Baker Center"],
-    []
-  );
-  const [selectedBuildings, setSelectedBuildings] = useState<string[]>([]);
-
-  const TIMES = useMemo(() => buildTimes(15), []);
-  const [customStart, setCustomStart] = useState<string>("9:00 AM");
-  const [customEnd, setCustomEnd] = useState<string>("5:00 PM");
-
-  // Controls modal visibility and type (favorites, buildings, schedule)
-  const openModal = (
-    type: "favoritesOnly" | "buildingSpecific" | "customSchedule"
-  ) => {
-    setModalType(type);
-    if (type === "customSchedule") {
-      setTempText("");
-    } else {
-      setTempText(customInputs[type as keyof typeof customInputs] || "");
-    }
-    setModalVisible(true);
-  };
-
-  // Resets modal state on close
-  const closeModal = () => {
-    setModalVisible(false);
-    setTempText("");
-    setModalType("");
-  };
+  // Simple master toggle for favorite-room notifications
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   // Adds a new group if valid and not already joined
   const addGroup = () => {
@@ -227,13 +139,7 @@ export default function PreferencesScreen() {
   const savePreferences = async () => {
     try {
       const data = {
-        notificationType,
-        method,
-        scheduleChoice,
-        customStart,
-        customEnd,
-        selectedFavorites,
-        selectedBuildings,
+        notificationsEnabled,
         mode,
       };
       await AsyncStorage.setItem("preferences", JSON.stringify(data));
@@ -248,16 +154,9 @@ export default function PreferencesScreen() {
       const saved = await AsyncStorage.getItem("preferences");
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.notificationType) setNotificationType(parsed.notificationType);
-        if (parsed.method) setMethod(parsed.method);
-        if (parsed.scheduleChoice) setScheduleChoice(parsed.scheduleChoice);
-        if (parsed.customStart) setCustomStart(parsed.customStart);
-        if (parsed.customEnd) setCustomEnd(parsed.customEnd);
-        if (Array.isArray(parsed.selectedFavorites)) {
-          setSelectedFavorites(parsed.selectedFavorites);
-        }
-        if (Array.isArray(parsed.selectedBuildings)) {
-          setSelectedBuildings(parsed.selectedBuildings);
+
+        if (typeof parsed.notificationsEnabled === "boolean") {
+          setNotificationsEnabled(parsed.notificationsEnabled);
         }
       }
     } catch (error) {
@@ -273,16 +172,7 @@ export default function PreferencesScreen() {
   // Automatically saves preferences when relevant state changes
   useEffect(() => {
     savePreferences();
-  }, [
-    notificationType,
-    method,
-    scheduleChoice,
-    customStart,
-    customEnd,
-    selectedFavorites,
-    selectedBuildings,
-    mode,
-  ]);
+  }, [notificationsEnabled, mode]);
 
   // Available preference sections
   const categories: PrefCategory[] = [
@@ -309,7 +199,7 @@ export default function PreferencesScreen() {
         </View>
       ) : (
         <LinearGradient
-          colors={["#0A5A38", "#05472A"]}
+          colors={["#06442A", "#04301D"]}
           style={styles.mobileHeaderBar}
         >
           <HoverTooltip message="Go back">
@@ -416,136 +306,61 @@ export default function PreferencesScreen() {
                 NOTIFICATIONS
               </Text>
 
-              <Text style={styles.categoryTitle} accessibilityRole="header">
-                NOTIFICATION TYPE
-              </Text>
+              <View
+                style={[
+                  styles.optionRow,
+                  {
+                    marginBottom: 18,
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.optionText,
+                    {
+                      fontFamily: FONT_BODY,
+                      fontSize: FONT_SIZE_SECTION - 8,
+                      flex: 0,
+                      marginRight: 12,
+                    },
+                  ]}
+                >
+                  Allow Notifications
+                </Text>
 
-              {([
-                { key: "allRooms", label: "All Available Rooms" },
-                { key: "favoritesOnly", label: "Favorites Only", modal: true },
-                {
-                  key: "buildingSpecific",
-                  label: "Building Specific",
-                  modal: true,
-                },
-              ] as Array<{
-                key: NotificationType;
-                label: string;
-                modal?: boolean;
-              }>).map(({ key, label, modal }) => {
-                const checked = notificationType === key;
-                return (
-                  <View key={key} style={styles.optionRow}>
-                    <TouchableOpacity
-                      style={[
-                        styles.radioOuter,
-                        checked && styles.radioOuterSelected,
-                      ]}
-                      onPress={() => setNotificationType(key)}
-                      accessibilityRole="radio"
-                      accessibilityLabel={label}
-                      accessibilityState={{ selected: checked }}
-                    >
-                      {checked && <View style={styles.radioInner} />}
-                    </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.pillBtn,
+                    notificationsEnabled ? styles.pillBtnOn : styles.pillBtnOff,
+                  ]}
+                  onPress={() => setNotificationsEnabled((prev) => !prev)}
+                  accessibilityRole="switch"
+                  accessibilityLabel="Allow notifications"
+                  accessibilityState={{ checked: notificationsEnabled }}
+                >
+                  <Text
+                    style={[
+                      styles.pillBtnText,
+                      { fontFamily: FONT_BODY, fontSize: 16 },
+                      notificationsEnabled && { color: colors.primary },
+                    ]}
+                  >
+                    {notificationsEnabled ? "On" : "Off"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-                    <Text style={styles.optionText}>{label}</Text>
-
-                    {modal && (
-                      <HoverTooltip message="Choose which buildings send notifications">
-                        <TouchableOpacity
-                          onPress={() =>
-                            openModal(
-                              key as "favoritesOnly" | "buildingSpecific"
-                            )
-                          }
-                          accessibilityRole="button"
-                          accessibilityLabel={`Edit ${label}`}
-                        >
-                          <Text style={styles.editText}>Edit</Text>
-                        </TouchableOpacity>
-                      </HoverTooltip>
-                    )}
-                  </View>
-                );
-              })}
-
-              <Text style={styles.categoryTitle} accessibilityRole="header">
-                METHOD
-              </Text>
-
-              {([
-                { key: "email", label: "Email" },
-                { key: "sms", label: "SMS" },
-              ] as Array<{ key: NotificationMethod; label: string }>).map(
-                ({ key, label }) => {
-                  const checked = method === key;
-                  return (
-                    <View key={key} style={styles.optionRow}>
-                      <TouchableOpacity
-                        style={[
-                          styles.radioOuter,
-                          checked && styles.radioOuterSelected,
-                        ]}
-                        onPress={() => setMethod(key)}
-                        accessibilityRole="radio"
-                        accessibilityLabel={label}
-                        accessibilityState={{ selected: checked }}
-                      >
-                        {checked && <View style={styles.radioInner} />}
-                      </TouchableOpacity>
-
-                      <Text style={styles.optionText}>{label}</Text>
-                    </View>
-                  );
-                }
-              )}
-
-              <Text style={styles.categoryTitle} accessibilityRole="header">
-                SCHEDULE
-              </Text>
-
-              {([
-                { key: "standard", label: "9:00AM - 5:00PM" },
-                { key: "alwaysOn", label: "Always On" },
-                { key: "custom", label: "Custom", modal: true },
-              ] as Array<{ key: ScheduleChoice; label: string; modal?: boolean }>).map(
-                ({ key, label, modal }) => {
-                  const checked = scheduleChoice === key;
-                  return (
-                    <View key={key} style={styles.optionRow}>
-                      <TouchableOpacity
-                        style={[
-                          styles.radioOuter,
-                          checked && styles.radioOuterSelected,
-                        ]}
-                        onPress={() => setScheduleChoice(key)}
-                        accessibilityRole="radio"
-                        accessibilityLabel={label}
-                        accessibilityState={{ selected: checked }}
-                      >
-                        {checked && <View style={styles.radioInner} />}
-                      </TouchableOpacity>
-
-                      <Text style={styles.optionText}>
-                        {key === "custom" && scheduleChoice === "custom"
-                          ? `${customStart} - ${customEnd}`
-                          : label}
-                      </Text>
-
-                      {modal && (
-                        <TouchableOpacity
-                          onPress={() => openModal("customSchedule")}
-                          accessibilityRole="button"
-                          accessibilityLabel="Edit custom schedule"
-                        >
-                          <Text style={styles.editText}>Edit</Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  );
-                }
-              )}
+              <View
+                style={styles.greenBox}
+                accessibilityLabel="Notification details"
+              >
+                <Text style={[styles.optionText, { color: colors.white }]}>
+                  Notifications will be sent for your favorite rooms when they
+                  become available.
+                </Text>
+              </View>
             </LinearGradient>
           )}
 
@@ -742,262 +557,6 @@ export default function PreferencesScreen() {
           )}
         </ScrollView>
       </View>
-
-      <Modal
-        transparent
-        visible={modalVisible}
-        animationType="fade"
-        accessibilityViewIsModal
-        onRequestClose={closeModal}
-      >
-        <View style={styles.modalOverlay} accessibilityLabel="Preferences dialog">
-          <View style={styles.modalContainer}>
-            {modalType === "favoritesOnly" && (
-              <>
-                <Text style={styles.modalTitle} accessibilityRole="header">
-                  My Favorites
-                </Text>
-
-                <View style={styles.greenBox} accessibilityLabel="Favorite rooms list">
-                  {favorites.length === 0 ? (
-                    <Text style={[styles.optionText, { color: colors.white }]}>
-                      No favorites yet
-                    </Text>
-                  ) : (
-                    favorites.map((fav) => {
-                      const checked = selectedFavorites.some(
-                        (f) => f.name === fav.name
-                      );
-                      return (
-                        <TouchableOpacity
-                          key={fav.name}
-                          style={styles.optionRow}
-                          onPress={() => {
-                            const exists = selectedFavorites.some(
-                              (f) => f.name === fav.name
-                            );
-                            setSelectedFavorites(
-                              exists
-                                ? selectedFavorites.filter(
-                                    (f) => f.name !== fav.name
-                                  )
-                                : [...selectedFavorites, fav]
-                            );
-                          }}
-                          accessibilityRole="checkbox"
-                          accessibilityLabel={fav.name}
-                          accessibilityState={{ checked }}
-                        >
-                          <View
-                            style={[
-                              styles.checkbox,
-                              checked && { backgroundColor: colors.white },
-                            ]}
-                          >
-                            {checked && (
-                              <Ionicons
-                                name="checkmark"
-                                size={16}
-                                color={colors.primary}
-                              />
-                            )}
-                          </View>
-
-                          <Text style={[styles.optionText, { color: colors.white }]}>
-                            {fav.name}
-                          </Text>
-                        </TouchableOpacity>
-                      );
-                    })
-                  )}
-                </View>
-
-                <TouchableOpacity
-                  style={styles.modalButton}
-                  onPress={closeModal}
-                  accessibilityRole="button"
-                  accessibilityLabel="Close dialog"
-                >
-                  <Text style={styles.modalButtonText}>Close</Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {modalType === "buildingSpecific" && (
-              <>
-                <Text style={styles.modalTitle} accessibilityRole="header">
-                  Select Buildings
-                </Text>
-
-                <View style={styles.greenBox} accessibilityLabel="Buildings list">
-                  {BUILDINGS.map((bld) => {
-                    const checked = selectedBuildings.includes(bld);
-                    return (
-                      <TouchableOpacity
-                        key={bld}
-                        style={styles.optionRow}
-                        onPress={() => {
-                          setSelectedBuildings((prev) =>
-                            prev.includes(bld)
-                              ? prev.filter((x) => x !== bld)
-                              : [...prev, bld]
-                          );
-                        }}
-                        accessibilityRole="checkbox"
-                        accessibilityLabel={bld}
-                        accessibilityState={{ checked }}
-                      >
-                        <View
-                          style={[
-                            styles.checkbox,
-                            checked && { backgroundColor: colors.white },
-                          ]}
-                        >
-                          {checked && (
-                            <Ionicons
-                              name="checkmark"
-                              size={16}
-                              color={colors.primary}
-                            />
-                          )}
-                        </View>
-
-                        <Text style={[styles.optionText, { color: colors.white }]}>
-                          {bld}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-
-                <TouchableOpacity
-                  style={styles.modalButton}
-                  onPress={closeModal}
-                  accessibilityRole="button"
-                  accessibilityLabel="Close dialog"
-                >
-                  <Text style={styles.modalButtonText}>Close</Text>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {modalType === "customSchedule" && (
-              <>
-                <Text style={styles.modalTitle} accessibilityRole="header">
-                  Custom Schedule
-                </Text>
-
-                <View style={styles.timeGrid}>
-                  <View style={styles.timeCol}>
-                    <Text style={styles.timeLabel}>START</Text>
-                    <View style={styles.timeBox}>
-                      <ScrollView style={{ maxHeight: 210 }}>
-                        {TIMES.map((t) => {
-                          const selected = t === customStart;
-                          return (
-                            <TouchableOpacity
-                              key={`start-${t}`}
-                              style={[
-                                styles.timeItem,
-                                selected && styles.timeItemSelected,
-                              ]}
-                              onPress={() => setCustomStart(t)}
-                              accessibilityRole="button"
-                              accessibilityLabel={`Start ${t}`}
-                            >
-                              <Text
-                                style={[
-                                  styles.timeItemText,
-                                  selected && styles.timeItemTextSelected,
-                                ]}
-                              >
-                                {t}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </ScrollView>
-                    </View>
-                  </View>
-
-                  <View style={styles.timeCol}>
-                    <Text style={styles.timeLabel}>END</Text>
-                    <View style={styles.timeBox}>
-                      <ScrollView style={{ maxHeight: 210 }}>
-                        {TIMES.map((t) => {
-                          const selected = t === customEnd;
-                          return (
-                            <TouchableOpacity
-                              key={`end-${t}`}
-                              style={[
-                                styles.timeItem,
-                                selected && styles.timeItemSelected,
-                              ]}
-                              onPress={() => setCustomEnd(t)}
-                              accessibilityRole="button"
-                              accessibilityLabel={`End ${t}`}
-                            >
-                              <Text
-                                style={[
-                                  styles.timeItemText,
-                                  selected && styles.timeItemTextSelected,
-                                ]}
-                              >
-                                {t}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </ScrollView>
-                    </View>
-                  </View>
-                </View>
-
-                {timeToMinutes(customEnd) <= timeToMinutes(customStart) && (
-                  <Text style={styles.timeError}>
-                    End time must be after start time
-                  </Text>
-                )}
-
-                <View style={styles.modalActionsRow}>
-                  <TouchableOpacity
-                    style={[styles.modalButtonSmall, styles.modalCancel]}
-                    onPress={closeModal}
-                    accessibilityRole="button"
-                    accessibilityLabel="Cancel"
-                  >
-                    <Text
-                      style={[styles.modalButtonText, { color: colors.primary }]}
-                    >
-                      Cancel
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.modalButtonSmall, styles.modalSave]}
-                    onPress={() => {
-                      if (timeToMinutes(customEnd) <= timeToMinutes(customStart)) {
-                        return;
-                      }
-                      setScheduleChoice("custom");
-                      setModalVisible(false);
-                      setModalType("");
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel="Save custom schedule"
-                  >
-                    <Text
-                      style={[styles.modalButtonText, { color: colors.white }]}
-                    >
-                      Save
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
 
       {logoutModalVisible && (
         <View
@@ -1496,78 +1055,6 @@ function createStyles(c: ThemeColors) {
       marginLeft: 8,
     },
 
-    modalOverlay: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      backgroundColor: "rgba(0,0,0,0.6)",
-    },
-
-    modalContainer: {
-      backgroundColor: c.white,
-      borderRadius: 12,
-      padding: 20,
-      width: "90%",
-      maxWidth: 700,
-      maxHeight: "85%",
-    },
-
-    modalTitle: {
-      fontSize: FONT_SIZE_BODY,
-      fontFamily: FONT_HEADING,
-      color: c.primary,
-      marginBottom: SPACE_MD,
-      textAlign: "center",
-    },
-
-    modalButton: {
-      alignSelf: "center",
-      paddingVertical: 10,
-      paddingHorizontal: CARD_PADDING,
-      borderRadius: BUTTON_BORDER_RADIUS,
-      backgroundColor: c.primary,
-      marginTop: 18,
-    },
-
-    modalButtonSmall: {
-      flex: 1,
-      paddingVertical: 10,
-      borderRadius: 8,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-
-    modalButtonText: {
-      fontSize: FONT_SIZE_BODY + 2,
-      fontFamily: FONT_HEADING,
-      color: c.white,
-    },
-
-    modalInput: {
-      borderWidth: 1,
-      borderColor: c.gray300,
-      borderRadius: BUTTON_BORDER_RADIUS,
-      padding: INPUT_PADDING,
-      color: c.primary,
-      fontFamily: FONT_BODY,
-    },
-
-    modalActionsRow: {
-      flexDirection: "row",
-      gap: 10,
-      marginTop: 14,
-    },
-
-    modalCancel: {
-      backgroundColor: c.gray100,
-      borderWidth: 1,
-      borderColor: c.primary,
-    },
-
-    modalSave: {
-      backgroundColor: c.primary,
-    },
-
     greenBox: {
       backgroundColor: c.primary,
       borderRadius: BUTTON_BORDER_RADIUS,
@@ -1575,57 +1062,6 @@ function createStyles(c: ThemeColors) {
       paddingHorizontal: 14,
       marginTop: 10,
       marginBottom: 10,
-    },
-
-    timeGrid: {
-      flexDirection: "row",
-      gap: 12,
-      alignItems: "flex-start",
-      justifyContent: "space-between",
-    },
-
-    timeCol: {
-      flex: 1,
-    },
-
-    timeLabel: {
-      fontFamily: FONT_HEADING,
-      color: c.primary,
-      marginBottom: 6,
-    },
-
-    timeBox: {
-      borderWidth: 1,
-      borderColor: c.gray300,
-      borderRadius: 10,
-      overflow: "hidden",
-    },
-
-    timeItem: {
-      paddingVertical: 10,
-      paddingHorizontal: 12,
-      backgroundColor: c.white,
-    },
-
-    timeItemSelected: {
-      backgroundColor: c.primary,
-    },
-
-    timeItemText: {
-      color: c.primary,
-      fontFamily: FONT_BODY,
-    },
-
-    timeItemTextSelected: {
-      color: c.white,
-      fontFamily: FONT_HEADING,
-    },
-
-    timeError: {
-      marginTop: 10,
-      color: "#D9534F",
-      fontFamily: FONT_BODY,
-      textAlign: "center",
     },
 
     logoutButton: {
