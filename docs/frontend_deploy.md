@@ -46,7 +46,7 @@ Then, set the install command to:
 - npm install
 
 Lastly, under Environment Variables, add the environment variable from your .env file:
-- EXPO_PUBLIC_API_URL=<https://YOUR-NGROK-URL.ngrok-free.dev/api/v1>
+- EXPO_PUBLIC_API_URL=https://YOUR-NGROK-URL.ngrok-free.dev/api/v1
 
 Scroll down and click Deploy. After building and deployment completes, you will be prompted to view your deployment from the dashboard. Under the Overview tab, you should see your production deployment, along with the status and deployment settings. You should also see the project URL under Domains in the Production Deployment container. This will be your public URL for the frontend.
 
@@ -57,10 +57,10 @@ In a new terminal, start the backend:
 - uvicorn main:app -host 0.0.0.0 --port 8000 -reload
 
 Test it with the following. It should return the message "Study Room Management API":
-- curl <http://localhost:8000>
+- curl http://localhost:8000
 
 In a new terminal, start the Cloudflare tunnel:
-- cloudflared tunnel --url <http://localhost:8000>
+- cloudflared tunnel --url http://localhost:8000
 
 Look for your new URL:
 - htps://randomly-generated-url.trycloudflare.com
