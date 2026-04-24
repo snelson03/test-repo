@@ -45,7 +45,7 @@ By combining physical sensor data with a modern web interface, the system elimin
 - [Project / Software Deployment Guide](docs/frontend_deploy.md)
 - [Backend Deployment Guide](docs/backend_deploy.md)
 - [Hardware Setup Guide](docs/hardware_setup.md)
-- [User Manual](README.md)
+- [User Manual](docs/user_manual.md)
 
 ---
 
