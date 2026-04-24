@@ -60,7 +60,7 @@ Test it with the following. It should return the message "Study Room Management 
 - curl http://localhost:8000
 
 In a new terminal, start the Cloudflare tunnel:
-- cloudflared tunnel --url http://localhost:8000
+- cloudflared tunnel http://localhost:8000
 
 Look for your new URL:
 - htps://randomly-generated-url.trycloudflare.com
