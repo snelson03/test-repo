@@ -29,7 +29,7 @@ The workflow for the front and back ends are as follows:
 ### **3\. Set Up Vercel**
 
 Create a .env file in the root of study-room-mobile. In this .env file, add the following (don't forget to append "/api/v1" to the end of the URL):
-- EXPO_PUBLIC_API_BASE_URL = <https://your-ngrok-url/api/v1>"
+- EXPO_PUBLIC_API_BASE_URL = https://your-ngrok-url/api/v1
 
 Restart the front end:
 - npx expo start -c
@@ -40,7 +40,7 @@ Under "Build and Output Settings", set the build command to:
 - npx expo export --platform web
 
 Still under "Build and Output Settings", set the output directory to:
-- Ddist
+- dist
 
 Then, set the install command to:
 - npm install
