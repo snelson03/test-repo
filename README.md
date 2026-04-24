@@ -2,7 +2,7 @@
 
 ## Project Logo
 
-<p align="center">
+<p align="left">
   <img src="logo.png" width="400"/>
 </p>
 
